@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>無限そば道 - 絶・越前極</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
+<style>
+body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
+
+/* --- タイトル画面 --- */
+#titleScreen{ position:fixed;width:100%;height:100%; display:flex;flex-direction:column; justify-content:center;align-items:center; z-index: 100; background: rgba(0,0,0,0.8); }
+#title{ font-size:64px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
+.menuBtn{ width:260px;padding:16px;margin:10px; font-size:22px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
+
+/* --- ゲーム画面 --- */
+#game {
+ position:absolute; left:50%; top:28%; transform:translate(-50%, -50%);
+ width:1100px; height:380px; display:none; overflow: hidden;
+ border: 3px solid #555; border-radius: 15px; background: #000;
+}
+.lane-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+.lane { width: 100%; height: 33.3%; background-size: 100% 100%; background-repeat: no-repeat; opacity: 0.8; }
+#lane1 { background-image: url('lane_a.png'); }
+#lane2 { background-image: url('lane_b.png'); }
+#lane3 { background-image: url('lane_c.png'); }
+
+.note-container { position:absolute; width:120px; height:120px; transform:translate(-50%,-50%); z-index: 10; pointer-events: none; }
+.soba-img { width: 100%; height: 100%; object-fit: contain; }
+
+.hit { position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); border-radius: 50%; z-index: 20; }
+.hit.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 35px gold; }
+.red{top:63px;} .blue{top:190px;} .green{top:316px;}
+
+#ui { position:absolute; left:20px; top:10px; z-index: 80; text-shadow: 2px 2px 4px black; }
+.info-text { font-size:24px; color:gold; font-family: 'Zen Old Mincho'; margin-right: 20px;}
+
+#judge { 
+  position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); 
+  font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap;
+}
+.showJudge { animation: judgeAnim 0.3s ease-out forwards; }
+@keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
+
+/* --- 下部エリア --- */
+#bottomArea {
+    position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%);
+    width: 1100px; height: 300px; display: none;
+    flex-direction: column; align-items: center; justify-content: space-around;
+}
+#gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
+#gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
+#gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
+.fever { animation: feverGlow 0.3s infinite alternate; }
+@keyframes feverGlow { 0% { box-shadow: 0 0 10px gold; } 100% { box-shadow: 0 0 30px gold; } }
+
+#workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
+.kone { animation: koneAnim 0.6s infinite ease-in-out; }
+@keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+.nobashi { animation: nobashiAnim 0.4s infinite linear; }
+@keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
+.kiri { animation: kiriAnim 0.1s infinite alternate; }
+@keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
+.goku { animation: gokuAnim 0.05s infinite; filter: drop-shadow(0 0 20px gold); }
+@keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
+
+/* --- リザルト画面 --- */
+#result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto;}
+#rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
+#triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
+</style>
+</head>
+
+<body>
+
+<div id="titleScreen">
+ <div id="title">無限そば道</div>
+ <div style="color:white; margin-bottom:30px;">～ 絶・越前極への道 ～</div>
+ <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
+ <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
+ <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
+ <button class="menuBtn" onclick="showRanking()">番付表</button>
+ <div style="margin-top:20px; color:gold; font-weight:bold;">目標：全打「極上」を完遂せよ</div>
+</div>
+
+<div id="game">
+ <div id="ui">
+  <span class="info-text">得点: <span id="score">0</span></span>
+  <span class="info-text">連打: <span id="combo">0</span></span>
+  <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
+ </div>
+ <div class="lane-container">
+  <div id="lane1" class="lane"></div>
+  <div id="lane2" class="lane"></div>
+  <div id="lane3" class="lane"></div>
+ </div>
+ <div id="hit-0" class="hit red" onpointerdown="hit(0)"></div>
+ <div id="hit-1" class="hit blue" onpointerdown="hit(1)"></div>
+ <div id="hit-2" class="hit green" onpointerdown="hit(2)"></div>
+ <div id="judge"></div>
+</div>
+
+<div id="bottomArea">
+    <div id="gaugeWrapper">
+        <div id="gaugeFill"></div>
+        <div id="gaugeText">茹で上がりゲージ</div>
+    </div>
+    <div id="workerArea">
+        <div id="workerEmoji">🥣</div>
+    </div>
+</div>
+
+<div id="result">
+ <h1 id="resultTitle">修行終了</h1>
+ <div id="finalScore" style="font-size:24px;"></div>
+ <div id="rankDisplay"></div>
+ <div id="triviaArea"></div>
+ <div id="rankingInputArea" style="display:none;">
+    番付名：<input id="nameInput" maxlength="8" placeholder="名無し" style="font-size:20px; text-align:center;"><br><br>
+    <button class="menuBtn" onclick="saveRank()">番付に刻む</button>
+ </div>
+ <button class="menuBtn" onclick="location.reload()">タイトルへ</button>
+</div>
+
+<div id="ranking">
+ <h1>番付表（五傑）</h1>
+ <div id="rankList"></div>
+ <br><button class="menuBtn" onclick="location.reload()">戻る</button>
+</div>
+
+<script>
+let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
+let gauge = 0, fever = false, lastAnimState = "", timerInterval;
+const HIT_X = 85; 
+const laneY = [63, 190, 316];
+const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
+
+const sobaTrivia = [
+    "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことからその名が広まったと言われているぞ。",
+    "福井では、冬でも冷たいおろしそばを食べるのが「通」のスタイルだ。",
+    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
+    "「おろしそば」は、実は健康食。大根の酵素が消化を助けてくれるんだぞ。",
+    "福井県民は、年越しそばももちろん「おろしそば」だ。",
+    "福井のそばは、殻まで一緒に挽き込む「ぐる挽き（全層粉）」が多く、香りが強いのが特徴だ。",
+    "「そばの実」の生産量、福井県は全国でもトップクラスの品質を誇っているぞ。",
+    "おろしそばにのっている「かつお節」は、あえて厚めに削っている店も多い。食感が大事なんだ。",
+    "福井では、そばと一緒に「ソースカツ丼」を食べるのが最強のセットメニューだ。",
+    "そばを打つ時の「水」も重要。福井の美味しい地下水が、そばの味を引き立てているんだな。"
+];
+
+function startGame(sec){ 
+    isInfinite=false; gameTime = sec; startCommon(); 
+    document.getElementById("timeDisplay").style.display = "inline";
+    let timeLeft = sec;
+    document.getElementById("timeLeft").innerText = timeLeft;
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timeLeft").innerText = timeLeft;
+        if(timeLeft <= 0) { clearInterval(timerInterval); endGame(); }
+    }, 1000);
+}
+
+function startInfinite(){ isInfinite=true; gameTime = 0; startCommon(); }
+
+function startCommon(){
+ score=0; combo=0; gauge=0; fever=false;
+ notes.forEach(n => n.el.remove()); notes = [];
+ document.getElementById("score").innerText = "0";
+ document.getElementById("combo").innerText = "0";
+ document.getElementById("titleScreen").style.display="none";
+ document.getElementById("game").style.display="block";
+ document.getElementById("bottomArea").style.display="flex";
+ running=true; loop(); spawn();
+}
+
+function spawn(){
+ if(!running) return;
+ let lane = Math.floor(Math.random()*3);
+ let container = document.createElement("div");
+ container.className = "note-container";
+ let soba = document.createElement("img");
+ soba.src = noteImages[lane];
+ soba.className = "soba-img";
+ container.appendChild(soba);
+ container.style.left = "1200px"; container.style.top = laneY[lane] + "px";
+ document.getElementById("game").appendChild(container);
+ notes.push({el:container, x:1200, lane:lane});
+ 
+ // 出現速度を少しマイルドに調整
+ let interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
+ setTimeout(spawn, interval);
+}
+
+function loop(){
+ if(!running) return;
+ // スピードを少し落として正確さを重視
+ let speed = isInfinite ? 6 + Math.min(10, combo * 0.08) : 12;
+ for(let i=notes.length-1; i>=0; i--){
+  let n = notes[i]; n.x -= speed;
+  n.el.style.left = n.x + "px";
+  if(n.x < -150){
+   n.el.remove(); notes.splice(i, 1);
+   missEffect();
+   if(isInfinite) { endGame(); return; }
+  }
+ }
+ updateUI();
+ requestAnimationFrame(loop);
+}
+
+function updateUI() {
+    const worker = document.getElementById("workerEmoji");
+    const bottom = document.getElementById("bottomArea");
+    let state = "kone"; let emoji = "🥣";
+    if (fever) {
+        state = "goku"; 
+        if (combo > 100) emoji = "✨😋✨"; 
+        else if (combo > 50) emoji = "🍜💨"; 
+        else emoji = "🥢😋"; 
+        gauge -= 0.5; 
+        if (gauge <= 0) {
+            gauge = 0; fever = false;
+            document.getElementById("gaugeWrapper").classList.remove("fever");
+            document.getElementById("gaugeText").innerText = "茹で上がりゲージ";
+        }
+    } else {
+        if (combo > 50) { state = "kiri"; emoji = "🔪"; } 
+        else if (combo > 20) { state = "nobashi"; emoji = "🥢"; } 
+        else { state = "kone"; emoji = "🥣"; }
+        if (gauge > 0) gauge -= 0.1;
+    }
+    if (lastAnimState !== (state + emoji)) {
+        worker.innerText = emoji;
+        worker.className = state;
+        lastAnimState = state + emoji;
+    }
+    document.getElementById("gaugeFill").style.width = gauge + "%";
+}
+
+function missEffect() {
+    combo = 0; gauge = 0;
+    document.getElementById("combo").innerText = 0;
+    showJudge("MISS");
+}
+
+function hit(l){
+ const hitBtn = document.getElementById(`hit-${l}`);
+ hitBtn.classList.add("active"); setTimeout(()=>hitBtn.classList.remove("active"), 100);
+ let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
+ if(tIdx === -1) return;
+ let t = notes[tIdx];
+ let diff = Math.abs(t.x - HIT_X);
+ 
+ let res;
+ combo++;
+
+ if (diff < 40) { 
+     res = "PERFECT";
+     let basePoint = 500;
+     let comboBonus = combo * 10;
+     score += (basePoint + comboBonus) * (fever ? 2 : 1);
+     if (!fever) {
+        gauge += 10; // 極上時はゲージが貯まりやすく
+        if (gauge >= 100) {
+            gauge = 100; fever = true;
+            document.getElementById("gaugeWrapper").classList.add("fever");
+            document.getElementById("gaugeText").innerText = "実食タイム（得点2倍）";
+        }
+     }
+ } else {
+     res = "GREAT";
+     score += 50; // 良打は大幅に得点が低い
+     gauge = Math.max(0, gauge - 15); // 良打でゲージが少し減少
+ }
+ 
+ document.getElementById("score").innerText = score;
+ document.getElementById("combo").innerText = combo;
+ showJudge(res);
+ t.el.remove(); notes.splice(tIdx, 1);
+}
+
+function showJudge(res){
+ const j = document.getElementById("judge");
+ if(res === "PERFECT") {
+    j.innerText = "極上";
+    j.style.color = "gold";
+ } else if(res === "GREAT") {
+    j.innerText = "良打(減点)";
+    j.style.color = "#44aaff"; // 良打は青色に変更
+ } else {
+    j.innerText = "茹で過ぎ";
+    j.style.color = "#ff4444";
+ }
+ j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
+}
+
+function getRank(s) {
+    let thresholds;
+    // 極上完遂が必須のスコア設定
+    if (gameTime === 30) { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
+    else if (gameTime === 60) { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
+    else { thresholds = [500000, 250000, 100000, 50000, 20000, 5000]; }
+
+    if (s >= thresholds[0]) return "越前極";
+    if (s >= thresholds[1]) return "伝説級";
+    if (s >= thresholds[2]) return "元帥";
+    if (s >= thresholds[3]) return "賢者";
+    if (s >= thresholds[4]) return "職人";
+    if (s >= thresholds[5]) return "見習い";
+    return "修行中";
+}
+
+function endGame(){
+ if(!running) return;
+ running=false; clearInterval(timerInterval);
+ document.getElementById("game").style.display="none";
+ document.getElementById("bottomArea").style.display="none";
+ document.getElementById("result").style.display="block";
+ document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
+ document.getElementById("rankDisplay").innerText = `称号: ${getRank(score)}`;
+ document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
+ if(isInfinite) document.getElementById("rankingInputArea").style.display = "block";
+}
+
+function saveRank(){
+ let name = document.getElementById("nameInput").value || "名無し";
+ let data = JSON.parse(localStorage.getItem("soba_rank") || "[]");
+ data.push({name, score});
+ data.sort((a,b) => b.score - a.score);
+ localStorage.setItem("soba_rank", JSON.stringify(data.slice(0, 5)));
+ showRanking();
+}
+
+function showRanking(){
+ document.getElementById("titleScreen").style.display="none";
+ document.getElementById("result").style.display="none";
+ document.getElementById("ranking").style.display="block";
+ let data = JSON.parse(localStorage.getItem("soba_rank") || "[]");
+ document.getElementById("rankList").innerHTML = data.length ? 
+    data.map((d,i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") : 
+    "<p>まだ番付がありません。</p>";
+}
+
+document.addEventListener("keydown", e => {
+ if(!running) return;
+ const key = e.key.toLowerCase();
+ if(key === "e") hit(0); if(key === "d") hit(1); if(key === "c") hit(2);
+});
+</script>
+</body>
+</html>
