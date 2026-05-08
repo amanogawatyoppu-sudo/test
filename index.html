@@ -2,61 +2,36 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 絶・越前極 (ASLオンライン版)</title>
+<title>無限そば道 - モード別番付版</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
+/* スタイルは変更なしのため、中身はそのまま維持してください */
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
-
-/* --- タイトル画面 --- */
 #titleScreen{ position:fixed;width:100%;height:100%; display:flex;flex-direction:column; justify-content:center;align-items:center; z-index: 100; background: rgba(0,0,0,0.8); }
 #title{ font-size:64px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
 .menuBtn{ width:260px;padding:16px;margin:10px; font-size:22px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
-
-/* --- ゲーム画面 --- */
-#game {
- position:absolute; left:50%; top:28%; transform:translate(-50%, -50%);
- width:1100px; height:380px; display:none; overflow: hidden;
- border: 3px solid #555; border-radius: 15px; background: #000;
-}
+#game { position:absolute; left:50%; top:28%; transform:translate(-50%, -50%); width:1100px; height:380px; display:none; overflow: hidden; border: 3px solid #555; border-radius: 15px; background: #000; }
 .lane-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
 .lane { width: 100%; height: 33.3%; background-size: 100% 100%; background-repeat: no-repeat; opacity: 0.8; }
 #lane1 { background-image: url('lane_a.png'); }
 #lane2 { background-image: url('lane_b.png'); }
 #lane3 { background-image: url('lane_c.png'); }
-
 .note-container { position:absolute; width:120px; height:120px; transform:translate(-50%,-50%); z-index: 10; pointer-events: none; }
 .soba-img { width: 100%; height: 100%; object-fit: contain; }
-
-.hit { 
-    position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); 
-    border-radius: 50%; z-index: 20; display: flex; align-items: center; justify-content: center;
-    font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.5); border: 2px dashed rgba(255,255,255,0.2);
-}
+.hit { position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); border-radius: 50%; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.5); border: 2px dashed rgba(255,255,255,0.2); }
 .hit.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 35px gold; color: white; border-style: solid; }
 .red{top:63px;} .blue{top:190px;} .green{top:316px;}
-
 #ui { position:absolute; left:20px; top:10px; z-index: 80; text-shadow: 2px 2px 4px black; }
 .info-text { font-size:24px; color:gold; font-family: 'Zen Old Mincho'; margin-right: 20px;}
-
-#judge { 
-  position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); 
-  font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap;
-}
+#judge { position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap; }
 .showJudge { animation: judgeAnim 0.3s ease-out forwards; }
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
-
-/* --- 下部エリア --- */
-#bottomArea {
-    position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%);
-    width: 1100px; height: 300px; display: none;
-    flex-direction: column; align-items: center; justify-content: space-around;
-}
+#bottomArea { position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%); width: 1100px; height: 300px; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
 #gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
 .fever { animation: feverGlow 0.3s infinite alternate; }
 @keyframes feverGlow { 0% { box-shadow: 0 0 10px gold; } 100% { box-shadow: 0 0 30px gold; } }
-
 #workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
 @keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
@@ -66,8 +41,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 @keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
 .goku { animation: gokuAnim 0.05s infinite; filter: drop-shadow(0 0 20px gold); }
 @keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
-
-/* --- リザルト画面 --- */
 #result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto;}
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
@@ -82,7 +55,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
  <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
  <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
- <button class="menuBtn" onclick="showRanking()">世界番付</button>
+ <button class="menuBtn" onclick="openRankingOnly()">世界番付（30秒）</button>
  <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
@@ -126,16 +99,18 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="ranking">
- <h1>世界番付（五傑）</h1>
+ <h1 id="rankTitle">世界番付</h1>
  <div id="rankList"></div>
- <br><button class="menuBtn" onclick="location.reload()">戻る</button>
+ <br>
+ <button class="menuBtn" onclick="location.reload()">戻る</button>
 </div>
 
 <script>
-// --- 設定：GASのウェブアプリURLを反映済み ---
+// --- GASのURL ---
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB56tjRCP1VVk0G4Dy5IhvEsu6eXDks16_4ZbwXOrx1uk/exec";
 
 let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
+let currentMode = "30"; // 現在のモード記録用
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
@@ -154,30 +129,31 @@ const sobaTrivia = [
     "そばを打つ時の「水」も重要。福井の美味しい地下水が、そばの味を引き立てているんだな。"
 ];
 
-// オンライン番付を取得
+// ランキング表示（モード別）
 async function showRanking() {
     document.getElementById("titleScreen").style.display = "none";
     document.getElementById("result").style.display = "none";
     document.getElementById("ranking").style.display = "block";
+    document.getElementById("rankTitle").innerText = `世界番付（${currentMode === "infinite" ? "無限" : currentMode + "秒"}）`;
+    
     const listArea = document.getElementById("rankList");
     listArea.innerHTML = "<div style='font-size:20px;'>番付を取得中...</div>";
 
     try {
-        const response = await fetch(GAS_URL);
+        // モードをURLパラメータとして渡す
+        const response = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await response.json();
         listArea.innerHTML = data.length ? 
             data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") :
-            "<p>まだ番付がありません。</p>";
+            "<p>まだこのモードの番付がありません。</p>";
     } catch (e) {
-        console.error(e);
-        listArea.innerHTML = "番付の取得に失敗しました。URLやGASの設定を確認してください。";
+        listArea.innerHTML = "番付の取得に失敗しました。";
     }
 }
 
-// オンラインに保存
+// スコア保存（モード情報付き）
 async function saveRank() {
-    const nameInput = document.getElementById("nameInput");
-    const name = nameInput.value || "名無し";
+    const name = document.getElementById("nameInput").value || "名無し";
     const btn = document.querySelector("#rankingInputArea button");
     btn.disabled = true;
     btn.innerText = "刻み中...";
@@ -185,19 +161,23 @@ async function saveRank() {
     try {
         await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({ name: name, score: score })
+            body: JSON.stringify({ name: name, score: score, mode: currentMode })
         });
         showRanking();
     } catch (e) {
-        console.error(e);
-        alert("保存に失敗しました。GASのデプロイが『全員』になっているか確認してください。");
+        alert("保存に失敗しました。");
         btn.disabled = false;
         btn.innerText = "番付に刻む";
     }
 }
 
+function openRankingOnly() {
+    currentMode = "30";
+    showRanking();
+}
+
 function startGame(sec){ 
-    isInfinite=false; gameTime = sec; startCommon(); 
+    isInfinite=false; gameTime = sec; currentMode = String(sec); startCommon(); 
     document.getElementById("timeDisplay").style.display = "inline";
     let timeLeft = sec;
     document.getElementById("timeLeft").innerText = timeLeft;
@@ -208,7 +188,9 @@ function startGame(sec){
     }, 1000);
 }
 
-function startInfinite(){ isInfinite=true; gameTime = 0; startCommon(); }
+function startInfinite(){ 
+    isInfinite=true; gameTime = 0; currentMode = "infinite"; startCommon(); 
+}
 
 function startCommon(){
  score=0; combo=0; gauge=0; fever=false;
@@ -341,8 +323,8 @@ function showJudge(res){
 
 function getRank(s) {
     let thresholds;
-    if (gameTime === 30) { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
-    else if (gameTime === 60) { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
+    if (currentMode === "30") { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
+    else if (currentMode === "60") { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
     else { thresholds = [500000, 250000, 100000, 50000, 20000, 5000]; }
 
     if (s >= thresholds[0]) return "越前極";
@@ -360,7 +342,7 @@ function endGame(){
  document.getElementById("game").style.display="none";
  document.getElementById("bottomArea").style.display="none";
  document.getElementById("result").style.display="block";
- document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
+ document.getElementById("finalScore").innerText = `最終得点: ${score}点 (${currentMode === "infinite" ? "無限" : currentMode + "秒"})`;
  document.getElementById("rankDisplay").innerText = `称号: ${getRank(score)}`;
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
