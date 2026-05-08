@@ -2,10 +2,9 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - モード別番付版</title>
+<title>無限そば道 - 全モード番付対応版</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
-/* スタイルは変更なしのため、中身はそのまま維持してください */
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
 #titleScreen{ position:fixed;width:100%;height:100%; display:flex;flex-direction:column; justify-content:center;align-items:center; z-index: 100; background: rgba(0,0,0,0.8); }
 #title{ font-size:64px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); }
@@ -55,7 +54,13 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
  <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
  <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
- <button class="menuBtn" onclick="openRankingOnly()">世界番付（30秒）</button>
+ 
+ <div style="margin-top:10px;">
+   <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('30')">30秒番付</button>
+   <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('60')">60秒番付</button>
+   <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('infinite')">無限番付</button>
+ </div>
+
  <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
@@ -106,11 +111,10 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-// --- GASのURL ---
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB56tjRCP1VVk0G4Dy5IhvEsu6eXDks16_4ZbwXOrx1uk/exec";
 
 let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
-let currentMode = "30"; // 現在のモード記録用
+let currentMode = "30"; 
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
@@ -129,7 +133,6 @@ const sobaTrivia = [
     "そばを打つ時の「水」も重要。福井の美味しい地下水が、そばの味を引き立てているんだな。"
 ];
 
-// ランキング表示（モード別）
 async function showRanking() {
     document.getElementById("titleScreen").style.display = "none";
     document.getElementById("result").style.display = "none";
@@ -140,7 +143,6 @@ async function showRanking() {
     listArea.innerHTML = "<div style='font-size:20px;'>番付を取得中...</div>";
 
     try {
-        // モードをURLパラメータとして渡す
         const response = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await response.json();
         listArea.innerHTML = data.length ? 
@@ -151,7 +153,6 @@ async function showRanking() {
     }
 }
 
-// スコア保存（モード情報付き）
 async function saveRank() {
     const name = document.getElementById("nameInput").value || "名無し";
     const btn = document.querySelector("#rankingInputArea button");
@@ -171,8 +172,9 @@ async function saveRank() {
     }
 }
 
-function openRankingOnly() {
-    currentMode = "30";
+// 追加した関数
+function openRankingMode(mode) {
+    currentMode = mode;
     showRanking();
 }
 
