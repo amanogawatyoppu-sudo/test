@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 絶・越前極 (ASL版)</title>
+<title>無限そば道 - 絶・越前極 (ASLオンライン版)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -82,7 +82,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
  <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
  <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
- <button class="menuBtn" onclick="showRanking()">番付表</button>
+ <button class="menuBtn" onclick="showRanking()">世界番付</button>
  <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
@@ -118,7 +118,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <div id="finalScore" style="font-size:24px;"></div>
  <div id="rankDisplay"></div>
  <div id="triviaArea"></div>
- <div id="rankingInputArea" style="display:none;">
+ <div id="rankingInputArea">
     番付名：<input id="nameInput" maxlength="8" placeholder="名無し" style="font-size:20px; text-align:center;"><br><br>
     <button class="menuBtn" onclick="saveRank()">番付に刻む</button>
  </div>
@@ -126,12 +126,15 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="ranking">
- <h1>番付表（五傑）</h1>
+ <h1>世界番付（五傑）</h1>
  <div id="rankList"></div>
  <br><button class="menuBtn" onclick="location.reload()">戻る</button>
 </div>
 
 <script>
+// --- 設定：GASのURLをここに貼り付けてください ---
+const GAS_URL = "ここにコピーしたウェブアプリのURLを貼る";
+
 let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 const HIT_X = 85; 
@@ -141,7 +144,7 @@ const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
     "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことからその名が広まったと言われているぞ。",
     "福井では、冬でも冷たいおろしそばを食べるのが「通」のスタイルだ。",
-    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。",
+    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
     "「おろしそば」は、実は健康食。大根の酵素が消化を助けてくれるんだぞ。",
     "福井県民は、年越しそばももちろん「おろしそば」だ。",
     "福井のそばは、殻まで一緒に挽き込む「ぐる挽き（全層粉）」が多く、香りが強いのが特徴だ。",
@@ -150,6 +153,45 @@ const sobaTrivia = [
     "福井では、そばと一緒に「ソースカツ丼」を食べるのが最強のセットメニューだ。",
     "そばを打つ時の「水」も重要。福井の美味しい地下水が、そばの味を引き立てているんだな。"
 ];
+
+// オンライン番付を取得
+async function showRanking() {
+    document.getElementById("titleScreen").style.display = "none";
+    document.getElementById("result").style.display = "none";
+    document.getElementById("ranking").style.display = "block";
+    const listArea = document.getElementById("rankList");
+    listArea.innerHTML = "<div style='font-size:20px;'>番付を取得中...</div>";
+
+    try {
+        const response = await fetch(GAS_URL);
+        const data = await response.json();
+        listArea.innerHTML = data.length ? 
+            data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") :
+            "<p>まだ番付がありません。</p>";
+    } catch (e) {
+        listArea.innerHTML = "番付の取得に失敗しました。URLを確認してください。";
+    }
+}
+
+// オンラインに保存
+async function saveRank() {
+    const name = document.getElementById("nameInput").value || "名無し";
+    const btn = document.querySelector("#rankingInputArea button");
+    btn.disabled = true;
+    btn.innerText = "刻み中...";
+
+    try {
+        await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ name: name, score: score })
+        });
+        showRanking();
+    } catch (e) {
+        alert("保存に失敗しました。");
+        btn.disabled = false;
+        btn.innerText = "番付に刻む";
+    }
+}
 
 function startGame(sec){ 
     isInfinite=false; gameTime = sec; startCommon(); 
@@ -319,29 +361,8 @@ function endGame(){
  document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
  document.getElementById("rankDisplay").innerText = `称号: ${getRank(score)}`;
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
- if(isInfinite) document.getElementById("rankingInputArea").style.display = "block";
 }
 
-function saveRank(){
- let name = document.getElementById("nameInput").value || "名無し";
- let data = JSON.parse(localStorage.getItem("soba_rank") || "[]");
- data.push({name, score});
- data.sort((a,b) => b.score - a.score);
- localStorage.setItem("soba_rank", JSON.stringify(data.slice(0, 5)));
- showRanking();
-}
-
-function showRanking(){
- document.getElementById("titleScreen").style.display="none";
- document.getElementById("result").style.display="none";
- document.getElementById("ranking").style.display="block";
- let data = JSON.parse(localStorage.getItem("soba_rank") || "[]");
- document.getElementById("rankList").innerHTML = data.length ? 
-    data.map((d,i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") : 
-    "<p>まだ番付がありません。</p>";
-}
-
-// キー設定を A, S, L に変更
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
