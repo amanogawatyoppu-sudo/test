@@ -132,8 +132,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-// --- 設定：GASのURLをここに貼り付けてください ---
-const GAS_URL = "ここにコピーしたウェブアプリのURLを貼る";
+// --- 設定：GASのウェブアプリURLを反映済み ---
+const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB56tjRCP1VVk0G4Dy5IhvEsu6eXDks16_4ZbwXOrx1uk/exec";
 
 let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
@@ -169,13 +169,15 @@ async function showRanking() {
             data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") :
             "<p>まだ番付がありません。</p>";
     } catch (e) {
-        listArea.innerHTML = "番付の取得に失敗しました。URLを確認してください。";
+        console.error(e);
+        listArea.innerHTML = "番付の取得に失敗しました。URLやGASの設定を確認してください。";
     }
 }
 
 // オンラインに保存
 async function saveRank() {
-    const name = document.getElementById("nameInput").value || "名無し";
+    const nameInput = document.getElementById("nameInput");
+    const name = nameInput.value || "名無し";
     const btn = document.querySelector("#rankingInputArea button");
     btn.disabled = true;
     btn.innerText = "刻み中...";
@@ -187,7 +189,8 @@ async function saveRank() {
         });
         showRanking();
     } catch (e) {
-        alert("保存に失敗しました。");
+        console.error(e);
+        alert("保存に失敗しました。GASのデプロイが『全員』になっているか確認してください。");
         btn.disabled = false;
         btn.innerText = "番付に刻む";
     }
@@ -253,7 +256,6 @@ function loop(){
 
 function updateUI() {
     const worker = document.getElementById("workerEmoji");
-    const bottom = document.getElementById("bottomArea");
     let state = "kone"; let emoji = "🥣";
     if (fever) {
         state = "goku"; 
