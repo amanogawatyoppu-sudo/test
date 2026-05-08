@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 絶・越前極</title>
+<title>無限そば道 - 絶・越前極 (ASL版)</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -27,8 +27,12 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .note-container { position:absolute; width:120px; height:120px; transform:translate(-50%,-50%); z-index: 10; pointer-events: none; }
 .soba-img { width: 100%; height: 100%; object-fit: contain; }
 
-.hit { position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); border-radius: 50%; z-index: 20; }
-.hit.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 35px gold; }
+.hit { 
+    position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); 
+    border-radius: 50%; z-index: 20; display: flex; align-items: center; justify-content: center;
+    font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.5); border: 2px dashed rgba(255,255,255,0.2);
+}
+.hit.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 35px gold; color: white; border-style: solid; }
 .red{top:63px;} .blue{top:190px;} .green{top:316px;}
 
 #ui { position:absolute; left:20px; top:10px; z-index: 80; text-shadow: 2px 2px 4px black; }
@@ -79,7 +83,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
  <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
  <button class="menuBtn" onclick="showRanking()">番付表</button>
- <div style="margin-top:20px; color:gold; font-weight:bold;">目標：全打「極上」を完遂せよ</div>
+ <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
 <div id="game">
@@ -93,9 +97,9 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <div id="lane2" class="lane"></div>
   <div id="lane3" class="lane"></div>
  </div>
- <div id="hit-0" class="hit red" onpointerdown="hit(0)"></div>
- <div id="hit-1" class="hit blue" onpointerdown="hit(1)"></div>
- <div id="hit-2" class="hit green" onpointerdown="hit(2)"></div>
+ <div id="hit-0" class="hit red" onpointerdown="hit(0)">A</div>
+ <div id="hit-1" class="hit blue" onpointerdown="hit(1)">S</div>
+ <div id="hit-2" class="hit green" onpointerdown="hit(2)">L</div>
  <div id="judge"></div>
 </div>
 
@@ -137,7 +141,7 @@ const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
     "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことからその名が広まったと言われているぞ。",
     "福井では、冬でも冷たいおろしそばを食べるのが「通」のスタイルだ。",
-    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
+    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。",
     "「おろしそば」は、実は健康食。大根の酵素が消化を助けてくれるんだぞ。",
     "福井県民は、年越しそばももちろん「おろしそば」だ。",
     "福井のそばは、殻まで一緒に挽き込む「ぐる挽き（全層粉）」が多く、香りが強いのが特徴だ。",
@@ -185,14 +189,12 @@ function spawn(){
  document.getElementById("game").appendChild(container);
  notes.push({el:container, x:1200, lane:lane});
  
- // 出現速度を少しマイルドに調整
  let interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
  setTimeout(spawn, interval);
 }
 
 function loop(){
  if(!running) return;
- // スピードを少し落として正確さを重視
  let speed = isInfinite ? 6 + Math.min(10, combo * 0.08) : 12;
  for(let i=notes.length-1; i>=0; i--){
   let n = notes[i]; n.x -= speed;
@@ -259,7 +261,7 @@ function hit(l){
      let comboBonus = combo * 10;
      score += (basePoint + comboBonus) * (fever ? 2 : 1);
      if (!fever) {
-        gauge += 10; // 極上時はゲージが貯まりやすく
+        gauge += 10;
         if (gauge >= 100) {
             gauge = 100; fever = true;
             document.getElementById("gaugeWrapper").classList.add("fever");
@@ -268,8 +270,8 @@ function hit(l){
      }
  } else {
      res = "GREAT";
-     score += 50; // 良打は大幅に得点が低い
-     gauge = Math.max(0, gauge - 15); // 良打でゲージが少し減少
+     score += 50; 
+     gauge = Math.max(0, gauge - 15);
  }
  
  document.getElementById("score").innerText = score;
@@ -285,7 +287,7 @@ function showJudge(res){
     j.style.color = "gold";
  } else if(res === "GREAT") {
     j.innerText = "良打(減点)";
-    j.style.color = "#44aaff"; // 良打は青色に変更
+    j.style.color = "#44aaff"; 
  } else {
     j.innerText = "茹で過ぎ";
     j.style.color = "#ff4444";
@@ -295,7 +297,6 @@ function showJudge(res){
 
 function getRank(s) {
     let thresholds;
-    // 極上完遂が必須のスコア設定
     if (gameTime === 30) { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
     else if (gameTime === 60) { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
     else { thresholds = [500000, 250000, 100000, 50000, 20000, 5000]; }
@@ -340,10 +341,13 @@ function showRanking(){
     "<p>まだ番付がありません。</p>";
 }
 
+// キー設定を A, S, L に変更
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
- if(key === "e") hit(0); if(key === "d") hit(1); if(key === "c") hit(2);
+ if(key === "a") hit(0); 
+ if(key === "s") hit(1); 
+ if(key === "l") hit(2);
 });
 </script>
 </body>
