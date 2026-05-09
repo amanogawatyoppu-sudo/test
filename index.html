@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 真・越前極（不正防止版）</title>
+<title>無限そば道 - 完・越前極（鉄壁ガード版）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -117,8 +117,8 @@ let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
 let currentMode = "30"; 
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 
-// 【不正防止】キーの押しっぱなし状態を管理
-let keyState = { a: false, s: false, l: false };
+// 【不正防止】レーンごとのロック状態（trueなら次のノーツを叩けない）
+let laneLocked = [false, false, false];
 
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
@@ -142,44 +142,28 @@ async function showRanking() {
     document.getElementById("result").style.display = "none";
     document.getElementById("ranking").style.display = "block";
     document.getElementById("rankTitle").innerText = `世界番付（${currentMode === "infinite" ? "無限" : currentMode + "秒"}）`;
-    
     const listArea = document.getElementById("rankList");
     listArea.innerHTML = "<div style='font-size:20px;'>番付を取得中...</div>";
-
     try {
         const response = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await response.json();
         listArea.innerHTML = data.length ? 
             data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") :
             "<p>まだこのモードの番付がありません。</p>";
-    } catch (e) {
-        listArea.innerHTML = "番付の取得に失敗しました。";
-    }
+    } catch (e) { listArea.innerHTML = "番付の取得に失敗しました。"; }
 }
 
 async function saveRank() {
     const name = document.getElementById("nameInput").value || "名無し";
     const btn = document.querySelector("#rankingInputArea button");
-    btn.disabled = true;
-    btn.innerText = "刻み中...";
-
+    btn.disabled = true; btn.innerText = "刻み中...";
     try {
-        await fetch(GAS_URL, {
-            method: "POST",
-            body: JSON.stringify({ name: name, score: score, mode: currentMode })
-        });
+        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ name: name, score: score, mode: currentMode }) });
         showRanking();
-    } catch (e) {
-        alert("保存に失敗しました。");
-        btn.disabled = false;
-        btn.innerText = "番付に刻む";
-    }
+    } catch (e) { alert("保存に失敗しました。"); btn.disabled = false; btn.innerText = "番付に刻む"; }
 }
 
-function openRankingMode(mode) {
-    currentMode = mode;
-    showRanking();
-}
+function openRankingMode(mode) { currentMode = mode; showRanking(); }
 
 function startGame(sec){ 
     isInfinite=false; gameTime = sec; currentMode = String(sec); startCommon(); 
@@ -193,12 +177,10 @@ function startGame(sec){
     }, 1000);
 }
 
-function startInfinite(){ 
-    isInfinite=true; gameTime = 0; currentMode = "infinite"; startCommon(); 
-}
+function startInfinite(){ isInfinite=true; gameTime = 0; currentMode = "infinite"; startCommon(); }
 
 function startCommon(){
- score=0; combo=0; gauge=0; fever=false;
+ score=0; combo=0; gauge=0; fever=false; laneLocked = [false, false, false];
  notes.forEach(n => n.el.remove()); notes = [];
  document.getElementById("score").innerText = "0";
  document.getElementById("combo").innerText = "0";
@@ -220,7 +202,6 @@ function spawn(){
  container.style.left = "1200px"; container.style.top = laneY[lane] + "px";
  document.getElementById("game").appendChild(container);
  notes.push({el:container, x:1200, lane:lane});
- 
  let interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
  setTimeout(spawn, interval);
 }
@@ -246,9 +227,7 @@ function updateUI() {
     let state = "kone"; let emoji = "🥣";
     if (fever) {
         state = "goku"; 
-        if (combo > 100) emoji = "✨😋✨"; 
-        else if (combo > 50) emoji = "🍜💨"; 
-        else emoji = "🥢😋"; 
+        if (combo > 100) emoji = "✨😋✨"; else if (combo > 50) emoji = "🍜💨"; else emoji = "🥢😋"; 
         gauge -= 0.5; 
         if (gauge <= 0) {
             gauge = 0; fever = false;
@@ -262,35 +241,38 @@ function updateUI() {
         if (gauge > 0) gauge -= 0.1;
     }
     if (lastAnimState !== (state + emoji)) {
-        worker.innerText = emoji;
-        worker.className = state;
+        worker.innerText = emoji; worker.className = state;
         lastAnimState = state + emoji;
     }
     document.getElementById("gaugeFill").style.width = gauge + "%";
 }
 
-function missEffect() {
-    combo = 0; gauge = 0;
-    document.getElementById("combo").innerText = 0;
-    showJudge("MISS");
-}
+function missEffect() { combo = 0; gauge = 0; document.getElementById("combo").innerText = 0; showJudge("MISS"); }
 
+// ヒット判定関数
 function hit(l){
+ // ロックされていたら判定しない
+ if(laneLocked[l]) return;
+
  const hitBtn = document.getElementById(`hit-${l}`);
- hitBtn.classList.add("active"); setTimeout(()=>hitBtn.classList.remove("active"), 100);
+ hitBtn.classList.add("active");
+
  let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
- if(tIdx === -1) return;
+ 
+ // 重要：叩いたら、結果に関わらずそのレーンをロックする
+ // これにより「押しっぱなし」が効かなくなる
+ laneLocked[l] = true;
+
+ if(tIdx === -1) return; // 空振り
+
  let t = notes[tIdx];
  let diff = Math.abs(t.x - HIT_X);
- 
  let res;
  combo++;
 
- if (diff < 40) { 
+ if (diff < 45) { 
      res = "PERFECT";
-     let basePoint = 500;
-     let comboBonus = combo * 10;
-     score += (basePoint + comboBonus) * (fever ? 2 : 1);
+     score += (500 + combo * 10) * (fever ? 2 : 1);
      if (!fever) {
         gauge += 10;
         if (gauge >= 100) {
@@ -300,11 +282,8 @@ function hit(l){
         }
      }
  } else {
-     res = "GREAT";
-     score += 50; 
-     gauge = Math.max(0, gauge - 15);
+     res = "GREAT"; score += 50; gauge = Math.max(0, gauge - 15);
  }
- 
  document.getElementById("score").innerText = score;
  document.getElementById("combo").innerText = combo;
  showJudge(res);
@@ -313,16 +292,9 @@ function hit(l){
 
 function showJudge(res){
  const j = document.getElementById("judge");
- if(res === "PERFECT") {
-    j.innerText = "極上";
-    j.style.color = "gold";
- } else if(res === "GREAT") {
-    j.innerText = "良打(減点)";
-    j.style.color = "#44aaff"; 
- } else {
-    j.innerText = "茹で過ぎ";
-    j.style.color = "#ff4444";
- }
+ if(res === "PERFECT") { j.innerText = "極上"; j.style.color = "gold"; }
+ else if(res === "GREAT") { j.innerText = "良打"; j.style.color = "#44aaff"; }
+ else { j.innerText = "MISS"; j.style.color = "#ff4444"; }
  j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
 }
 
@@ -331,7 +303,6 @@ function getRank(s) {
     if (currentMode === "30") { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
     else if (currentMode === "60") { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
     else { thresholds = [500000, 250000, 100000, 50000, 20000, 5000]; }
-
     if (s >= thresholds[0]) return "越前極";
     if (s >= thresholds[1]) return "伝説級";
     if (s >= thresholds[2]) return "元帥";
@@ -352,25 +323,26 @@ function endGame(){
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
 
-// 【不正防止】キー入力イベントを強化
+// 【キーボード】押した瞬間に判定、離した瞬間にロック解除
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
- 
- // 押しっぱなしの場合は処理しない
- if(keyState[key]) return;
-
- if(key === "a") { keyState.a = true; hit(0); }
- if(key === "s") { keyState.s = true; hit(1); }
- if(key === "l") { keyState.l = true; hit(2); }
+ if(key === "a") hit(0); 
+ if(key === "s") hit(1); 
+ if(key === "l") hit(2);
 });
 
-// キーを離した時に状態を解除
 document.addEventListener("keyup", e => {
  const key = e.key.toLowerCase();
- if(keyState.hasOwnProperty(key)) {
-    keyState[key] = false;
- }
+ if(key === "a") { laneLocked[0] = false; document.getElementById("hit-0").classList.remove("active"); }
+ if(key === "s") { laneLocked[1] = false; document.getElementById("hit-1").classList.remove("active"); }
+ if(key === "l") { laneLocked[2] = false; document.getElementById("hit-2").classList.remove("active"); }
+});
+
+// 【タッチ/マウス】離した瞬間にロック解除
+window.addEventListener("pointerup", () => {
+  laneLocked = [false, false, false];
+  document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
 });
 </script>
 </body>
