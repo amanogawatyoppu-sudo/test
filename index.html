@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 全モード番付対応版</title>
+<title>無限そば道 - 真・越前極（不正防止版）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -116,6 +116,10 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB
 let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
 let currentMode = "30"; 
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
+
+// 【不正防止】キーの押しっぱなし状態を管理
+let keyState = { a: false, s: false, l: false };
+
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
@@ -172,7 +176,6 @@ async function saveRank() {
     }
 }
 
-// 追加した関数
 function openRankingMode(mode) {
     currentMode = mode;
     showRanking();
@@ -349,12 +352,25 @@ function endGame(){
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
 
+// 【不正防止】キー入力イベントを強化
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
- if(key === "a") hit(0); 
- if(key === "s") hit(1); 
- if(key === "l") hit(2);
+ 
+ // 押しっぱなしの場合は処理しない
+ if(keyState[key]) return;
+
+ if(key === "a") { keyState.a = true; hit(0); }
+ if(key === "s") { keyState.s = true; hit(1); }
+ if(key === "l") { keyState.l = true; hit(2); }
+});
+
+// キーを離した時に状態を解除
+document.addEventListener("keyup", e => {
+ const key = e.key.toLowerCase();
+ if(keyState.hasOwnProperty(key)) {
+    keyState[key] = false;
+ }
 });
 </script>
 </body>
