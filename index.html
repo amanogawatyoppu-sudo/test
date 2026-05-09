@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 完・越前極（鉄壁ガード版）</title>
+<title>無限そば道 バグ修正版</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -75,9 +75,9 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <div id="lane2" class="lane"></div>
   <div id="lane3" class="lane"></div>
  </div>
- <div id="hit-0" class="hit red" onpointerdown="hit(0)">A</div>
- <div id="hit-1" class="hit blue" onpointerdown="hit(1)">S</div>
- <div id="hit-2" class="hit green" onpointerdown="hit(2)">L</div>
+ <div id="hit-0" class="hit red">A</div>
+ <div id="hit-1" class="hit blue">S</div>
+ <div id="hit-2" class="hit green">L</div>
  <div id="judge"></div>
 </div>
 
@@ -113,11 +113,12 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB56tjRCP1VVk0G4Dy5IhvEsu6eXDks16_4ZbwXOrx1uk/exec";
 
-let notes=[], score=0, combo=0, running=false, isInfinite=false, gameTime=0;
+let notes=[], score=0, combo=0, running=false, isInfinite=false;
 let currentMode = "30"; 
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 
-// 【不正防止】レーンごとのロック状態（trueなら次のノーツを叩けない）
+// 【不正防止】現在押されているキーを追跡
+let activeKeys = new Set();
 let laneLocked = [false, false, false];
 
 const HIT_X = 85; 
@@ -166,7 +167,7 @@ async function saveRank() {
 function openRankingMode(mode) { currentMode = mode; showRanking(); }
 
 function startGame(sec){ 
-    isInfinite=false; gameTime = sec; currentMode = String(sec); startCommon(); 
+    isInfinite=false; currentMode = String(sec); startCommon(); 
     document.getElementById("timeDisplay").style.display = "inline";
     let timeLeft = sec;
     document.getElementById("timeLeft").innerText = timeLeft;
@@ -177,10 +178,10 @@ function startGame(sec){
     }, 1000);
 }
 
-function startInfinite(){ isInfinite=true; gameTime = 0; currentMode = "infinite"; startCommon(); }
+function startInfinite(){ isInfinite=true; currentMode = "infinite"; startCommon(); }
 
 function startCommon(){
- score=0; combo=0; gauge=0; fever=false; laneLocked = [false, false, false];
+ score=0; combo=0; gauge=0; fever=false; laneLocked = [false, false, false]; activeKeys.clear();
  notes.forEach(n => n.el.remove()); notes = [];
  document.getElementById("score").innerText = "0";
  document.getElementById("combo").innerText = "0";
@@ -249,21 +250,22 @@ function updateUI() {
 
 function missEffect() { combo = 0; gauge = 0; document.getElementById("combo").innerText = 0; showJudge("MISS"); }
 
-// ヒット判定関数
 function hit(l){
- // ロックされていたら判定しない
+ // ロック中なら無視
  if(laneLocked[l]) return;
+ 
+ // 【全押し対策】現在押されているキーが2つ以上なら、どのレーンの判定もしない
+ if(activeKeys.size > 1) {
+    console.log("不正検知：複数押し");
+    return;
+ }
 
  const hitBtn = document.getElementById(`hit-${l}`);
  hitBtn.classList.add("active");
-
- let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
- 
- // 重要：叩いたら、結果に関わらずそのレーンをロックする
- // これにより「押しっぱなし」が効かなくなる
  laneLocked[l] = true;
 
- if(tIdx === -1) return; // 空振り
+ let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
+ if(tIdx === -1) return;
 
  let t = notes[tIdx];
  let diff = Math.abs(t.x - HIT_X);
@@ -275,15 +277,10 @@ function hit(l){
      score += (500 + combo * 10) * (fever ? 2 : 1);
      if (!fever) {
         gauge += 10;
-        if (gauge >= 100) {
-            gauge = 100; fever = true;
-            document.getElementById("gaugeWrapper").classList.add("fever");
-            document.getElementById("gaugeText").innerText = "実食タイム（得点2倍）";
-        }
+        if (gauge >= 100) { gauge = 100; fever = true; document.getElementById("gaugeWrapper").classList.add("fever"); }
      }
- } else {
-     res = "GREAT"; score += 50; gauge = Math.max(0, gauge - 15);
- }
+ } else { res = "GREAT"; score += 50; gauge = Math.max(0, gauge - 15); }
+ 
  document.getElementById("score").innerText = score;
  document.getElementById("combo").innerText = combo;
  showJudge(res);
@@ -323,10 +320,16 @@ function endGame(){
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
 
-// 【キーボード】押した瞬間に判定、離した瞬間にロック解除
+// 【キーボード操作】
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
+ if(!["a", "s", "l"].includes(key)) return;
+ 
+ // 押しっぱなし防止
+ if(activeKeys.has(key)) return;
+ activeKeys.add(key);
+
  if(key === "a") hit(0); 
  if(key === "s") hit(1); 
  if(key === "l") hit(2);
@@ -334,14 +337,25 @@ document.addEventListener("keydown", e => {
 
 document.addEventListener("keyup", e => {
  const key = e.key.toLowerCase();
+ activeKeys.delete(key);
  if(key === "a") { laneLocked[0] = false; document.getElementById("hit-0").classList.remove("active"); }
  if(key === "s") { laneLocked[1] = false; document.getElementById("hit-1").classList.remove("active"); }
  if(key === "l") { laneLocked[2] = false; document.getElementById("hit-2").classList.remove("active"); }
 });
 
-// 【タッチ/マウス】離した瞬間にロック解除
+// 【マウス・タッチ操作】
+// pointerdownイベントを個別ボタンに設定する代わりに、ここで一括管理するとより正確です
+document.querySelectorAll(".hit").forEach((el, index) => {
+    el.addEventListener("pointerdown", (e) => {
+        if(!running) return;
+        activeKeys.add("p" + index); // ポインター用の仮想キー
+        hit(index);
+    });
+});
+
 window.addEventListener("pointerup", () => {
   laneLocked = [false, false, false];
+  activeKeys.clear();
   document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
 });
 </script>
