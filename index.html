@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 バグ修正版</title>
+<title>無限そば道 バグ修正・音追加</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -116,10 +116,20 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB
 let notes=[], score=0, combo=0, running=false, isInfinite=false;
 let currentMode = "30"; 
 let gauge = 0, fever = false, lastAnimState = "", timerInterval;
-
-// 【不正防止】現在押されているキーを追跡
 let activeKeys = new Set();
 let laneLocked = [false, false, false];
+
+// 【効果音の準備】
+const sePerfect = new Audio('perfect.mp3');
+const seGreat = new Audio('great.mp3');
+const seMiss = new Audio('miss.mp3');
+
+// SE再生用関数（連打対応）
+function playSE(audio) {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(e => console.log("音再生エラー:", e));
+}
 
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
@@ -248,17 +258,17 @@ function updateUI() {
     document.getElementById("gaugeFill").style.width = gauge + "%";
 }
 
-function missEffect() { combo = 0; gauge = 0; document.getElementById("combo").innerText = 0; showJudge("MISS"); }
+// 茹で過ぎ（MISS）
+function missEffect() { 
+    combo = 0; gauge = 0; 
+    document.getElementById("combo").innerText = 0; 
+    showJudge("MISS"); 
+    playSE(seMiss); // 音追加
+}
 
 function hit(l){
- // ロック中なら無視
  if(laneLocked[l]) return;
- 
- // 【全押し対策】現在押されているキーが2つ以上なら、どのレーンの判定もしない
- if(activeKeys.size > 1) {
-    console.log("不正検知：複数押し");
-    return;
- }
+ if(activeKeys.size > 1) return;
 
  const hitBtn = document.getElementById(`hit-${l}`);
  hitBtn.classList.add("active");
@@ -274,12 +284,17 @@ function hit(l){
 
  if (diff < 45) { 
      res = "PERFECT";
+     playSE(sePerfect); // 音追加
      score += (500 + combo * 10) * (fever ? 2 : 1);
      if (!fever) {
         gauge += 10;
         if (gauge >= 100) { gauge = 100; fever = true; document.getElementById("gaugeWrapper").classList.add("fever"); }
      }
- } else { res = "GREAT"; score += 50; gauge = Math.max(0, gauge - 15); }
+ } else { 
+     res = "GREAT"; 
+     playSE(seGreat); // 音追加
+     score += 50; gauge = Math.max(0, gauge - 15); 
+ }
  
  document.getElementById("score").innerText = score;
  document.getElementById("combo").innerText = combo;
@@ -291,7 +306,7 @@ function showJudge(res){
  const j = document.getElementById("judge");
  if(res === "PERFECT") { j.innerText = "極上"; j.style.color = "gold"; }
  else if(res === "GREAT") { j.innerText = "良打"; j.style.color = "#44aaff"; }
- else { j.innerText = "MISS"; j.style.color = "#ff4444"; }
+ else { j.innerText = "茹で過ぎ"; j.style.color = "#ff4444"; }
  j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
 }
 
@@ -320,19 +335,13 @@ function endGame(){
  document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
 
-// 【キーボード操作】
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
  if(!["a", "s", "l"].includes(key)) return;
- 
- // 押しっぱなし防止
  if(activeKeys.has(key)) return;
  activeKeys.add(key);
-
- if(key === "a") hit(0); 
- if(key === "s") hit(1); 
- if(key === "l") hit(2);
+ if(key === "a") hit(0); if(key === "s") hit(1); if(key === "l") hit(2);
 });
 
 document.addEventListener("keyup", e => {
@@ -343,12 +352,10 @@ document.addEventListener("keyup", e => {
  if(key === "l") { laneLocked[2] = false; document.getElementById("hit-2").classList.remove("active"); }
 });
 
-// 【マウス・タッチ操作】
-// pointerdownイベントを個別ボタンに設定する代わりに、ここで一括管理するとより正確です
 document.querySelectorAll(".hit").forEach((el, index) => {
     el.addEventListener("pointerdown", (e) => {
         if(!running) return;
-        activeKeys.add("p" + index); // ポインター用の仮想キー
+        activeKeys.add("p" + index);
         hit(index);
     });
 });
