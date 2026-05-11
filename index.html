@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道</title>
+<title>無限そば道 - 完結編・越前極（唯一無二の名簿版）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -33,16 +33,17 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 @keyframes feverGlow { 0% { box-shadow: 0 0 10px gold; } 100% { box-shadow: 0 0 30px gold; } }
 #workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
-@keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .nobashi { animation: nobashiAnim 0.4s infinite linear; }
-@keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
 .kiri { animation: kiriAnim 0.1s infinite alternate; }
-@keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
 .goku { animation: gokuAnim 0.05s infinite; filter: drop-shadow(0 0 20px gold); }
+@keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
+@keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
 @keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
 #result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto;}
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
+#nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
 </style>
 </head>
 
@@ -60,7 +61,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('60')">60秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('infinite')">無限番付</button>
  </div>
-
  <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
@@ -82,13 +82,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="bottomArea">
-    <div id="gaugeWrapper">
-        <div id="gaugeFill"></div>
-        <div id="gaugeText">茹で上がりゲージ</div>
-    </div>
-    <div id="workerArea">
-        <div id="workerEmoji">🥣</div>
-    </div>
+    <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
+    <div id="workerArea"><div id="workerEmoji">🥣</div></div>
 </div>
 
 <div id="result">
@@ -97,7 +92,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <div id="rankDisplay"></div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
-    番付名：<input id="nameInput" maxlength="8" placeholder="名無し" style="font-size:20px; text-align:center;"><br><br>
+    番付名：<input id="nameInput" maxlength="8" placeholder="職人の名"><br><br>
     <button class="menuBtn" onclick="saveRank()">番付に刻む</button>
  </div>
  <button class="menuBtn" onclick="location.reload()">タイトルへ</button>
@@ -105,231 +100,188 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 
 <div id="ranking">
  <h1 id="rankTitle">世界番付</h1>
- <div id="rankList"></div>
- <br>
+ <div id="rankList"></div><br>
  <button class="menuBtn" onclick="location.reload()">戻る</button>
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzwMTX2Py87laws-YS4x7pB56tjRCP1VVk0G4Dy5IhvEsu6eXDks16_4ZbwXOrx1uk/exec";
-
-let notes=[], score=0, combo=0, running=false, isInfinite=false;
-let currentMode = "30"; 
-let gauge = 0, fever = false, lastAnimState = "", timerInterval;
-let activeKeys = new Set();
-let laneLocked = [false, false, false];
-
-// ミス（良打または見逃し）があったかをカウント
-let totalMissCount = 0;
-
-const sePerfect = new Audio('perfect.mp3');
-const seGreat = new Audio('great.mp3');
-const seMiss = new Audio('miss.mp3');
-
-function playSE(audio) {
-    audio.pause(); audio.currentTime = 0;
-    audio.play().catch(e => {});
-}
-
+// --- 基本設定 ---
+const GAS_URL = "ここにデプロイした最新のURLを貼り付けてください";
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
-
 const sobaTrivia = [
-    "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことからその名が広まったと言われているぞ。",
-    "福井では、冬でも冷たいおろしそばを食べるのが「通」のスタイルだ。",
-    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。",
-    "「おろしそば」は、実は健康食。大根の酵素が消化を助けてくれるんだぞ。",
-    "福井県民は、年越しそばももちろん「おろしそば」だ。"
+    "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことから広まったと言われている。",
+    "福井では、冬でも冷たいおろしそばを食べるのが「通」だ。",
+    "大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
+    "おろしそばは、大根の酵素が消化を助ける健康食だ。",
+    "福井県民は、年越しそばも「おろしそば」が定番だ。"
 ];
 
-async function showRanking() {
-    document.getElementById("titleScreen").style.display = "none";
-    document.getElementById("result").style.display = "none";
-    document.getElementById("ranking").style.display = "block";
-    const listArea = document.getElementById("rankList");
-    listArea.innerHTML = "取得中...";
-    try {
-        const response = await fetch(`${GAS_URL}?mode=${currentMode}`);
-        const data = await response.json();
-        listArea.innerHTML = data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("");
-    } catch (e) { listArea.innerHTML = "番付の取得に失敗しました。"; }
-}
+let notes=[], score=0, combo=0, running=false, isInfinite=false, currentMode="30";
+let gauge=0, fever=false, timerInterval, totalMissCount=0;
+let activeKeys = new Set();
+let laneLocked = [false, false, false];
 
-async function saveRank() {
-    const name = document.getElementById("nameInput").value || "名無し";
-    const btn = document.querySelector("#rankingInputArea button");
-    btn.disabled = true; btn.innerText = "記録中...";
-    try {
-        await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ name: name, score: score, mode: currentMode }) });
-        showRanking();
-    } catch (e) { alert("保存失敗"); btn.disabled = false; }
-}
+// --- 音響設定 ---
+const sePerfect = new Audio('perfect.mp3');
+const seGreat = new Audio('great.mp3');
+const seMiss = new Audio('miss.mp3');
+function playSE(audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); }
 
-function openRankingMode(mode) { currentMode = mode; showRanking(); }
-
-function startGame(sec){ 
-    isInfinite=false; currentMode = String(sec); startCommon(); 
-    document.getElementById("timeDisplay").style.display = "inline";
-    let timeLeft = sec;
+// --- ゲーム制御 ---
+function startGame(sec){ isInfinite=false; currentMode=String(sec); startCommon(); setupTimer(sec); }
+function startInfinite(){ isInfinite=true; currentMode="infinite"; startCommon(); }
+function setupTimer(sec){
+    let timeLeft = sec; document.getElementById("timeDisplay").style.display="inline";
     document.getElementById("timeLeft").innerText = timeLeft;
     timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById("timeLeft").innerText = timeLeft;
+        timeLeft--; document.getElementById("timeLeft").innerText = timeLeft;
         if(timeLeft <= 0) { clearInterval(timerInterval); endGame(); }
     }, 1000);
 }
 
-function startInfinite(){ isInfinite=true; currentMode = "infinite"; startCommon(); }
-
 function startCommon(){
- score=0; combo=0; gauge=0; fever=false; totalMissCount = 0;
- laneLocked = [false, false, false]; activeKeys.clear();
- notes.forEach(n => n.el.remove()); notes = [];
- document.getElementById("score").innerText = "0";
- document.getElementById("combo").innerText = "0";
- document.getElementById("titleScreen").style.display="none";
- document.getElementById("game").style.display="block";
- document.getElementById("bottomArea").style.display="flex";
- running=true; loop(); spawn();
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
+    activeKeys.clear(); laneLocked=[false,false,false];
+    notes.forEach(n => n.el.remove()); notes = [];
+    document.getElementById("titleScreen").style.display="none";
+    document.getElementById("game").style.display="block";
+    document.getElementById("bottomArea").style.display="flex";
+    running=true; loop(); spawn();
 }
 
 function spawn(){
- if(!running) return;
- let lane = Math.floor(Math.random()*3);
- let container = document.createElement("div");
- container.className = "note-container";
- let soba = document.createElement("img");
- soba.src = noteImages[lane];
- soba.className = "soba-img";
- container.appendChild(soba);
- container.style.left = "1200px"; container.style.top = laneY[lane] + "px";
- document.getElementById("game").appendChild(container);
- notes.push({el:container, x:1200, lane:lane});
- let interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
- setTimeout(spawn, interval);
+    if(!running) return;
+    let lane = Math.floor(Math.random()*3);
+    let container = document.createElement("div");
+    container.className = "note-container";
+    let img = document.createElement("img"); img.src = noteImages[lane]; img.className = "soba-img";
+    container.appendChild(img);
+    container.style.left = "1200px"; container.style.top = laneY[lane]+"px";
+    document.getElementById("game").appendChild(container);
+    notes.push({el:container, x:1200, lane:lane});
+    setTimeout(spawn, isInfinite ? Math.max(160, 450 - combo*1.5) : 320);
 }
 
 function loop(){
- if(!running) return;
- let speed = isInfinite ? 6 + Math.min(10, combo * 0.08) : 12;
- for(let i=notes.length-1; i>=0; i--){
-  let n = notes[i]; n.x -= speed;
-  n.el.style.left = n.x + "px";
-  if(n.x < -150){
-   n.el.remove(); notes.splice(i, 1);
-   missEffect();
-   if(isInfinite) { endGame(); return; }
-  }
- }
- updateUI();
- requestAnimationFrame(loop);
+    if(!running) return;
+    let speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
+    for(let i=notes.length-1; i>=0; i--){
+        let n = notes[i]; n.x -= speed; n.el.style.left = n.x + "px";
+        if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite) { endGame(); return; } }
+    }
+    updateUI(); requestAnimationFrame(loop);
 }
 
 function updateUI() {
     const worker = document.getElementById("workerEmoji");
-    let state = "kone"; let emoji = "🥣";
-    if (fever) {
-        state = "goku"; emoji = combo > 50 ? "🍜💨" : "🥢😋";
-        gauge -= 0.5; if (gauge <= 0) { gauge = 0; fever = false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
+    let state="kone", emoji="🥣";
+    if(fever){
+        state="goku"; emoji=combo>50?"🍜💨":"🥢😋";
+        gauge-=0.5; if(gauge<=0){ gauge=0; fever=false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
     } else {
-        if (combo > 50) { state = "kiri"; emoji = "🔪"; } else if (combo > 20) { state = "nobashi"; emoji = "🥢"; } 
-        if (gauge > 0) gauge -= 0.1;
+        if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
+        if(gauge>0) gauge-=0.1;
     }
-    worker.innerText = emoji; worker.className = state;
-    document.getElementById("gaugeFill").style.width = gauge + "%";
-}
-
-function missEffect() { 
-    combo = 0; gauge = 0; totalMissCount++; // ミスを記録
-    document.getElementById("combo").innerText = 0; 
-    showJudge("MISS"); playSE(seMiss);
+    worker.innerText=emoji; worker.className=state;
+    document.getElementById("gaugeFill").style.width = gauge+"%";
 }
 
 function hit(l){
- if(laneLocked[l] || activeKeys.size > 1) return;
- const hitBtn = document.getElementById(`hit-${l}`);
- hitBtn.classList.add("active"); laneLocked[l] = true;
-
- let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
- if(tIdx === -1) return;
-
- let t = notes[tIdx];
- let diff = Math.abs(t.x - HIT_X);
- let res;
- combo++;
-
- if (diff < 45) { 
-     res = "PERFECT"; playSE(sePerfect);
-     score += (500 + combo * 10) * (fever ? 2 : 1);
-     if (!fever) { gauge += 10; if (gauge >= 100) { gauge = 100; fever = true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
- } else { 
-     res = "GREAT"; playSE(seGreat);
-     totalMissCount++; // 良打はミス扱い（極上のみが正解）
-     score += 50; gauge = Math.max(0, gauge - 15); 
- }
- 
- document.getElementById("score").innerText = score;
- document.getElementById("combo").innerText = combo;
- showJudge(res);
- t.el.remove(); notes.splice(tIdx, 1);
+    if(laneLocked[l] || activeKeys.size > 1) return; // 全押し/長押しガード
+    laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
+    
+    let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
+    if(tIdx === -1) return;
+    
+    let t = notes[tIdx], diff = Math.abs(t.x - HIT_X), res;
+    combo++;
+    if(diff < 45){
+        res="PERFECT"; playSE(sePerfect);
+        score += (500 + combo*10) * (fever?2:1);
+        if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+    } else {
+        res="GREAT"; playSE(seGreat); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
+    }
+    document.getElementById("score").innerText=score; document.getElementById("combo").innerText=combo;
+    showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
 }
+
+function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE(seMiss); }
 
 function showJudge(res){
- const j = document.getElementById("judge");
- j.innerText = res === "PERFECT" ? "極上" : (res === "GREAT" ? "良打" : "茹で過ぎ");
- j.style.color = res === "PERFECT" ? "gold" : (res === "GREAT" ? "#44aaff" : "#ff4444");
- j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
-}
-
-// 【称号判定の修正】
-function getRank(s) {
-    // 30秒と60秒モードでは、ミス（良打含む）が1回でもあると越前極になれない
-    if (currentMode === "30" || currentMode === "60") {
-        if (totalMissCount === 0 && combo > 0) return "越前極";
-        if (s >= 40000) return "伝説級";
-        if (s >= 20000) return "職人";
-        return "修行中";
-    }
-    // 無限モードは従来通りのスコア判定
-    if (s >= 500000) return "越前極";
-    if (s >= 200000) return "伝説級";
-    return "修行中";
+    const j = document.getElementById("judge");
+    j.innerText = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
+    j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
+    j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
 }
 
 function endGame(){
- if(!running) return;
- running=false; clearInterval(timerInterval);
- document.getElementById("game").style.display="none";
- document.getElementById("bottomArea").style.display="none";
- document.getElementById("result").style.display="block";
- document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
- document.getElementById("rankDisplay").innerText = `称号: ${getRank(score)}`;
- document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
+    running=false; clearInterval(timerInterval);
+    document.getElementById("game").style.display="none";
+    document.getElementById("bottomArea").style.display="none";
+    document.getElementById("result").style.display="block";
+    document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
+    let rank = "修行中";
+    if(currentMode==="30"||currentMode==="60"){ if(totalMissCount===0 && combo>0) rank="越前極"; else if(score>40000) rank="伝説級"; }
+    else { if(score>=500000) rank="越前極"; else if(score>=200000) rank="伝説級"; }
+    document.getElementById("rankDisplay").innerText = `称号: ${rank}`;
+    document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 }
 
+// --- 番付システム (重複禁止) ---
+async function saveRank() {
+    const name = document.getElementById("nameInput").value.trim();
+    if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
+    const btn = document.querySelector("#rankingInputArea button");
+    btn.disabled=true; btn.innerText="名簿を確認中...";
+    try {
+        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
+        const ranking = await res.json();
+        if(ranking.some(e => e.name === name)){
+            alert(`「${name}」は既に番付におる。別の名を名乗るがよい。`);
+            btn.disabled=false; btn.innerText="番付に刻む"; return;
+        }
+        btn.innerText="刻み中...";
+        await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name:name, score:score, mode:currentMode}) });
+        showRanking();
+    } catch(e){ alert("通信失敗"); btn.disabled=false; btn.innerText="番付に刻む"; }
+}
+
+async function showRanking(){
+    document.getElementById("titleScreen").style.display="none"; document.getElementById("result").style.display="none";
+    document.getElementById("ranking").style.display="block";
+    const list = document.getElementById("rankList"); list.innerHTML="番付を取得中...";
+    try {
+        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
+        const data = await res.json();
+        list.innerHTML = data.map((d,i)=>`<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("");
+    } catch(e){ list.innerHTML="取得失敗"; }
+}
+
+function openRankingMode(m){ currentMode=m; showRanking(); }
+
+// --- 入力イベント ---
 document.addEventListener("keydown", e => {
- if(!running) return;
- const key = e.key.toLowerCase();
- if(!["a", "s", "l"].includes(key) || activeKeys.has(key)) return;
- activeKeys.add(key);
- if(key === "a") hit(0); if(key === "s") hit(1); if(key === "l") hit(2);
+    if(!running) return;
+    const k = e.key.toLowerCase(); if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
+    activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
-
 document.addEventListener("keyup", e => {
- const key = e.key.toLowerCase(); activeKeys.delete(key);
- if(["a","s","l"].includes(key)){
-    let idx = key==="a"?0 : key==="s"?1 : 2;
-    laneLocked[idx] = false;
-    document.getElementById(`hit-${idx}`).classList.remove("active");
- }
+    const k = e.key.toLowerCase(); activeKeys.delete(k);
+    if(["a","s","l"].includes(k)){
+        let i = k==="a"?0:k==="s"?1:2; laneLocked[i]=false;
+        document.getElementById(`hit-${i}`).classList.remove("active");
+    }
 });
-
-document.querySelectorAll(".hit").forEach((el, index) => {
-    el.addEventListener("pointerdown", () => { if(running) { activeKeys.add("p"+index); hit(index); } });
+document.querySelectorAll(".hit").forEach((el, i) => {
+    el.addEventListener("pointerdown", () => { if(running) { activeKeys.add("p"+i); hit(i); } });
 });
-
-window.addEventListener("pointerup", () => { laneLocked = [false,false,false]; activeKeys.clear(); document.querySelectorAll(".hit").forEach(el => el.classList.remove("active")); });
+window.addEventListener("pointerup", () => {
+    laneLocked=[false,false,false]; activeKeys.clear();
+    document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
+});
 </script>
 </body>
 </html>
