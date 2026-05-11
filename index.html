@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 バグ修正・音追加</title>
+<title>無限そば道</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -119,16 +119,16 @@ let gauge = 0, fever = false, lastAnimState = "", timerInterval;
 let activeKeys = new Set();
 let laneLocked = [false, false, false];
 
-// 【効果音の準備】
+// ミス（良打または見逃し）があったかをカウント
+let totalMissCount = 0;
+
 const sePerfect = new Audio('perfect.mp3');
 const seGreat = new Audio('great.mp3');
 const seMiss = new Audio('miss.mp3');
 
-// SE再生用関数（連打対応）
 function playSE(audio) {
-    audio.pause();
-    audio.currentTime = 0;
-    audio.play().catch(e => console.log("音再生エラー:", e));
+    audio.pause(); audio.currentTime = 0;
+    audio.play().catch(e => {});
 }
 
 const HIT_X = 85; 
@@ -138,40 +138,32 @@ const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
     "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことからその名が広まったと言われているぞ。",
     "福井では、冬でも冷たいおろしそばを食べるのが「通」のスタイルだ。",
-    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
+    "そばのつゆに大根おろしを入れるのではなく、大根のしぼり汁をつゆに混ぜる店もある。",
     "「おろしそば」は、実は健康食。大根の酵素が消化を助けてくれるんだぞ。",
-    "福井県民は、年越しそばももちろん「おろしそば」だ。",
-    "福井のそばは、殻まで一緒に挽き込む「ぐる挽き（全層粉）」が多く、香りが強いのが特徴だ。",
-    "「そばの実」の生産量、福井県は全国でもトップクラスの品質を誇っているぞ。",
-    "おろしそばにのっている「かつお節」は、あえて厚めに削っている店も多い。食感が大事なんだ。",
-    "福井では、そばと一緒に「ソースカツ丼」を食べるのが最強のセットメニューだ。",
-    "そばを打つ時の「水」も重要。福井の美味しい地下水が、そばの味を引き立てているんだな。"
+    "福井県民は、年越しそばももちろん「おろしそば」だ。"
 ];
 
 async function showRanking() {
     document.getElementById("titleScreen").style.display = "none";
     document.getElementById("result").style.display = "none";
     document.getElementById("ranking").style.display = "block";
-    document.getElementById("rankTitle").innerText = `世界番付（${currentMode === "infinite" ? "無限" : currentMode + "秒"}）`;
     const listArea = document.getElementById("rankList");
-    listArea.innerHTML = "<div style='font-size:20px;'>番付を取得中...</div>";
+    listArea.innerHTML = "取得中...";
     try {
         const response = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await response.json();
-        listArea.innerHTML = data.length ? 
-            data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("") :
-            "<p>まだこのモードの番付がありません。</p>";
+        listArea.innerHTML = data.map((d, i) => `<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("");
     } catch (e) { listArea.innerHTML = "番付の取得に失敗しました。"; }
 }
 
 async function saveRank() {
     const name = document.getElementById("nameInput").value || "名無し";
     const btn = document.querySelector("#rankingInputArea button");
-    btn.disabled = true; btn.innerText = "刻み中...";
+    btn.disabled = true; btn.innerText = "記録中...";
     try {
         await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ name: name, score: score, mode: currentMode }) });
         showRanking();
-    } catch (e) { alert("保存に失敗しました。"); btn.disabled = false; btn.innerText = "番付に刻む"; }
+    } catch (e) { alert("保存失敗"); btn.disabled = false; }
 }
 
 function openRankingMode(mode) { currentMode = mode; showRanking(); }
@@ -191,7 +183,8 @@ function startGame(sec){
 function startInfinite(){ isInfinite=true; currentMode = "infinite"; startCommon(); }
 
 function startCommon(){
- score=0; combo=0; gauge=0; fever=false; laneLocked = [false, false, false]; activeKeys.clear();
+ score=0; combo=0; gauge=0; fever=false; totalMissCount = 0;
+ laneLocked = [false, false, false]; activeKeys.clear();
  notes.forEach(n => n.el.remove()); notes = [];
  document.getElementById("score").innerText = "0";
  document.getElementById("combo").innerText = "0";
@@ -237,42 +230,26 @@ function updateUI() {
     const worker = document.getElementById("workerEmoji");
     let state = "kone"; let emoji = "🥣";
     if (fever) {
-        state = "goku"; 
-        if (combo > 100) emoji = "✨😋✨"; else if (combo > 50) emoji = "🍜💨"; else emoji = "🥢😋"; 
-        gauge -= 0.5; 
-        if (gauge <= 0) {
-            gauge = 0; fever = false;
-            document.getElementById("gaugeWrapper").classList.remove("fever");
-            document.getElementById("gaugeText").innerText = "茹で上がりゲージ";
-        }
+        state = "goku"; emoji = combo > 50 ? "🍜💨" : "🥢😋";
+        gauge -= 0.5; if (gauge <= 0) { gauge = 0; fever = false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
     } else {
-        if (combo > 50) { state = "kiri"; emoji = "🔪"; } 
-        else if (combo > 20) { state = "nobashi"; emoji = "🥢"; } 
-        else { state = "kone"; emoji = "🥣"; }
+        if (combo > 50) { state = "kiri"; emoji = "🔪"; } else if (combo > 20) { state = "nobashi"; emoji = "🥢"; } 
         if (gauge > 0) gauge -= 0.1;
     }
-    if (lastAnimState !== (state + emoji)) {
-        worker.innerText = emoji; worker.className = state;
-        lastAnimState = state + emoji;
-    }
+    worker.innerText = emoji; worker.className = state;
     document.getElementById("gaugeFill").style.width = gauge + "%";
 }
 
-// 茹で過ぎ（MISS）
 function missEffect() { 
-    combo = 0; gauge = 0; 
+    combo = 0; gauge = 0; totalMissCount++; // ミスを記録
     document.getElementById("combo").innerText = 0; 
-    showJudge("MISS"); 
-    playSE(seMiss); // 音追加
+    showJudge("MISS"); playSE(seMiss);
 }
 
 function hit(l){
- if(laneLocked[l]) return;
- if(activeKeys.size > 1) return;
-
+ if(laneLocked[l] || activeKeys.size > 1) return;
  const hitBtn = document.getElementById(`hit-${l}`);
- hitBtn.classList.add("active");
- laneLocked[l] = true;
+ hitBtn.classList.add("active"); laneLocked[l] = true;
 
  let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
  if(tIdx === -1) return;
@@ -283,16 +260,12 @@ function hit(l){
  combo++;
 
  if (diff < 45) { 
-     res = "PERFECT";
-     playSE(sePerfect); // 音追加
+     res = "PERFECT"; playSE(sePerfect);
      score += (500 + combo * 10) * (fever ? 2 : 1);
-     if (!fever) {
-        gauge += 10;
-        if (gauge >= 100) { gauge = 100; fever = true; document.getElementById("gaugeWrapper").classList.add("fever"); }
-     }
+     if (!fever) { gauge += 10; if (gauge >= 100) { gauge = 100; fever = true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
  } else { 
-     res = "GREAT"; 
-     playSE(seGreat); // 音追加
+     res = "GREAT"; playSE(seGreat);
+     totalMissCount++; // 良打はミス扱い（極上のみが正解）
      score += 50; gauge = Math.max(0, gauge - 15); 
  }
  
@@ -304,23 +277,23 @@ function hit(l){
 
 function showJudge(res){
  const j = document.getElementById("judge");
- if(res === "PERFECT") { j.innerText = "極上"; j.style.color = "gold"; }
- else if(res === "GREAT") { j.innerText = "良打"; j.style.color = "#44aaff"; }
- else { j.innerText = "茹で過ぎ"; j.style.color = "#ff4444"; }
+ j.innerText = res === "PERFECT" ? "極上" : (res === "GREAT" ? "良打" : "茹で過ぎ");
+ j.style.color = res === "PERFECT" ? "gold" : (res === "GREAT" ? "#44aaff" : "#ff4444");
  j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
 }
 
+// 【称号判定の修正】
 function getRank(s) {
-    let thresholds;
-    if (currentMode === "30") { thresholds = [60000, 40000, 25000, 15000, 8000, 3000]; } 
-    else if (currentMode === "60") { thresholds = [150000, 100000, 60000, 35000, 15000, 5000]; } 
-    else { thresholds = [500000, 250000, 100000, 50000, 20000, 5000]; }
-    if (s >= thresholds[0]) return "越前極";
-    if (s >= thresholds[1]) return "伝説級";
-    if (s >= thresholds[2]) return "元帥";
-    if (s >= thresholds[3]) return "賢者";
-    if (s >= thresholds[4]) return "職人";
-    if (s >= thresholds[5]) return "見習い";
+    // 30秒と60秒モードでは、ミス（良打含む）が1回でもあると越前極になれない
+    if (currentMode === "30" || currentMode === "60") {
+        if (totalMissCount === 0 && combo > 0) return "越前極";
+        if (s >= 40000) return "伝説級";
+        if (s >= 20000) return "職人";
+        return "修行中";
+    }
+    // 無限モードは従来通りのスコア判定
+    if (s >= 500000) return "越前極";
+    if (s >= 200000) return "伝説級";
     return "修行中";
 }
 
@@ -330,41 +303,33 @@ function endGame(){
  document.getElementById("game").style.display="none";
  document.getElementById("bottomArea").style.display="none";
  document.getElementById("result").style.display="block";
- document.getElementById("finalScore").innerText = `最終得点: ${score}点 (${currentMode === "infinite" ? "無限" : currentMode + "秒"})`;
+ document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
  document.getElementById("rankDisplay").innerText = `称号: ${getRank(score)}`;
- document.getElementById("triviaArea").innerText = "【越前そば豆知識】\n" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
+ document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random() * sobaTrivia.length)];
 }
 
 document.addEventListener("keydown", e => {
  if(!running) return;
  const key = e.key.toLowerCase();
- if(!["a", "s", "l"].includes(key)) return;
- if(activeKeys.has(key)) return;
+ if(!["a", "s", "l"].includes(key) || activeKeys.has(key)) return;
  activeKeys.add(key);
  if(key === "a") hit(0); if(key === "s") hit(1); if(key === "l") hit(2);
 });
 
 document.addEventListener("keyup", e => {
- const key = e.key.toLowerCase();
- activeKeys.delete(key);
- if(key === "a") { laneLocked[0] = false; document.getElementById("hit-0").classList.remove("active"); }
- if(key === "s") { laneLocked[1] = false; document.getElementById("hit-1").classList.remove("active"); }
- if(key === "l") { laneLocked[2] = false; document.getElementById("hit-2").classList.remove("active"); }
+ const key = e.key.toLowerCase(); activeKeys.delete(key);
+ if(["a","s","l"].includes(key)){
+    let idx = key==="a"?0 : key==="s"?1 : 2;
+    laneLocked[idx] = false;
+    document.getElementById(`hit-${idx}`).classList.remove("active");
+ }
 });
 
 document.querySelectorAll(".hit").forEach((el, index) => {
-    el.addEventListener("pointerdown", (e) => {
-        if(!running) return;
-        activeKeys.add("p" + index);
-        hit(index);
-    });
+    el.addEventListener("pointerdown", () => { if(running) { activeKeys.add("p"+index); hit(index); } });
 });
 
-window.addEventListener("pointerup", () => {
-  laneLocked = [false, false, false];
-  activeKeys.clear();
-  document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
-});
+window.addEventListener("pointerup", () => { laneLocked = [false,false,false]; activeKeys.clear(); document.querySelectorAll(".hit").forEach(el => el.classList.remove("active")); });
 </script>
 </body>
 </html>
