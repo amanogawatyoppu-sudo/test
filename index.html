@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 - 完結編・越前極（唯一無二の名簿版）</title>
+<title>無限そば道 (修正版）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -46,7 +46,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
 </style>
 </head>
-
 <body>
 
 <div id="titleScreen">
@@ -55,13 +54,11 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
  <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
  <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
- 
  <div style="margin-top:10px;">
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('30')">30秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('60')">60秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('infinite')">無限番付</button>
  </div>
- <div style="margin-top:20px; color:gold; font-weight:bold;">操作： A(上) / S(中) / L(下)</div>
 </div>
 
 <div id="game">
@@ -71,13 +68,9 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
  </div>
  <div class="lane-container">
-  <div id="lane1" class="lane"></div>
-  <div id="lane2" class="lane"></div>
-  <div id="lane3" class="lane"></div>
+  <div id="lane1" class="lane"></div><div id="lane2" class="lane"></div><div id="lane3" class="lane"></div>
  </div>
- <div id="hit-0" class="hit red">A</div>
- <div id="hit-1" class="hit blue">S</div>
- <div id="hit-2" class="hit green">L</div>
+ <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
  <div id="judge"></div>
 </div>
 
@@ -105,17 +98,16 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-// --- 基本設定 ---
-const GAS_URL = "ここにデプロイした最新のURLを貼り付けてください";
+// 【重要】ここにあなたのGASのURLを正確に貼り付けてください
+const GAS_URL = "https://script.google.com/macros/s/AKfycbz5Z-cPaAmLU2_9wrMT2ImNU1jN4feGRov_5J-lEPKsVzI9_nVT6QMMJkECeKrRDg/exec";
+
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
-    "越前おろしそばは、昭和天皇が「あの越前のそば…」と仰ったことから広まったと言われている。",
-    "福井では、冬でも冷たいおろしそばを食べるのが「通」だ。",
-    "大根のしぼり汁をつゆに混ぜる店もある。これがまた辛くて旨い！",
-    "おろしそばは、大根の酵素が消化を助ける健康食だ。",
-    "福井県民は、年越しそばも「おろしそば」が定番だ。"
+    "福井県民は、年越しそばも「おろしそば」が定番だ。",
+    "越前おろしそばは、昭和天皇が絶賛されたことで全国的に有名になった。",
+    "大根のしぼり汁をつゆに混ぜるスタイルが福井流だ。"
 ];
 
 let notes=[], score=0, combo=0, running=false, isInfinite=false, currentMode="30";
@@ -123,13 +115,11 @@ let gauge=0, fever=false, timerInterval, totalMissCount=0;
 let activeKeys = new Set();
 let laneLocked = [false, false, false];
 
-// --- 音響設定 ---
 const sePerfect = new Audio('perfect.mp3');
 const seGreat = new Audio('great.mp3');
 const seMiss = new Audio('miss.mp3');
 function playSE(audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); }
 
-// --- ゲーム制御 ---
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startCommon(); setupTimer(sec); }
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startCommon(); }
 function setupTimer(sec){
@@ -189,12 +179,10 @@ function updateUI() {
 }
 
 function hit(l){
-    if(laneLocked[l] || activeKeys.size > 1) return; // 全押し/長押しガード
+    if(laneLocked[l] || activeKeys.size > 1) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
-    
     let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
     if(tIdx === -1) return;
-    
     let t = notes[tIdx], diff = Math.abs(t.x - HIT_X), res;
     combo++;
     if(diff < 45){
@@ -230,12 +218,11 @@ function endGame(){
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 }
 
-// --- 番付システム (重複禁止) ---
 async function saveRank() {
     const name = document.getElementById("nameInput").value.trim();
     if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
     const btn = document.querySelector("#rankingInputArea button");
-    btn.disabled=true; btn.innerText="名簿を確認中...";
+    btn.disabled=true; btn.innerText="確認中...";
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const ranking = await res.json();
@@ -246,11 +233,16 @@ async function saveRank() {
         btn.innerText="刻み中...";
         await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name:name, score:score, mode:currentMode}) });
         showRanking();
-    } catch(e){ alert("通信失敗"); btn.disabled=false; btn.innerText="番付に刻む"; }
+    } catch(e){ 
+        console.error(e);
+        alert("通信失敗。URLが正しいか、GASが「全員」に公開されているか確認してくれ。"); 
+        btn.disabled=false; btn.innerText="番付に刻む"; 
+    }
 }
 
 async function showRanking(){
-    document.getElementById("titleScreen").style.display="none"; document.getElementById("result").style.display="none";
+    document.getElementById("titleScreen").style.display="none";
+    document.getElementById("result").style.display="none";
     document.getElementById("ranking").style.display="block";
     const list = document.getElementById("rankList"); list.innerHTML="番付を取得中...";
     try {
@@ -262,13 +254,14 @@ async function showRanking(){
 
 function openRankingMode(m){ currentMode=m; showRanking(); }
 
-// --- 入力イベント ---
 document.addEventListener("keydown", e => {
-    if(!running) return;
-    const k = e.key.toLowerCase(); if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
+    if(!running || !e.key) return; // e.keyが存在しない場合をガード
+    const k = e.key.toLowerCase(); 
+    if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
     activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
 document.addEventListener("keyup", e => {
+    if(!e.key) return;
     const k = e.key.toLowerCase(); activeKeys.delete(k);
     if(["a","s","l"].includes(k)){
         let i = k==="a"?0:k==="s"?1:2; laneLocked[i]=false;
