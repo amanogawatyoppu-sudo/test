@@ -2,7 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>無限そば道 (修正版）</title>
+<title>無限そば道 - 音ゲー・越前おろしそば職人修業ゲーム</title>
+<meta name="description" content="PCのブラウザで遊べる無料のそば打ち音ゲー「無限そば道」。A、S、Lキーを駆使してノーツを叩き、最高称号『越前極』のハイスコア番付を目指せ！">
+<meta name="keywords" content="無限そば道,音ゲー,ブラウザゲーム,越前そば,無料ゲーム,福井">
+
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -98,7 +101,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-// 【重要】ここにあなたのGASのURLを正確に貼り付けてください
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz5Z-cPaAmLU2_9wrMT2ImNU1jN4feGRov_5J-lEPKsVzI9_nVT6QMMJkECeKrRDg/exec";
 
 const HIT_X = 85; 
@@ -255,7 +257,7 @@ async function showRanking(){
 function openRankingMode(m){ currentMode=m; showRanking(); }
 
 document.addEventListener("keydown", e => {
-    if(!running || !e.key) return; // e.keyが存在しない場合をガード
+    if(!running || !e.key) return; 
     const k = e.key.toLowerCase(); 
     if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
     activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
