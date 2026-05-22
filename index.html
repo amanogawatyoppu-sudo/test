@@ -258,14 +258,15 @@ async function showRanking(){
 
 function openRankingMode(m){ currentMode=m; showRanking(); }
 
+// 💡 バグガードを追加したキーボード処理
 document.addEventListener("keydown", e => {
-    if(!running || !e.key) return; 
+    if(!running || !e || !e.key) return; 
     const k = e.key.toLowerCase(); 
     if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
     activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
 document.addEventListener("keyup", e => {
-    if(!e.key) return;
+    if(!e || !e.key) return;
     const k = e.key.toLowerCase(); activeKeys.delete(k);
     if(["a","s","l"].includes(k)){
         let i = k==="a"?0:k==="s"?1:2; laneLocked[i]=false;
