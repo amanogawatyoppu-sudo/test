@@ -51,7 +51,16 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
-.rank-month-title { font-size: 28px; color: #ffcc00; margin-bottom: 15px; font-family: 'Zen Old Mincho'; }
+
+/* 💡 Wランキング用スタイル */
+.rank-container { display: flex; justify-content: center; gap: 40px; max-width: 1000px; margin: 0 auto; padding: 10px; }
+.rank-column { flex: 1; background: rgba(255,255,255,0.03); border: 2px solid #444; border-radius: 10px; padding: 15px; box-sizing: border-box; }
+.rank-column h2 { font-size: 24px; font-family: 'Zen Old Mincho'; margin-top: 0; padding-bottom: 10px; border-bottom: 1px dashed #666; }
+.rank-column.month h2 { color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.3); }
+.rank-column.rekidai h2 { color: #ff4444; text-shadow: 0 0 10px rgba(255,68,68,0.3); }
+.rank-item { font-size: 22px; margin: 12px 0; text-align: left; padding-left: 20px; display: flex; justify-content: space-between; }
+.rank-item .score-val { color: gold; font-weight: bold; }
+#modeTitleLabel { font-size: 26px; color: white; font-family: 'Zen Old Mincho'; margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -100,9 +109,21 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="ranking">
- <h1 id="rankTitle">月間ランクマ番付</h1>
- <div id="rankMonth" class="rank-month-title"></div>
- <div id="rankList"></div><br>
+ <h1 id="rankTitle">天下御免の二大番付</h1>
+ <div id="modeTitleLabel"></div>
+ 
+ <div class="rank-container">
+    <div class="rank-column month">
+        <h2 id="monthLabelHeader">今月の月間番付</h2>
+        <div id="monthRankList"></div>
+    </div>
+    
+    <div class="rank-column rekidai">
+        <h2>宇宙開闢の歴代番付</h2>
+        <div id="rekidaiRankList"></div>
+    </div>
+ </div>
+ <br>
  <button class="menuBtn" onclick="location.reload()">戻る</button>
 </div>
 
@@ -232,15 +253,13 @@ async function saveRank() {
     const btn = document.querySelector("#rankingInputArea button");
     btn.disabled=true; btn.innerText="確認中...";
     try {
-        // 💡 登録時に重複を避けるために今月のデータをチェック
+        // 重複チェックは今月のデータに対しておこなう
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
-        const ranking = await res.json();
+        const fullData = await res.json();
+        const monthData = fullData.month || [];
         
-        const modeName = currentMode === "infinite" ? "無限" : currentMode + "秒";
-        const checkName = `${name} (${modeName})`;
-        
-        if(ranking.some(e => e.name === checkName)){
-            alert(`「${name}」は今月のこの部門の番付に既に登録されておる。`);
+        if(monthData.some(e => e.name === name)){
+            alert(`「${name}」は今月すでに番付に名を刻んでおる。来月また挑むがよい！`);
             btn.disabled=false; btn.innerText="番付に刻む"; return;
         }
         btn.innerText="刻み中...";
@@ -258,31 +277,39 @@ async function showRanking(){
     document.getElementById("result").style.display="none";
     document.getElementById("ranking").style.display="block";
     
-    // 💡 画面に現在の年月を表示
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const modeLabel = currentMode === "infinite" ? "終わりなき修行" : currentMode + "秒修行";
-    document.getElementById("rankMonth").innerText = `【開催期間：${year}年${month}月】- ${modeLabel}`;
+    const modeLabel = currentMode === "infinite" ? "終わりなき修行部門" : currentMode + "秒修行部門";
+    document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel} 】`;
+    document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth() + 1}月 限定番付`;
 
-    const list = document.getElementById("rankList"); list.innerHTML="番付を取得中...";
+    const mList = document.getElementById("monthRankList");
+    const rList = document.getElementById("rekidaiRankList");
+    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中...";
+    
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
         
-        // 💡 今月の全モード混合データから、選ばれたモードのデータだけを綺麗に表示
-        const modeSuffix = currentMode === "infinite" ? "(無限)" : `(${currentMode}秒)`;
-        const filteredData = data.filter(d => d.name.endsWith(modeSuffix));
-
-        if(filteredData.length === 0) {
-            list.innerHTML = `<div style="font-size:20px;margin:20px;color:#aaa;">今月のこの部門には、まだ誰も刻んでおらぬようだ…</div>`;
+        // 💡 月間データの表示
+        const monthArr = data.month || [];
+        if(monthArr.length === 0){
+            mList.innerHTML = `<div style="color:#aaa;padding:10px;">今月の挑戦者はまだおらぬ…</div>`;
         } else {
-            list.innerHTML = filteredData.map((d,i)=>{
-                const cleanName = d.name.replace(` ${modeSuffix}`, "");
-                return `<div style="font-size:24px;margin:10px;">${i+1}位: ${cleanName} - ${d.score}点</div>`;
-            }).join("");
+            mList.innerHTML = monthArr.map((d,i)=>`<div class="rank-item"><span>${i+1}位: ${d.name}</span><span class="score-val">${d.score}点</span></div>`).join("");
         }
-    } catch(e){ list.innerHTML="取得失敗"; }
+        
+        // 💡 歴代データの表示
+        const rekidaiArr = data.rekidai || [];
+        if(rekidaiArr.length === 0){
+            rList.innerHTML = `<div style="color:#aaa;padding:10px;">歴史の証人はまだおらぬ…</div>`;
+        } else {
+            rList.innerHTML = rekidaiArr.map((d,i)=>`<div class="rank-item"><span>${i+1}位: ${d.name}</span><span class="score-val">${d.score}点</span></div>`).join("");
+        }
+        
+    } catch(e){ 
+        mList.innerHTML="取得失敗"; 
+        rList.innerHTML="取得失敗"; 
+    }
 }
 
 function openRankingMode(m){ currentMode=m; showRanking(); }
