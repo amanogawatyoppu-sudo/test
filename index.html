@@ -445,6 +445,10 @@ function startCommon(){
     showMobileBtnsIfNeeded();
 }
 
+// 現在のゲームスケール値を返す（スマホ補正用）
+let _currentScale = 1;
+function currentMobileScale() { return _currentScale; }
+
 function spawn(){
     if(!running) return;
     let lane = Math.floor(Math.random()*3);
@@ -455,12 +459,24 @@ function spawn(){
     container.style.left = "1200px"; container.style.top = laneY[lane]+"px";
     document.getElementById("game").appendChild(container);
     notes.push({el:container, x:1200, lane:lane});
-    setTimeout(spawn, isInfinite ? Math.max(160, 450 - combo*1.5) : 320);
+
+    // スマホはスケールが小さい分、見た目の距離が短くなるため間隔を広げる
+    const scale = currentMobileScale();
+    const mobileCoeff = isMobile() ? (1 / scale) : 1;
+    const interval = isInfinite
+        ? Math.max(160, 450 - combo*1.5) * mobileCoeff
+        : 320 * mobileCoeff;
+    setTimeout(spawn, interval);
 }
 
 function loop(){
     if(!running) return;
-    let speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
+
+    // スマホはゲームエリアがscaleで縮小されているため、速度もscaleに合わせて補正
+    const scale = currentMobileScale();
+    const baseSpeed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
+    const speed = isMobile() ? baseSpeed * scale : baseSpeed;
+
     for(let i=notes.length-1; i>=0; i--){
         let n = notes[i]; n.x -= speed; n.el.style.left = n.x + "px";
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
@@ -468,7 +484,9 @@ function loop(){
     updateUI(); requestAnimationFrame(loop);
 }
 
+let _uiFrame = 0;
 function updateUI() {
+    _uiFrame++;
     const worker = document.getElementById("workerEmoji");
     let state="kone", emoji="🥣";
     if(fever){
@@ -478,7 +496,10 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    worker.innerText=emoji; worker.className=state;
+    // スマホは絵文字更新を3フレームに1回に間引いて軽量化
+    if (!isMobile() || _uiFrame % 3 === 0) {
+        worker.innerText=emoji; worker.className=state;
+    }
     document.getElementById("gaugeFill").style.width = gauge+"%";
 }
 
@@ -652,6 +673,7 @@ function scaleGame() {
   const scaleX = vw / GAME_W;
   const scaleY = topAreaH / GAME_H;
   const scale = Math.min(scaleX, scaleY, 1);
+  _currentScale = scale;
 
   const game = document.getElementById("game");
   const scaledH = GAME_H * scale;
