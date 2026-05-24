@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="C3c5Iz5iiSzs-1oAL64oGKvXrwIjSoIawN6zvuo6lNo" />
-
 <link rel="icon" href="favicon.png" type="image/png">
-
 <title>無限そば道 - 音ゲー・越前おろしそば職人修業ゲーム</title>
 <meta name="description" content="PCのブラウザで遊べる無料のそば打ち音ゲー「無限そば道」。A、S、Lキーを駆使してノーツを叩き、最高称号『越前極』のハイスコア番付を目指せ！">
 <meta name="keywords" content="無限そば道,音ゲー,ブラウザゲーム,越前そば,無料ゲーム,福井">
-
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
@@ -51,7 +48,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
-
 .rank-container { display: flex; justify-content: center; gap: 40px; max-width: 1000px; margin: 0 auto; padding: 10px; }
 .rank-column { flex: 1; background: rgba(255,255,255,0.03); border: 2px solid #444; border-radius: 10px; padding: 15px; box-sizing: border-box; }
 .rank-column h2 { font-size: 24px; font-family: 'Zen Old Mincho'; margin-top: 0; padding-bottom: 10px; border-bottom: 1px dashed #666; }
@@ -60,16 +56,102 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .rank-item { font-size: 22px; margin: 12px 0; text-align: left; padding-left: 20px; display: flex; justify-content: space-between; }
 .rank-item .score-val { color: gold; font-weight: bold; }
 #modeTitleLabel { font-size: 26px; color: white; font-family: 'Zen Old Mincho'; margin-bottom: 20px; }
+
+/* ===== ランクマ名前入力モーダル ===== */
+#nameModal {
+  display: none;
+  position: fixed;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.92);
+  z-index: 400;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+#nameModal.open { display: flex; }
+#nameModalBox {
+  border: 3px solid gold;
+  border-radius: 16px;
+  padding: 40px 60px;
+  background: rgba(20,15,0,0.98);
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255,215,0,0.25);
+  min-width: 420px;
+}
+#nameModalBox h2 {
+  font-family: 'Zen Old Mincho';
+  font-size: 30px;
+  color: gold;
+  margin: 0 0 8px;
+}
+#nameModalBox .modal-sub {
+  color: #bbb;
+  font-size: 14px;
+  margin: 0 0 22px;
+  line-height: 1.8;
+}
+#nameModalInput {
+  font-size: 26px;
+  text-align: center;
+  background: #111;
+  color: white;
+  border: 2px solid gold;
+  border-radius: 8px;
+  padding: 10px 20px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Noto Serif JP';
+  margin-bottom: 8px;
+}
+#nameModalMsg {
+  min-height: 22px;
+  font-size: 14px;
+  margin-bottom: 18px;
+  color: #ff6655;
+}
+#nameModalMsg.info { color: #ffcc00; }
+#nameModalConfirm {
+  width: 100%; padding: 14px; font-size: 20px;
+  background: linear-gradient(#fff4cc,gold);
+  border: none; border-radius: 10px; cursor: pointer; font-weight: bold;
+  margin-bottom: 10px;
+  display: block;
+}
+#nameModalCancel {
+  background: none; border: none; color: #666; font-size: 13px; cursor: pointer; text-decoration: underline;
+}
 </style>
 </head>
 <body>
 
+<!-- ランクマ参戦名入力モーダル -->
+<div id="nameModal">
+  <div id="nameModalBox">
+    <h2>⚔️ ランクマッチ参戦</h2>
+    <p class="modal-sub">職人の名を刻め。この名で月間番付を戦う。<br>同じ名前なら<strong style="color:gold">最高スコアのみ</strong>が残る。</p>
+    <input id="nameModalInput" type="text" maxlength="8" placeholder="職人の名（8文字まで）">
+    <div id="nameModalMsg"></div>
+    <button id="nameModalConfirm" onclick="confirmRankmaName()">この名で参戦する</button>
+    <button id="nameModalCancel" onclick="closeNameModal()">キャンセル</button>
+  </div>
+</div>
+
 <div id="titleScreen">
  <div id="title">無限そば道</div>
- <div style="color:white; margin-bottom:30px;">～ 絶・越前極への道 ～</div>
- <button class="menuBtn" onclick="startGame(30)">30秒修行</button>
- <button class="menuBtn" onclick="startGame(60)">60秒修行</button>
- <button class="menuBtn" onclick="startInfinite()">終わりなき修行</button>
+ <div style="color:white; margin-bottom:20px;">～ 絶・越前極への道 ～</div>
+ <button class="menuBtn" onclick="startNormal(30)">30秒修行</button>
+ <button class="menuBtn" onclick="startNormal(60)">60秒修行</button>
+ <button class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
+
+ <!-- 月間ランクマッチ -->
+ <div style="margin-top:16px; border-top:1px solid #333; padding-top:14px; text-align:center;">
+   <div style="color:#ffcc00; font-size:15px; margin-bottom:8px; font-family:'Zen Old Mincho'; letter-spacing:2px;">⚔️ 月間ランクマッチ（名前登録制）</div>
+   <button class="menuBtn" style="width:140px;font-size:15px;padding:10px;" onclick="openRankma('30')">30秒ランクマ</button>
+   <button class="menuBtn" style="width:140px;font-size:15px;padding:10px;" onclick="openRankma('60')">60秒ランクマ</button>
+   <button class="menuBtn" style="width:140px;font-size:15px;padding:10px;" onclick="openRankma('infinite')">無限ランクマ</button>
+ </div>
+
+ <!-- 番付閲覧 -->
  <div style="margin-top:10px;">
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('30')">30秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:10px;" onclick="openRankingMode('60')">60秒番付</button>
@@ -82,6 +164,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <span class="info-text">得点: <span id="score">0</span></span>
   <span class="info-text">連打: <span id="combo">0</span></span>
   <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
+  <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
  </div>
  <div class="lane-container">
   <div id="lane1" class="lane"></div><div id="lane2" class="lane"></div><div id="lane3" class="lane"></div>
@@ -101,8 +184,16 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <div id="rankDisplay"></div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
-    番付名：<input id="nameInput" maxlength="8" placeholder="職人の名"><br><br>
-    <button class="menuBtn" onclick="saveRank()">番付に刻む</button>
+    <!-- 通常モード -->
+    <div id="normalSaveArea">
+      番付名：<input id="nameInput" maxlength="8" placeholder="職人の名"><br><br>
+      <button class="menuBtn" onclick="saveRank()">番付に刻む</button>
+    </div>
+    <!-- ランクマモード -->
+    <div id="rankmaSaveArea" style="display:none;">
+      <div style="font-size:18px; color:#ffcc00; margin-bottom:14px;">⚔️ 参戦名：<strong id="rankmaNameLabel" style="color:gold;font-size:22px;"></strong></div>
+      <button class="menuBtn" onclick="saveRankmaScore()">スコアを番付に刻む</button>
+    </div>
  </div>
  <button class="menuBtn" onclick="location.reload()">タイトルへ</button>
 </div>
@@ -110,7 +201,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <div id="ranking">
  <h1 id="rankTitle">世界番付</h1>
  <div id="modeTitleLabel"></div>
- 
  <div class="rank-container">
     <div class="rank-column month">
         <h2 id="monthLabelHeader">今月の月間番付</h2>
@@ -126,10 +216,9 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-// 💡 先ほど共有していただいた最新のURLをセットしています
 const GAS_URL = "https://script.google.com/macros/s/AKfycbygiit5TLOFBonR2Hz9svLuVDum5gKtfoG_R0_ImgjwBnEiXL75t4aqBbFbfotDN90/exec";
 
-const HIT_X = 85; 
+const HIT_X = 85;
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
@@ -142,16 +231,77 @@ let notes=[], score=0, combo=0, running=false, isInfinite=false, currentMode="30
 let gauge=0, fever=false, timerInterval, totalMissCount=0;
 let activeKeys = new Set();
 let laneLocked = [false, false, false];
+let isRankmaMode = false;
+let rankmaName = "";
+let pendingRankmaMode = "";
 
 const sePerfect = new Audio('perfect.mp3');
 const seGreat = new Audio('great.mp3');
 const seMiss = new Audio('miss.mp3');
 function playSE(audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); }
 
+// ===== ランクマ モーダル =====
+function openRankma(mode) {
+    pendingRankmaMode = mode;
+    const input = document.getElementById("nameModalInput");
+    input.value = rankmaName || "";
+    document.getElementById("nameModalMsg").innerText = "";
+    document.getElementById("nameModalMsg").className = "";
+    document.getElementById("nameModal").classList.add("open");
+    setTimeout(() => input.focus(), 80);
+}
+
+function closeNameModal() {
+    document.getElementById("nameModal").classList.remove("open");
+}
+
+async function confirmRankmaName() {
+    const name = document.getElementById("nameModalInput").value.trim();
+    const msg = document.getElementById("nameModalMsg");
+    if (!name) { msg.className=""; msg.innerText = "名前を入力せよ。"; return; }
+    if (name === "名無し") { msg.className=""; msg.innerText = "その名は名乗れぬ。"; return; }
+
+    const btn = document.getElementById("nameModalConfirm");
+    btn.disabled = true; btn.innerText = "確認中...";
+    msg.className = ""; msg.innerText = "";
+
+    // フロント重複チェック：既存スコアを確認
+    try {
+        const res = await fetch(`${GAS_URL}?mode=${pendingRankmaMode}`);
+        const data = await res.json();
+        const monthArr = data.month || [];
+        const existing = monthArr.find(e => e.name === name);
+        if (existing) {
+            msg.className = "info";
+            msg.innerText = `現在のスコア: ${existing.score}点。今回超えれば更新される。`;
+        }
+    } catch(e) {
+        msg.className = ""; msg.innerText = "番付確認できず。そのまま参戦する。";
+    }
+
+    rankmaName = name;
+    btn.disabled = false; btn.innerText = "この名で参戦する";
+
+    // メッセージがあれば少し見せてからゲーム開始
+    setTimeout(() => {
+        closeNameModal();
+        isRankmaMode = true;
+        if (pendingRankmaMode === "infinite") startInfinite();
+        else startGame(parseInt(pendingRankmaMode));
+    }, msg.innerText ? 1400 : 0);
+}
+
+// ===== 通常スタート（ランクマフラグなし） =====
+function startNormal(sec) { isRankmaMode = false; startGame(sec); }
+function startNormalInfinite() { isRankmaMode = false; startInfinite(); }
+
+// ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startCommon(); setupTimer(sec); }
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startCommon(); }
+
 function setupTimer(sec){
-    let timeLeft = sec; document.getElementById("timeDisplay").style.display="inline";
+    let timeLeft = sec;
+    document.getElementById("timeDisplay").style.display="inline";
     document.getElementById("timeLeft").innerText = timeLeft;
     timerInterval = setInterval(() => {
         timeLeft--; document.getElementById("timeLeft").innerText = timeLeft;
@@ -166,6 +316,16 @@ function startCommon(){
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("game").style.display="block";
     document.getElementById("bottomArea").style.display="flex";
+
+    // ランクマタグ表示
+    const tag = document.getElementById("rankmaTag");
+    if (isRankmaMode) {
+        document.getElementById("rankmaTagName").innerText = rankmaName;
+        tag.style.display = "inline";
+    } else {
+        tag.style.display = "none";
+    }
+
     running=true; loop(); spawn();
 }
 
@@ -187,7 +347,7 @@ function loop(){
     let speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
     for(let i=notes.length-1; i>=0; i--){
         let n = notes[i]; n.x -= speed; n.el.style.left = n.x + "px";
-        if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite) { endGame(); return; } }
+        if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI(); requestAnimationFrame(loop);
 }
@@ -244,72 +404,109 @@ function endGame(){
     else { if(score>=500000) rank="越前極"; else if(score>=200000) rank="伝説級"; }
     document.getElementById("rankDisplay").innerText = `称号: ${rank}`;
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
-}
 
-async function saveRank() {
-    const name = document.getElementById("nameInput").value.trim();
-    if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
-    const btn = document.querySelector("#rankingInputArea button");
-    btn.disabled=true; btn.innerText="確認中...";
-    try {
-        btn.innerText="刻み中...";
-        await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name:name, score:score, mode:currentMode}) });
-        showRanking();
-    } catch(e){ 
-        console.error(e);
-        alert("通信失敗。URLが正しいか確認してくれ。"); 
-        btn.disabled=false; btn.innerText="番付に刻む"; 
+    // モードに応じて保存UIを切り替え
+    if (isRankmaMode) {
+        document.getElementById("normalSaveArea").style.display = "none";
+        document.getElementById("rankmaSaveArea").style.display = "block";
+        document.getElementById("rankmaNameLabel").innerText = rankmaName;
+    } else {
+        document.getElementById("normalSaveArea").style.display = "block";
+        document.getElementById("rankmaSaveArea").style.display = "none";
     }
 }
 
+// ===== 通常番付保存 =====
+async function saveRank() {
+    const name = document.getElementById("nameInput").value.trim();
+    if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
+    const btn = document.querySelector("#normalSaveArea button");
+    btn.disabled=true; btn.innerText="刻み中...";
+    try {
+        await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name, score, mode:currentMode}) });
+        showRanking();
+    } catch(e){
+        console.error(e);
+        alert("通信失敗。URLが正しいか確認してくれ。");
+        btn.disabled=false; btn.innerText="番付に刻む";
+    }
+}
+
+// ===== ランクマスコア保存（GAS側でupsert） =====
+async function saveRankmaScore() {
+    const btn = document.querySelector("#rankmaSaveArea button");
+    btn.disabled=true; btn.innerText="刻み中...";
+    try {
+        // rankma:true を付けてGAS側でupsert処理させる
+        await fetch(GAS_URL, {
+            method: "POST",
+            body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true })
+        });
+        showRanking();
+    } catch(e){
+        console.error(e);
+        alert("通信失敗。もう一度試してくれ。");
+        btn.disabled=false; btn.innerText="スコアを番付に刻む";
+    }
+}
+
+// ===== 番付表示 =====
 async function showRanking(){
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("result").style.display="none";
     document.getElementById("ranking").style.display="block";
-    
+
     const now = new Date();
     const modeLabel = currentMode === "infinite" ? "終わりなき修行部門" : currentMode + "秒修行部門";
-    document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel} 】`;
-    document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth() + 1}月 限定番付`;
+    const rankmaLabel = isRankmaMode ? " ⚔️ ランクマ" : "";
+    document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
+    document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 限定番付`;
 
     const mList = document.getElementById("monthRankList");
     const rList = document.getElementById("rekidaiRankList");
     mList.innerHTML = "取得中..."; rList.innerHTML = "取得中...";
-    
+
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
-        
-        const monthArr = data.month || [];
-        if(monthArr.length === 0){
-            mList.innerHTML = `<div style="color:#aaa;padding:10px;">今月の挑戦者はまだおらぬ…</div>`;
-        } else {
-            mList.innerHTML = monthArr.map((d,i)=>`<div class="rank-item"><span>${i+1}位: ${d.name}</span><span class="score-val">${d.score}点</span></div>`).join("");
-        }
-        
-        const rekidaiArr = data.rekidai || [];
-        if(rekidaiArr.length === 0){
-            rList.innerHTML = `<div style="color:#aaa;padding:10px;">歴史の証人はまだおらぬ…</div>`;
-        } else {
-            rList.innerHTML = rekidaiArr.map((d,i)=>`<div class="rank-item"><span>${i+1}位: ${d.name}</span><span class="score-val">${d.score}点</span></div>`).join("");
-        }
-        
-    } catch(e){ 
-        mList.innerHTML="取得失敗"; 
-        rList.innerHTML="取得失敗"; 
+
+        const renderList = (arr, el) => {
+            if (!arr || arr.length === 0) {
+                el.innerHTML = `<div style="color:#aaa;padding:10px;">まだ誰も刻んでおらぬ…</div>`;
+                return;
+            }
+            const medals = ["🥇","🥈","🥉"];
+            el.innerHTML = arr.map((d,i) =>
+                `<div class="rank-item"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}点</span></div>`
+            ).join("");
+        };
+
+        renderList(data.month || [], mList);
+        renderList(data.rekidai || [], rList);
+
+    } catch(e){
+        mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗";
     }
 }
 
-function openRankingMode(m){ currentMode=m; showRanking(); }
+function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 
+// ===== キー操作 =====
 document.addEventListener("keydown", e => {
-    if(!running || !e || !e.key) return; 
-    const k = e.key.toLowerCase(); 
-    if(!["a","s","l"].includes(k) || activeKeys.has(k)) return;
+    if (!e || !e.key) return;
+    // モーダルが開いているときはEnterで確定、Escでキャンセル
+    if (document.getElementById("nameModal").classList.contains("open")) {
+        if (e.key === "Enter") confirmRankmaName();
+        if (e.key === "Escape") closeNameModal();
+        return;
+    }
+    if (!running) return;
+    const k = e.key.toLowerCase();
+    if (!["a","s","l"].includes(k) || activeKeys.has(k)) return;
     activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
 document.addEventListener("keyup", e => {
-    if(!e || !e.key) return;
+    if (!e || !e.key) return;
     const k = e.key.toLowerCase(); activeKeys.delete(k);
     if(["a","s","l"].includes(k)){
         let i = k==="a"?0:k==="s"?1:2; laneLocked[i]=false;
