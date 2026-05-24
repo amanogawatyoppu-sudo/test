@@ -52,7 +52,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
 
-/* 💡 Wランキング用スタイル */
 .rank-container { display: flex; justify-content: center; gap: 40px; max-width: 1000px; margin: 0 auto; padding: 10px; }
 .rank-column { flex: 1; background: rgba(255,255,255,0.03); border: 2px solid #444; border-radius: 10px; padding: 15px; box-sizing: border-box; }
 .rank-column h2 { font-size: 24px; font-family: 'Zen Old Mincho'; margin-top: 0; padding-bottom: 10px; border-bottom: 1px dashed #666; }
@@ -109,7 +108,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="ranking">
- <h1 id="rankTitle">天下御免の二大番付</h1>
+ <h1 id="rankTitle">世界番付</h1>
  <div id="modeTitleLabel"></div>
  
  <div class="rank-container">
@@ -117,9 +116,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
         <h2 id="monthLabelHeader">今月の月間番付</h2>
         <div id="monthRankList"></div>
     </div>
-    
     <div class="rank-column rekidai">
-        <h2>宇宙開闢の歴代番付</h2>
+        <h2>歴代番付</h2>
         <div id="rekidaiRankList"></div>
     </div>
  </div>
@@ -128,7 +126,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <script>
-const GAS_URL = "https://script.google.com/macros/s/AKfycbz5Z-cPaAmLU2_9wrMT2ImNU1jN4feGRov_5J-lEPKsVzI9_nVT6QMMJkECeKrRDg/exec";
+// 💡 先ほど共有していただいた最新のURLをセットしています
+const GAS_URL = "https://script.google.com/macros/s/AKfycbygiit5TLOFBonR2Hz9svLuVDum5gKtfoG_R0_ImgjwBnEiXL75t4aqBbFbfotDN90/exec";
 
 const HIT_X = 85; 
 const laneY = [63, 190, 316];
@@ -253,15 +252,6 @@ async function saveRank() {
     const btn = document.querySelector("#rankingInputArea button");
     btn.disabled=true; btn.innerText="確認中...";
     try {
-        // 重複チェックは今月のデータに対しておこなう
-        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
-        const fullData = await res.json();
-        const monthData = fullData.month || [];
-        
-        if(monthData.some(e => e.name === name)){
-            alert(`「${name}」は今月すでに番付に名を刻んでおる。来月また挑むがよい！`);
-            btn.disabled=false; btn.innerText="番付に刻む"; return;
-        }
         btn.innerText="刻み中...";
         await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name:name, score:score, mode:currentMode}) });
         showRanking();
@@ -290,7 +280,6 @@ async function showRanking(){
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
         
-        // 💡 月間データの表示
         const monthArr = data.month || [];
         if(monthArr.length === 0){
             mList.innerHTML = `<div style="color:#aaa;padding:10px;">今月の挑戦者はまだおらぬ…</div>`;
@@ -298,7 +287,6 @@ async function showRanking(){
             mList.innerHTML = monthArr.map((d,i)=>`<div class="rank-item"><span>${i+1}位: ${d.name}</span><span class="score-val">${d.score}点</span></div>`).join("");
         }
         
-        // 💡 歴代データの表示
         const rekidaiArr = data.rekidai || [];
         if(rekidaiArr.length === 0){
             rList.innerHTML = `<div style="color:#aaa;padding:10px;">歴史の証人はまだおらぬ…</div>`;
