@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="google-site-verification" content="C3c5Iz5iiSzs-1oAL64oGKvXrwIjSoIawN6zvuo6lNo" />
 <link rel="icon" href="favicon.png" type="image/png">
 <title>無限そば道 - 音ゲー・越前おろしそば職人修業ゲーム</title>
@@ -120,9 +121,116 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #nameModalCancel {
   background: none; border: none; color: #666; font-size: 13px; cursor: pointer; text-decoration: underline;
 }
+
+/* ===== スマホタップボタン ===== */
+.mobileHitBtn {
+  flex: 1;
+  max-width: 32%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  background: rgba(0, 0, 0, 0.6);
+  border: 3px solid rgba(100, 180, 255, 0.6);
+  border-radius: 20px;
+  color: rgba(255,255,255,0.7);
+  font-size: 48px;
+  font-family: 'Zen Old Mincho';
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(80,160,255,0.3), inset 0 0 20px rgba(0,0,0,0.5);
+  transition: background 0.05s, box-shadow 0.05s, color 0.05s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.mobileHitBtn.active {
+  background: rgba(255, 215, 0, 0.25);
+  border-color: gold;
+  color: gold;
+  box-shadow: 0 0 40px rgba(255,215,0,0.5), inset 0 0 20px rgba(255,215,0,0.1);
+}
+
+/* ===== 縦持ち警告オーバーレイ ===== */
+#rotateOverlay {
+  display: none;
+  position: fixed; width: 100%; height: 100%;
+  background: #000; z-index: 9999;
+  justify-content: center; align-items: center; flex-direction: column;
+  text-align: center; padding: 20px; box-sizing: border-box;
+}
+#rotateOverlay .rotate-icon { font-size: 80px; animation: rotateAnim 1.5s infinite ease-in-out; }
+@keyframes rotateAnim { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);} }
+#rotateOverlay p { font-size: 20px; color: gold; font-family: 'Zen Old Mincho'; margin-top: 20px; }
+
+/* ===== スマホ共通 ===== */
+@media (max-width: 1200px) {
+  /* タイトル画面スケール */
+  #title { font-size: 36px; }
+  #titleScreen > div:nth-child(2) { font-size: 13px; margin-bottom: 10px; }
+  .menuBtn { width: 200px; padding: 12px; font-size: 17px; margin: 6px; }
+
+  /* ランクマ・番付ボタン行 */
+  #titleScreen div[style*="margin-top:16px"] button,
+  #titleScreen div[style*="margin-top:10px"] button {
+    width: 100px !important; font-size: 12px !important; padding: 8px !important; margin: 4px !important;
+  }
+
+  /* ゲームエリア：CSSスケールで縮小 */
+  #game {
+    width: 1100px;
+    height: 380px;
+    transform-origin: top center;
+    /* JSで動的にscaleとtopをセット */
+  }
+
+  /* ヒットボタンをスマホ用に大きく */
+  .hit { width: 110px; height: 110px; font-size: 32px; }
+
+  /* bottomArea */
+  #bottomArea { width: 100vw; }
+  #gaugeWrapper { width: 90%; }
+  #workerArea { font-size: 70px; height: 90px; }
+
+  /* UI テキスト */
+  .info-text { font-size: 16px; margin-right: 10px; }
+
+  /* judge */
+  #judge { font-size: 44px; }
+
+  /* リザルト */
+  #rankDisplay { font-size: 36px; }
+  #triviaArea { font-size: 14px; width: 90%; }
+  .menuBtn { width: 200px; }
+
+  /* 番付カラムを縦積みに */
+  .rank-container { flex-direction: column; gap: 16px; padding: 0 10px; }
+  .rank-column h2 { font-size: 18px; }
+  .rank-item { font-size: 16px; }
+  #modeTitleLabel { font-size: 18px; }
+
+  /* モーダル */
+  #nameModalBox { min-width: unset; width: 90vw; padding: 24px 20px; box-sizing: border-box; }
+  #nameModalBox h2 { font-size: 22px; }
+  #nameModalInput { font-size: 20px; }
+}
+
+/* 横持ちスマホ専用微調整 */
+@media (max-height: 500px) and (orientation: landscape) {
+  #titleScreen { overflow-y: auto; justify-content: flex-start; padding: 10px 0; }
+  #title { font-size: 28px; margin-bottom: 0; }
+  .menuBtn { padding: 8px; margin: 4px; font-size: 15px; width: 170px; }
+  #result { padding-top: 8px; }
+  #result h1 { font-size: 22px; margin: 4px 0; }
+  #rankDisplay { font-size: 28px; }
+  #triviaArea { margin: 8px auto; padding: 10px; font-size: 13px; }
+}
 </style>
 </head>
 <body>
+
+<!-- 縦持ち回転促すオーバーレイ -->
+<div id="rotateOverlay">
+  <div class="rotate-icon">📱</div>
+  <p>スマホを横向きにして<br>遊んでくれ！</p>
+</div>
 
 <!-- ランクマ参戦名入力モーダル -->
 <div id="nameModal">
@@ -176,6 +284,13 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <div id="bottomArea">
     <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
     <div id="workerArea"><div id="workerEmoji">🥣</div></div>
+</div>
+
+<!-- スマホ専用タップボタン -->
+<div id="mobileBtns" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:45%; z-index:50; justify-content:space-around; align-items:center; padding:0 12px; box-sizing:border-box; background:rgba(0,0,0,0.5);">
+  <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
+  <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
+  <button class="mobileHitBtn" id="mBtn-2" onpointerdown="mobileTap(2)" onpointerup="mobileRelease(2)">L</button>
 </div>
 
 <div id="result">
@@ -327,6 +442,7 @@ function startCommon(){
     }
 
     running=true; loop(); spawn();
+    showMobileBtnsIfNeeded();
 }
 
 function spawn(){
@@ -395,6 +511,7 @@ function showJudge(res){
 
 function endGame(){
     running=false; clearInterval(timerInterval);
+    document.getElementById("mobileBtns").style.display = "none";
     document.getElementById("game").style.display="none";
     document.getElementById("bottomArea").style.display="none";
     document.getElementById("result").style.display="block";
@@ -490,6 +607,88 @@ async function showRanking(){
 }
 
 function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
+
+// ===== スマホタップボタン =====
+function mobileTap(i) {
+    if (!running) return;
+    document.getElementById(`mBtn-${i}`).classList.add("active");
+    activeKeys.add("m"+i);
+    hit(i);
+}
+function mobileRelease(i) {
+    document.getElementById(`mBtn-${i}`).classList.remove("active");
+    activeKeys.delete("m"+i);
+    laneLocked[i] = false;
+}
+
+// ===== スマホ対応：ゲームエリアのスケーリング & 縦持ち検出 =====
+const isMobile = () => window.innerWidth <= 1200 || /Mobi|Android/i.test(navigator.userAgent);
+
+function scaleGame() {
+  const overlay = document.getElementById("rotateOverlay");
+  const mobileBtns = document.getElementById("mobileBtns");
+
+  if (!isMobile()) {
+    overlay.style.display = "none";
+    mobileBtns.style.display = "none";
+    return;
+  }
+
+  // 縦持ち検出
+  if (window.innerHeight > window.innerWidth) {
+    overlay.style.display = "flex";
+    mobileBtns.style.display = "none";
+    return;
+  }
+  overlay.style.display = "none";
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const GAME_W = 1100;
+  const GAME_H = 380;
+
+  // 上55%をゲームエリア、下45%をタップボタンに割り当て
+  const topAreaH = vh * 0.55;
+  const scaleX = vw / GAME_W;
+  const scaleY = topAreaH / GAME_H;
+  const scale = Math.min(scaleX, scaleY, 1);
+
+  const game = document.getElementById("game");
+  const scaledH = GAME_H * scale;
+  game.style.transform = `translate(-50%, 0) scale(${scale})`;
+  game.style.left = "50%";
+  game.style.top = `${(topAreaH - scaledH) / 2}px`;
+
+  // ゲージをゲームのすぐ下に配置
+  const bottom = document.getElementById("bottomArea");
+  const gaugeTop = (topAreaH - scaledH) / 2 + scaledH + 4;
+  bottom.style.position = "fixed";
+  bottom.style.top = `${gaugeTop}px`;
+  bottom.style.left = "50%";
+  bottom.style.transform = "translateX(-50%)";
+  bottom.style.width = `${vw}px`;
+  bottom.style.height = `${vh * 0.45 - 4}px`;
+
+  // タップボタン表示（ゲーム中のみ）
+  if (running) {
+    mobileBtns.style.display = "flex";
+  }
+}
+
+// ゲーム開始・終了時にスマホボタンの表示を切り替え
+const _origStartCommon = startCommon;
+// startCommon後にモバイルボタン表示
+function showMobileBtnsIfNeeded() {
+  if (isMobile() && window.innerWidth > window.innerHeight) {
+    document.getElementById("mobileBtns").style.display = "flex";
+  }
+}
+// endGame後に非表示
+const _origEndGame = endGame;
+
+window.addEventListener("resize", scaleGame);
+window.addEventListener("orientationchange", () => setTimeout(scaleGame, 200));
+scaleGame();
 
 // ===== キー操作 =====
 document.addEventListener("keydown", e => {
