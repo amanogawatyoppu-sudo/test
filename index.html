@@ -51,6 +51,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
+.rank-month-title { font-size: 28px; color: #ffcc00; margin-bottom: 15px; font-family: 'Zen Old Mincho'; }
 </style>
 </head>
 <body>
@@ -99,7 +100,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <div id="ranking">
- <h1 id="rankTitle">世界番付</h1>
+ <h1 id="rankTitle">月間ランクマ番付</h1>
+ <div id="rankMonth" class="rank-month-title"></div>
  <div id="rankList"></div><br>
  <button class="menuBtn" onclick="location.reload()">戻る</button>
 </div>
@@ -230,10 +232,15 @@ async function saveRank() {
     const btn = document.querySelector("#rankingInputArea button");
     btn.disabled=true; btn.innerText="確認中...";
     try {
+        // 💡 登録時に重複を避けるために今月のデータをチェック
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const ranking = await res.json();
-        if(ranking.some(e => e.name === name)){
-            alert(`「${name}」は既に番付におる。別の名を名乗るがよい。`);
+        
+        const modeName = currentMode === "infinite" ? "無限" : currentMode + "秒";
+        const checkName = `${name} (${modeName})`;
+        
+        if(ranking.some(e => e.name === checkName)){
+            alert(`「${name}」は今月のこの部門の番付に既に登録されておる。`);
             btn.disabled=false; btn.innerText="番付に刻む"; return;
         }
         btn.innerText="刻み中...";
@@ -241,7 +248,7 @@ async function saveRank() {
         showRanking();
     } catch(e){ 
         console.error(e);
-        alert("通信失敗。URLが正しいか、GASが「全員」に公開されているか確認してくれ。"); 
+        alert("通信失敗。URLが正しいか確認してくれ。"); 
         btn.disabled=false; btn.innerText="番付に刻む"; 
     }
 }
@@ -250,11 +257,31 @@ async function showRanking(){
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("result").style.display="none";
     document.getElementById("ranking").style.display="block";
+    
+    // 💡 画面に現在の年月を表示
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const modeLabel = currentMode === "infinite" ? "終わりなき修行" : currentMode + "秒修行";
+    document.getElementById("rankMonth").innerText = `【開催期間：${year}年${month}月】- ${modeLabel}`;
+
     const list = document.getElementById("rankList"); list.innerHTML="番付を取得中...";
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
-        list.innerHTML = data.map((d,i)=>`<div style="font-size:24px;margin:10px;">${i+1}位: ${d.name} - ${d.score}点</div>`).join("");
+        
+        // 💡 今月の全モード混合データから、選ばれたモードのデータだけを綺麗に表示
+        const modeSuffix = currentMode === "infinite" ? "(無限)" : `(${currentMode}秒)`;
+        const filteredData = data.filter(d => d.name.endsWith(modeSuffix));
+
+        if(filteredData.length === 0) {
+            list.innerHTML = `<div style="font-size:20px;margin:20px;color:#aaa;">今月のこの部門には、まだ誰も刻んでおらぬようだ…</div>`;
+        } else {
+            list.innerHTML = filteredData.map((d,i)=>{
+                const cleanName = d.name.replace(` ${modeSuffix}`, "");
+                return `<div style="font-size:24px;margin:10px;">${i+1}位: ${cleanName} - ${d.score}点</div>`;
+            }).join("");
+        }
     } catch(e){ list.innerHTML="取得失敗"; }
 }
 
