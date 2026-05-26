@@ -555,7 +555,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbygiit5TLOFBonR2Hz9svLuVDum5gKtfoG_R0_ImgjwBnEiXL75t4aqBbFbfotDN90/exec";
 
-const HIT_X = 85;
+const HIT_X = 65;
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
@@ -905,7 +905,7 @@ function hit(l){
     if(tIdx === -1) return;
     let t = notes[tIdx], diff = Math.abs(t.x - HIT_X), res;
     combo++;
-    if(diff < 45){
+    if(diff < 65){
         res="PERFECT"; playSE(sePerfect);
         score += (500 + combo*10) * (fever?2:1);
         if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
@@ -962,22 +962,30 @@ async function fetchRankPosition() {
         // 月間番付での順位
         const monthArr = data.month || [];
         const monthPos = monthArr.findIndex(d => d.score <= score);
-        const monthRank = monthPos === -1 ? monthArr.length + 1 : monthPos + 1;
+        const monthRank = monthPos === -1 ? null : monthPos + 1;
 
         // 歴代番付での順位
         const rekidaiArr = data.rekidai || [];
         const rekidaiPos = rekidaiArr.findIndex(d => d.score <= score);
-        const rekidaiRank = rekidaiPos === -1 ? rekidaiArr.length + 1 : rekidaiPos + 1;
+        const rekidaiRank = rekidaiPos === -1 ? null : rekidaiPos + 1;
 
         let text = "";
         if (isRankmaMode) {
-            const medal = monthRank === 1 ? "🥇" : monthRank === 2 ? "🥈" : monthRank === 3 ? "🥉" : "";
-            text = `${medal} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> 相当`;
-            if (monthRank <= 3) text += " 🔥";
+            if (monthRank === null) {
+                text = `今月番付 <span style="color:#888;font-size:28px;">圏外</span>（トップ10入りを目指せ）`;
+            } else {
+                const medal = monthRank === 1 ? "🥇" : monthRank === 2 ? "🥈" : monthRank === 3 ? "🥉" : "";
+                text = `${medal} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> 相当`;
+                if (monthRank <= 3) text += " 🔥";
+            }
         } else {
-            const medal = rekidaiRank === 1 ? "🥇" : rekidaiRank === 2 ? "🥈" : rekidaiRank === 3 ? "🥉" : "";
-            text = `${medal} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> 相当`;
-            if (rekidaiRank <= 3) text += " 🔥";
+            if (rekidaiRank === null) {
+                text = `歴代番付 <span style="color:#888;font-size:28px;">圏外</span>（トップ10入りを目指せ）`;
+            } else {
+                const medal = rekidaiRank === 1 ? "🥇" : rekidaiRank === 2 ? "🥈" : rekidaiRank === 3 ? "🥉" : "";
+                text = `${medal} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> 相当`;
+                if (rekidaiRank <= 3) text += " 🔥";
+            }
         }
         el.style.color = "white";
         el.innerHTML = text;
