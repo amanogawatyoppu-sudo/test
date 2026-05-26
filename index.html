@@ -638,8 +638,9 @@ function fireTick() {
     const canvas = fireCtx.canvas;
     fireCtx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (Math.random() < 0.4) spawnFireParticle();
-    if (Math.random() < 0.3) spawnFireParticle();
+    const spawnRate = isMobile() ? 0.2 : 0.4;
+    if (Math.random() < spawnRate) spawnFireParticle();
+    if (!isMobile() && Math.random() < 0.3) spawnFireParticle();
 
     for (let i = fireParticles.length - 1; i >= 0; i--) {
         const p = fireParticles[i];
@@ -859,25 +860,26 @@ function spawn(){
     document.getElementById("game").appendChild(container);
     notes.push({el:container, x:1200, lane:lane});
 
-    const scale = currentMobileScale();
-    const mobileCoeff = isMobile() ? (1 / scale) : 1;
     const interval = isInfinite
-        ? Math.max(160, 450 - combo*1.5) * mobileCoeff
-        : 320 * mobileCoeff;
+        ? Math.max(160, 450 - combo*1.5)
+        : 320;
     setTimeout(spawn, interval);
 }
 
 function loop(){
     if(!running) return;
-    const scale = currentMobileScale();
-    const baseSpeed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
-    const speed = isMobile() ? baseSpeed * scale : baseSpeed;
+    const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
 
     for(let i=notes.length-1; i>=0; i--){
         let n = notes[i]; n.x -= speed; n.el.style.transform = "translate3d("+n.x+"px,-50%,0)";
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
-    updateUI(); requestAnimationFrame(loop);
+    updateUI();
+    if (isMobile()) {
+        setTimeout(() => requestAnimationFrame(loop), 16); // ~60fps cap on mobile
+    } else {
+        requestAnimationFrame(loop);
+    }
 }
 
 let _uiFrame = 0;
@@ -892,7 +894,7 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    if (!isMobile() || _uiFrame % 6 === 0) {
+    if (!isMobile() || _uiFrame % 10 === 0) {
         worker.innerText=emoji; worker.className=state;
     }
     if (!isMobile() || _uiFrame % 3 === 0) document.getElementById("gaugeFill").style.width = gauge+"%";
