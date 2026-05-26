@@ -47,6 +47,51 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   50%, 100% { left: 120%; }
 }
 
+
+/* ===== カウントダウン ===== */
+#countdown {
+  display: none;
+  position: absolute; width: 100%; height: 100%;
+  top: 0; left: 0;
+  z-index: 100;
+  justify-content: center; align-items: center;
+  pointer-events: none;
+  background: rgba(0,0,0,0.55);
+  border-radius: 12px;
+}
+#countdownNum {
+  font-size: 200px;
+  font-family: 'Zen Old Mincho';
+  color: gold;
+  text-shadow: 0 0 30px rgba(255,215,0,1), 0 0 80px rgba(255,150,0,0.6);
+  line-height: 1;
+}
+#countdownNum.go {
+  font-size: 130px;
+  color: #ff4400;
+  text-shadow: 0 0 40px rgba(255,80,0,1), 0 0 80px rgba(255,40,0,0.5);
+}
+@keyframes countPop {
+  0%   { transform: scale(2.2); opacity: 0; }
+  25%  { transform: scale(1.0); opacity: 1; }
+  70%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+@keyframes countGo {
+  0%   { transform: scale(0.5); opacity: 0; }
+  20%  { transform: scale(1.1); opacity: 1; }
+  60%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ===== リザルト順位表示 ===== */
+#rankPositionDisplay {
+  font-size: 28px;
+  font-family: 'Zen Old Mincho';
+  margin: 6px 0 14px;
+  min-height: 36px;
+}
+
 /* ===== ランクマ中間画面 ===== */
 #rankmaLobby {
   display: none;
@@ -358,6 +403,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 
 <canvas id="fireCanvas"></canvas>
 
+
+
 <!-- 縦持ち回転促すオーバーレイ -->
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
@@ -452,6 +499,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  </div>
  <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
  <div id="judge"></div>
+ <div id="countdown"><div id="countdownNum">3</div></div>
 </div>
 
 <div id="bottomArea">
@@ -470,6 +518,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  <h1 id="resultTitle">修行終了</h1>
  <div id="finalScore" style="font-size:24px;"></div>
  <div id="rankDisplay"></div>
+ <div id="rankPositionDisplay"></div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
     <div id="normalSaveArea">
@@ -730,8 +779,55 @@ function startNormal(sec) { isRankmaMode = false; startGame(sec); }
 function startNormalInfinite() { isRankmaMode = false; startInfinite(); }
 
 // ===== ゲーム本体 =====
-function startGame(sec){ isInfinite=false; currentMode=String(sec); startCommon(); setupTimer(sec); }
-function startInfinite(){ isInfinite=true; currentMode="infinite"; startCommon(); }
+function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
+function startInfinite(){ isInfinite=true; currentMode="infinite"; startWithCountdown(() => {}); }
+
+function startWithCountdown(afterCallback) {
+    // まずゲームエリアを表示（ノーツはまだ動かさない）
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
+    activeKeys.clear(); laneLocked=[false,false,false];
+    notes.forEach(n => n.el.remove()); notes = [];
+    document.getElementById("titleScreen").style.display="none";
+    document.getElementById("rankmaLobby").classList.remove("open");
+    document.getElementById("game").style.display="block";
+    document.getElementById("bottomArea").style.display="flex";
+    const tag = document.getElementById("rankmaTag");
+    if (isRankmaMode) {
+        document.getElementById("rankmaTagName").innerText = rankmaName;
+        tag.style.display = "inline";
+    } else {
+        tag.style.display = "none";
+    }
+    scaleGame();
+
+    // カウントダウン開始
+    const overlay = document.getElementById("countdown");
+    const num = document.getElementById("countdownNum");
+    overlay.style.display = "flex";
+    const steps = ["3","2","1","GO!!"];
+    let i = 0;
+    function step() {
+        const isGo = steps[i] === "GO!!";
+        num.className = isGo ? "go" : "";
+        num.innerText = steps[i];
+        num.style.animation = "none";
+        void num.offsetWidth;
+        num.style.animation = isGo ? "countGo 0.75s ease-out forwards" : "countPop 0.85s ease-out forwards";
+        i++;
+        if (i < steps.length) {
+            setTimeout(step, 850);
+        } else {
+            setTimeout(() => {
+                overlay.style.display = "none";
+                // ここでゲーム本体をスタート
+                running = true; loop(); spawn();
+                showMobileBtnsIfNeeded();
+                afterCallback();
+            }, 650);
+        }
+    }
+    step();
+}
 
 function setupTimer(sec){
     let timeLeft = sec;
@@ -744,23 +840,7 @@ function setupTimer(sec){
 }
 
 function startCommon(){
-    score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
-    activeKeys.clear(); laneLocked=[false,false,false];
-    notes.forEach(n => n.el.remove()); notes = [];
-    document.getElementById("titleScreen").style.display="none";
-    document.getElementById("game").style.display="block";
-    document.getElementById("bottomArea").style.display="flex";
-
-    const tag = document.getElementById("rankmaTag");
-    if (isRankmaMode) {
-        document.getElementById("rankmaTagName").innerText = rankmaName;
-        tag.style.display = "inline";
-    } else {
-        tag.style.display = "none";
-    }
-
-    running=true; loop(); spawn();
-    showMobileBtnsIfNeeded();
+    // startWithCountdown内で処理済みのため不要（後方互換用に空で残す）
 }
 
 let _currentScale = 1;
@@ -865,6 +945,44 @@ function endGame(){
     } else {
         document.getElementById("normalSaveArea").style.display = "block";
         document.getElementById("rankmaSaveArea").style.display = "none";
+    }
+
+    // 順位表示（非同期で取得）
+    fetchRankPosition();
+}
+
+async function fetchRankPosition() {
+    const el = document.getElementById("rankPositionDisplay");
+    el.style.color = "#aaa";
+    el.innerText = "番付照合中...";
+    try {
+        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
+        const data = await res.json();
+
+        // 月間番付での順位
+        const monthArr = data.month || [];
+        const monthPos = monthArr.findIndex(d => d.score <= score);
+        const monthRank = monthPos === -1 ? monthArr.length + 1 : monthPos + 1;
+
+        // 歴代番付での順位
+        const rekidaiArr = data.rekidai || [];
+        const rekidaiPos = rekidaiArr.findIndex(d => d.score <= score);
+        const rekidaiRank = rekidaiPos === -1 ? rekidaiArr.length + 1 : rekidaiPos + 1;
+
+        let text = "";
+        if (isRankmaMode) {
+            const medal = monthRank === 1 ? "🥇" : monthRank === 2 ? "🥈" : monthRank === 3 ? "🥉" : "";
+            text = `${medal} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> 相当`;
+            if (monthRank <= 3) text += " 🔥";
+        } else {
+            const medal = rekidaiRank === 1 ? "🥇" : rekidaiRank === 2 ? "🥈" : rekidaiRank === 3 ? "🥉" : "";
+            text = `${medal} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> 相当`;
+            if (rekidaiRank <= 3) text += " 🔥";
+        }
+        el.style.color = "white";
+        el.innerHTML = text;
+    } catch(e) {
+        el.innerText = "";
     }
 }
 
