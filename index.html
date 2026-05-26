@@ -163,7 +163,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #lane1 { background-image: url('lane_a.png'); }
 #lane2 { background-image: url('lane_b.png'); }
 #lane3 { background-image: url('lane_c.png'); }
-.note-container { position:absolute; width:120px; height:120px; transform:translate(-50%,-50%); z-index: 10; pointer-events: none; }
+.note-container { position:absolute; width:120px; height:120px; z-index: 10; pointer-events: none; }
 .soba-img { width: 100%; height: 100%; object-fit: contain; }
 .hit { position:absolute; left:85px; width:130px; height:130px; transform:translate(-50%,-50%); border-radius: 50%; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: rgba(255,255,255,0.5); border: 2px dashed rgba(255,255,255,0.2); }
 .hit.active { background: rgba(255, 215, 0, 0.4); box-shadow: 0 0 35px gold; color: white; border-style: solid; }
@@ -760,7 +760,9 @@ function spawn(){
     container.className = "note-container";
     let img = document.createElement("img"); img.src = noteImages[lane]; img.className = "soba-img";
     container.appendChild(img);
-    container.style.left = "1200px"; container.style.top = laneY[lane]+"px";
+    container.style.left = "0px"; container.style.top = laneY[lane]+"px";
+    container.style.transform = "translate3d(1200px,-50%,0)";
+    container.style.willChange = "transform";
     document.getElementById("game").appendChild(container);
     notes.push({el:container, x:1200, lane:lane});
 
@@ -779,7 +781,7 @@ function loop(){
     const speed = isMobile() ? baseSpeed * scale : baseSpeed;
 
     for(let i=notes.length-1; i>=0; i--){
-        let n = notes[i]; n.x -= speed; n.el.style.left = n.x + "px";
+        let n = notes[i]; n.x -= speed; n.el.style.transform = "translate3d("+n.x+"px,-50%,0)";
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI(); requestAnimationFrame(loop);
@@ -797,10 +799,10 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    if (!isMobile() || _uiFrame % 3 === 0) {
+    if (!isMobile() || _uiFrame % 6 === 0) {
         worker.innerText=emoji; worker.className=state;
     }
-    document.getElementById("gaugeFill").style.width = gauge+"%";
+    if (!isMobile() || _uiFrame % 3 === 0) document.getElementById("gaugeFill").style.width = gauge+"%";
 }
 
 function hit(l){
