@@ -47,7 +47,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   50%, 100% { left: 120%; }
 }
 
-
 /* ===== カウントダウン ===== */
 #countdown {
   display: none;
@@ -71,18 +70,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   color: #ff4400;
   text-shadow: 0 0 40px rgba(255,80,0,1), 0 0 80px rgba(255,40,0,0.5);
 }
-@keyframes countPop {
-  0%   { transform: scale(2.2); opacity: 0; }
-  25%  { transform: scale(1.0); opacity: 1; }
-  70%  { transform: scale(1.0); opacity: 1; }
-  100% { transform: scale(0.5); opacity: 0; }
-}
-@keyframes countGo {
-  0%   { transform: scale(0.5); opacity: 0; }
-  20%  { transform: scale(1.1); opacity: 1; }
-  60%  { transform: scale(1.0); opacity: 1; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
 
 /* ===== リザルト順位表示 ===== */
 #rankPositionDisplay {
@@ -91,7 +78,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   margin: 6px 0 14px;
   min-height: 36px;
 }
-
 
 /* ===== コンボフラッシュ演出 ===== */
 #comboFlash {
@@ -145,12 +131,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   box-sizing: border-box;
 }
 #rankmaLobby.open { display: flex; }
-
-/* 炎パーティクルキャンバス */
-#fireCanvas {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: 151;
-}
 
 .lobby-content {
   position: relative; z-index: 152;
@@ -240,7 +220,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 }
 .lobby-back-btn:hover { color: #bbb; border-color: #888; }
 
-/* ===== ゲームエリア（既存） ===== */
+/* ===== ゲームエリア ===== */
 #game { position:absolute; left:50%; top:28%; transform:translate(-50%, -50%); width:1100px; height:380px; display:none; overflow: hidden; border: 3px solid #555; border-radius: 15px; background: #000; }
 .lane-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
 .lane { width: 100%; height: 33.3%; background-size: 100% 100%; background-repeat: no-repeat; opacity: 0.8; }
@@ -438,10 +418,9 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   .lobby-mode-btns { margin-bottom: 12px; }
 }
 
-/* ===== 縦持ち（非プレイ中の通常画面）専用スタイル調整 ===== */
+/* ===== 縦持ち専用スタイル調整 ===== */
 @media (max-width: 1200px) and (orientation: portrait) {
   body { overflow-y: auto; }
-
   #titleScreen {
     position: relative; min-height: 100vh;
     overflow-y: auto; justify-content: flex-start;
@@ -470,8 +449,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <body>
 
 <canvas id="fireCanvas"></canvas>
-
-
 
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
@@ -769,6 +746,39 @@ async function loadLobbyTop3() {
     }
 }
 
+// ===== ★ 対策1: Web Audio API の実装 =====
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+const soundBuffers = { perfect: null, great: null, miss: null };
+
+// 音声を事前ロード・デコードする関数
+async function loadSound(name, url) {
+    try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        soundBuffers[name] = await audioCtx.decodeAudioData(arrayBuffer);
+    } catch (e) {
+        console.error("音声の読み込みに失敗:", url, e);
+    }
+}
+// ページ読み込み時にロード開始
+loadSound('perfect', 'perfect.mp3');
+loadSound('great', 'great.mp3');
+loadSound('miss', 'miss.mp3');
+
+// 超軽量な再生関数（メインスレッドをブロックしない）
+function playSE(type) {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    const buffer = soundBuffers[type];
+    if (!buffer) return; 
+    const source = audioCtx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioCtx.destination);
+    source.start(0);
+}
+
 let notes=[], score=0, combo=0, running=false, isInfinite=false, currentMode="30";
 let gauge=0, fever=false, timerInterval, totalMissCount=0;
 let activeKeys = new Set();
@@ -777,13 +787,10 @@ let isRankmaMode = false;
 let rankmaName = "";
 let pendingRankmaMode = "";
 
-const sePerfect = new Audio('perfect.mp3');
-const seGreat = new Audio('great.mp3');
-const seMiss = new Audio('miss.mp3');
-function playSE(audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); }
-
 // ===== ランクマ モーダル =====
 function openRankma(mode) {
+    // ユーザーインタラクションのタイミングでオーディオコンテキストをアクティブ化（スマホ対策）
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     pendingRankmaMode = mode;
     const input = document.getElementById("nameModalInput");
     input.value = rankmaName || "";
@@ -833,8 +840,16 @@ async function confirmRankmaName() {
 }
 
 // ===== 通常スタート =====
-function startNormal(sec) { isRankmaMode = false; startGame(sec); }
-function startNormalInfinite() { isRankmaMode = false; startInfinite(); }
+function startNormal(sec) { 
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isRankmaMode = false; 
+    startGame(sec); 
+}
+function startNormalInfinite() { 
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isRankmaMode = false; 
+    startInfinite(); 
+}
 
 // ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
@@ -856,7 +871,6 @@ function startWithCountdown(afterCallback) {
         tag.style.display = "none";
     }
     
-    // ゲーム本体がスタート状態であることを記録（カウントダウン中も含むためここで行う）
     running = true; 
     scaleGame();
 
@@ -897,14 +911,11 @@ function setupTimer(sec){
     }, 1000);
 }
 
-function startCommon(){}
-
 let _currentScale = 1;
 function currentMobileScale() { return _currentScale; }
 
 function spawn(){
     if(!running) return;
-    // 縦持ちの間は一時的にノーツの生成をストップする（再開時に崩れないよう保護）
     if(isMobile() && window.innerHeight > window.innerWidth) {
         setTimeout(spawn, 300);
         return;
@@ -930,7 +941,6 @@ function spawn(){
 function loop(){
     if(!running) return;
     
-    // スマホかつ縦持ち（Portrait）のときはゲームの内部進行（ノーツの移動）を一時停止
     if (isMobile() && window.innerHeight > window.innerWidth) {
         requestAnimationFrame(loop);
         return;
@@ -943,11 +953,8 @@ function loop(){
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI();
-    if (isMobile()) {
-        setTimeout(() => requestAnimationFrame(loop), 16);
-    } else {
-        requestAnimationFrame(loop);
-    }
+    // スマホでのタイマーズレを防ぎ描画を滑らかにするため、一本化
+    requestAnimationFrame(loop);
 }
 
 let _uiFrame = 0;
@@ -962,7 +969,8 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    if (!isMobile() || _uiFrame % 10 === 0) {
+    // スマホの負荷を減らすためDOM更新頻度を適度に間引く
+    if (!isMobile() || _uiFrame % 6 === 0) {
         if(worker) { worker.innerText=emoji; worker.className=state; }
     }
     if (!isMobile() || _uiFrame % 3 === 0) {
@@ -972,7 +980,6 @@ function updateUI() {
 }
 
 function hit(l){
-    // 縦持ち中は判定を受け付けない
     if(isMobile() && window.innerHeight > window.innerWidth) return;
     if(laneLocked[l] || activeKeys.size > 1) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
@@ -982,11 +989,14 @@ function hit(l){
     combo++;
     checkComboMilestone(combo);
     if(diff < 65){
-        res="PERFECT"; playSE(sePerfect);
+        res="PERFECT"; 
+        playSE('perfect'); // 引数を文字列に変更
         score += (500 + combo*10) * (fever?2:1);
         if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
     } else {
-        res="GREAT"; playSE(seGreat); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
+        res="GREAT"; 
+        playSE('great');   // 引数を文字列に変更
+        totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
     document.getElementById("score").innerText=score; document.getElementById("combo").innerText=combo;
     showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
@@ -1019,7 +1029,12 @@ function checkComboMilestone(c) {
   flashTimer = setTimeout(() => { el.style.display = "none"; }, 1000);
 }
 
-function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE(seMiss); }
+function missEffect(){ 
+    combo=0; gauge=0; totalMissCount++; 
+    document.getElementById("combo").innerText=0; 
+    showJudge("MISS"); 
+    playSE('miss'); // 引数を文字列に変更
+}
 
 function showJudge(res){
     const j = document.getElementById("judge");
@@ -1033,7 +1048,7 @@ function endGame(){
     document.getElementById("mobileBtns").style.display = "none";
     document.getElementById("game").style.display="none";
     document.getElementById("bottomArea").style.display="none";
-    document.getElementById("rotateOverlay").style.display = "none"; // 終了時は警告を消去
+    document.getElementById("rotateOverlay").style.display = "none"; 
     document.getElementById("result").style.display="block";
     document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
     let rank = "修行中";
@@ -1061,7 +1076,6 @@ async function fetchRankPosition() {
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
-
         const monthAllArr = data.monthTotal || data.month || [];
         const rekidaiAllArr = data.rekidaiTotal || data.rekidai || [];
 
@@ -1186,7 +1200,6 @@ function scaleGame() {
 
   const isPortrait = window.innerHeight > window.innerWidth;
 
-  // ★ プレイ中（running === true）のみ、縦持ちの時に回転促す画面を表示
   if (running) {
     if (isPortrait) {
       overlay.style.display = "flex";
@@ -1201,15 +1214,13 @@ function scaleGame() {
       mobileBtns.style.display = "flex";
     }
   } else {
-    // プレイ中でなければ回転オーバーレイとゲーム・スマホ用ボタンは完全に非表示
     overlay.style.display = "none";
     mobileBtns.style.display = "none";
     game.style.display = "none";
     bottom.style.display = "none";
-    return; // タイトルやランキングなどの通常画面はCSSのメディアクエリで縦表示対応
+    return; 
   }
 
-  // 以下、横持ちプレイ中限定のゲーム画面スケール処理
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const GAME_W = 1100;
@@ -1250,7 +1261,6 @@ window.addEventListener("resize", () => {
 });
 window.addEventListener("orientationchange", () => setTimeout(scaleGame, 200));
 
-// 初回起動時のレイアウト初期化
 document.addEventListener("DOMContentLoaded", () => {
     scaleGame();
 });
@@ -1270,7 +1280,7 @@ document.addEventListener("keydown", e => {
     if (!running) return;
     const k = e.key.toLowerCase();
     if (!["a","s","l"].includes(k) || activeKeys.has(k)) return;
-    activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
+    activeKeys.add(k); if(k alienation="a") hit(0); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
 document.addEventListener("keyup", e => {
     if (!e || !e.key) return;
