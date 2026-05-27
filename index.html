@@ -10,7 +10,7 @@
 <meta name="keywords" content="無限そば道,音ゲー,ブラウザゲーム,越前そば,無料ゲーム,福井">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
-body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; }
+body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; overflow-x:hidden; user-select: none; }
 
 /* ===== タイトル画面 ===== */
 #titleScreen{ position:fixed;width:100%;height:100%; display:flex;flex-direction:column; justify-content:center;align-items:center; z-index: 100; background: rgba(0,0,0,0.8); overflow-y: auto; padding: 10px 0; box-sizing: border-box; }
@@ -272,7 +272,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 @keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
 @keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
 @keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
-#result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto;}
+#result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto; left:0; top:0; box-sizing: border-box; }
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
 #nameInput { font-size: 20px; text-align: center; background: #222; color: white; border: 1px solid gold; border-radius: 5px; padding: 5px; }
@@ -289,6 +289,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #nameModal {
   display: none;
   position: fixed;
+  left:0; top:0;
   width: 100%; height: 100%;
   background: rgba(0,0,0,0.92);
   z-index: 400;
@@ -378,7 +379,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 /* ===== 縦持ち警告オーバーレイ ===== */
 #rotateOverlay {
   display: none;
-  position: fixed; width: 100%; height: 100%;
+  position: fixed; left:0; top:0; width: 100%; height: 100%;
   background: #000; z-index: 9999;
   justify-content: center; align-items: center; flex-direction: column;
   text-align: center; padding: 20px; box-sizing: border-box;
@@ -387,7 +388,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 @keyframes rotateAnim { 0%,100%{transform:rotate(0deg);} 50%{transform:rotate(90deg);} }
 #rotateOverlay p { font-size: 20px; color: gold; font-family: 'Zen Old Mincho'; margin-top: 20px; }
 
-/* ===== スマホ共通 ===== */
+/* ===== スマホ共通・PC共通レスポンシブ調整 ===== */
 @media (max-width: 1200px) {
   #title { font-size: 36px; }
   #titleScreen > div:nth-child(2) { font-size: 13px; margin-bottom: 10px; }
@@ -437,7 +438,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   .lobby-mode-btns { margin-bottom: 12px; }
 }
 
-/* ===== 縦持ちスマホ専用 ===== */
+/* ===== 縦持ち（非プレイ中の通常画面）専用スタイル調整 ===== */
 @media (max-width: 1200px) and (orientation: portrait) {
   body { overflow-y: auto; }
 
@@ -472,13 +473,11 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 
 
 
-<!-- 縦持ち回転促すオーバーレイ -->
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
   <p>スマホを横向きにして<br>遊んでくれ！</p>
 </div>
 
-<!-- ランクマ名前入力モーダル -->
 <div id="nameModal">
   <div id="nameModalBox">
     <h2>⚔️ ランクマッチ参戦</h2>
@@ -490,7 +489,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   </div>
 </div>
 
-<!-- ===== ランクマ中間画面 ===== -->
 <div id="rankmaLobby">
   <canvas id="fireCanvas2" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:151;"></canvas>
   <div class="lobby-content">
@@ -501,7 +499,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
       <div id="tauntText">Loading...</div>
     </div>
 
-    <!-- 月間トップ3（モード別） -->
     <div class="lobby-top3-wrapper" id="lobbyTop3Wrapper">
       <div class="lobby-top3-card" id="lobbyCard30">
         <h3>🏆 30秒の頂</h3>
@@ -530,22 +527,18 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   </div>
 </div>
 
-<!-- タイトル画面 -->
 <div id="titleScreen">
  <div id="title">無限そば道</div>
  <div style="color:white; margin-bottom:8px; font-size:14px;">～ 絶・越前極への道 ～</div>
 
- <!-- 通常修行 -->
  <div style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 修行モード ──</div>
  <button class="menuBtn" onclick="startNormal(30)">30秒修行</button>
  <button class="menuBtn" onclick="startNormal(60)">60秒修行</button>
  <button class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
 
- <!-- ランクマッチ挑戦ボタン -->
  <button id="rankmaEntryBtn" onclick="openRankmaLobby()">⚔️ ランクマッチに挑戦する</button>
  <div style="color:#ff8844; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">月間最強職人を決める真剣勝負</div>
 
- <!-- 番付閲覧 -->
  <div style="margin-top:4px; border-top:1px solid #333; padding-top:8px;">
    <div style="color:#888; font-size:12px; margin-bottom:4px; letter-spacing:1px;">番付を見る</div>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('30')">30秒番付</button>
@@ -575,7 +568,6 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
     <div id="workerArea"><div id="workerEmoji">🥣</div></div>
 </div>
 
-<!-- スマホ専用タップボタン -->
 <div id="mobileBtns" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:45%; z-index:50; justify-content:space-around; align-items:center; padding:0 12px; box-sizing:border-box; background:rgba(0,0,0,0.5);">
   <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
   <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
@@ -659,6 +651,7 @@ let tauntIdx = 0;
 function rotateTaunt() {
     tauntIdx = (tauntIdx + 1) % tauntLines.length;
     const el = document.getElementById("tauntText");
+    if(!el) return;
     el.style.animation = "none";
     void el.offsetWidth;
     el.innerText = tauntLines[tauntIdx];
@@ -731,17 +724,13 @@ function fireTick() {
 // ===== ランクマロビー開閉 =====
 async function openRankmaLobby() {
     document.getElementById("rankmaLobby").classList.add("open");
-    // 初回煽り文句
     const el = document.getElementById("tauntText");
     tauntIdx = Math.floor(Math.random() * tauntLines.length);
     el.innerText = tauntLines[tauntIdx];
     el.style.animation = "tauntFade 0.5s ease-in";
     tauntTimer = setInterval(rotateTaunt, 4000);
 
-    // 炎スタート
     initFire();
-
-    // 番付読込
     loadLobbyTop3();
 }
 
@@ -852,7 +841,6 @@ function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCou
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startWithCountdown(() => {}); }
 
 function startWithCountdown(afterCallback) {
-    // まずゲームエリアを表示（ノーツはまだ動かさない）
     score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
     notes.forEach(n => n.el.remove()); notes = [];
@@ -867,9 +855,11 @@ function startWithCountdown(afterCallback) {
     } else {
         tag.style.display = "none";
     }
+    
+    // ゲーム本体がスタート状態であることを記録（カウントダウン中も含むためここで行う）
+    running = true; 
     scaleGame();
 
-    // カウントダウン開始
     const overlay = document.getElementById("countdown");
     const num = document.getElementById("countdownNum");
     overlay.style.display = "flex";
@@ -888,8 +878,7 @@ function startWithCountdown(afterCallback) {
         } else {
             setTimeout(() => {
                 overlay.style.display = "none";
-                // ここでゲーム本体をスタート
-                running = true; loop(); spawn();
+                loop(); spawn();
                 showMobileBtnsIfNeeded();
                 afterCallback();
             }, 650);
@@ -908,15 +897,19 @@ function setupTimer(sec){
     }, 1000);
 }
 
-function startCommon(){
-    // startWithCountdown内で処理済みのため不要（後方互換用に空で残す）
-}
+function startCommon(){}
 
 let _currentScale = 1;
 function currentMobileScale() { return _currentScale; }
 
 function spawn(){
     if(!running) return;
+    // 縦持ちの間は一時的にノーツの生成をストップする（再開時に崩れないよう保護）
+    if(isMobile() && window.innerHeight > window.innerWidth) {
+        setTimeout(spawn, 300);
+        return;
+    }
+
     let lane = Math.floor(Math.random()*3);
     let container = document.createElement("div");
     container.className = "note-container";
@@ -936,6 +929,13 @@ function spawn(){
 
 function loop(){
     if(!running) return;
+    
+    // スマホかつ縦持ち（Portrait）のときはゲームの内部進行（ノーツの移動）を一時停止
+    if (isMobile() && window.innerHeight > window.innerWidth) {
+        requestAnimationFrame(loop);
+        return;
+    }
+
     const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
 
     for(let i=notes.length-1; i>=0; i--){
@@ -944,7 +944,7 @@ function loop(){
     }
     updateUI();
     if (isMobile()) {
-        setTimeout(() => requestAnimationFrame(loop), 16); // ~60fps cap on mobile
+        setTimeout(() => requestAnimationFrame(loop), 16);
     } else {
         requestAnimationFrame(loop);
     }
@@ -963,12 +963,17 @@ function updateUI() {
         if(gauge>0) gauge-=0.1;
     }
     if (!isMobile() || _uiFrame % 10 === 0) {
-        worker.innerText=emoji; worker.className=state;
+        if(worker) { worker.innerText=emoji; worker.className=state; }
     }
-    if (!isMobile() || _uiFrame % 3 === 0) document.getElementById("gaugeFill").style.width = gauge+"%";
+    if (!isMobile() || _uiFrame % 3 === 0) {
+        const gf = document.getElementById("gaugeFill");
+        if(gf) gf.style.width = gauge+"%";
+    }
 }
 
 function hit(l){
+    // 縦持ち中は判定を受け付けない
+    if(isMobile() && window.innerHeight > window.innerWidth) return;
     if(laneLocked[l] || activeKeys.size > 1) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
     let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
@@ -987,8 +992,6 @@ function hit(l){
     showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
 }
 
-
-// ===== コンボフラッシュ =====
 const comboMilestones = [
   { n: 50,  text: "50コンボ！",  sub: "そばの腕が上がってきたぞ！",  color: "#44ccff", bg: "rgba(0,150,255,0.18)" },
   { n: 100, text: "100コンボ！！", sub: "越前職人の領域に入った！",   color: "#ffcc00", bg: "rgba(255,180,0,0.22)" },
@@ -1030,6 +1033,7 @@ function endGame(){
     document.getElementById("mobileBtns").style.display = "none";
     document.getElementById("game").style.display="none";
     document.getElementById("bottomArea").style.display="none";
+    document.getElementById("rotateOverlay").style.display = "none"; // 終了時は警告を消去
     document.getElementById("result").style.display="block";
     document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
     let rank = "修行中";
@@ -1047,7 +1051,6 @@ function endGame(){
         document.getElementById("rankmaSaveArea").style.display = "none";
     }
 
-    // 順位表示（非同期で取得）
     fetchRankPosition();
 }
 
@@ -1059,9 +1062,6 @@ async function fetchRankPosition() {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
 
-        // 月間番付での順位
-        const monthArr = data.month || [];
-        // 全件データで正確な順位を計算
         const monthAllArr = data.monthTotal || data.month || [];
         const rekidaiAllArr = data.rekidaiTotal || data.rekidai || [];
 
@@ -1087,7 +1087,6 @@ async function fetchRankPosition() {
     }
 }
 
-// ===== 通常番付保存 =====
 async function saveRank() {
     const name = document.getElementById("nameInput").value.trim();
     if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
@@ -1103,7 +1102,6 @@ async function saveRank() {
     }
 }
 
-// ===== ランクマスコア保存 =====
 async function saveRankmaScore() {
     const btn = document.querySelector("#rankmaSaveArea button");
     btn.disabled=true; btn.innerText="刻み中...";
@@ -1120,7 +1118,6 @@ async function saveRankmaScore() {
     }
 }
 
-// ===== 番付表示 =====
 async function showRanking(){
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("result").style.display="none";
@@ -1161,7 +1158,6 @@ async function showRanking(){
 
 function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 
-// ===== スマホタップボタン =====
 function mobileTap(i) {
     if (!running) return;
     document.getElementById(`mBtn-${i}`).classList.add("active");
@@ -1174,12 +1170,13 @@ function mobileRelease(i) {
     laneLocked[i] = false;
 }
 
-// ===== スマホ対応 =====
 const isMobile = () => window.innerWidth <= 1200 || /Mobi|Android/i.test(navigator.userAgent);
 
 function scaleGame() {
   const overlay = document.getElementById("rotateOverlay");
   const mobileBtns = document.getElementById("mobileBtns");
+  const game = document.getElementById("game");
+  const bottom = document.getElementById("bottomArea");
 
   if (!isMobile()) {
     overlay.style.display = "none";
@@ -1189,19 +1186,30 @@ function scaleGame() {
 
   const isPortrait = window.innerHeight > window.innerWidth;
 
-  // 縦持ち回転オーバーレイはプレイ中のみ表示
-  if (isPortrait && running) {
-    overlay.style.display = "flex";
+  // ★ プレイ中（running === true）のみ、縦持ちの時に回転促す画面を表示
+  if (running) {
+    if (isPortrait) {
+      overlay.style.display = "flex";
+      mobileBtns.style.display = "none";
+      game.style.display = "none";
+      bottom.style.display = "none";
+      return;
+    } else {
+      overlay.style.display = "none";
+      game.style.display = "block";
+      bottom.style.display = "flex";
+      mobileBtns.style.display = "flex";
+    }
+  } else {
+    // プレイ中でなければ回転オーバーレイとゲーム・スマホ用ボタンは完全に非表示
+    overlay.style.display = "none";
     mobileBtns.style.display = "none";
-    return;
-  }
-  overlay.style.display = "none";
-
-  // 縦持ちのままゲーム以外の画面を表示する場合はスケール処理をスキップ
-  if (isPortrait) {
-    return;
+    game.style.display = "none";
+    bottom.style.display = "none";
+    return; // タイトルやランキングなどの通常画面はCSSのメディアクエリで縦表示対応
   }
 
+  // 以下、横持ちプレイ中限定のゲーム画面スケール処理
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const GAME_W = 1100;
@@ -1213,13 +1221,11 @@ function scaleGame() {
   const scale = Math.min(scaleX, scaleY, 1);
   _currentScale = scale;
 
-  const game = document.getElementById("game");
   const scaledH = GAME_H * scale;
   game.style.transform = `translate(-50%, 0) scale(${scale})`;
   game.style.left = "50%";
   game.style.top = `${(topAreaH - scaledH) / 2}px`;
 
-  const bottom = document.getElementById("bottomArea");
   const gaugeTop = (topAreaH - scaledH) / 2 + scaledH + 4;
   bottom.style.position = "fixed";
   bottom.style.top = `${gaugeTop}px`;
@@ -1227,14 +1233,10 @@ function scaleGame() {
   bottom.style.transform = "translateX(-50%)";
   bottom.style.width = `${vw}px`;
   bottom.style.height = `${vh * 0.45 - 4}px`;
-
-  if (running) {
-    mobileBtns.style.display = "flex";
-  }
 }
 
 function showMobileBtnsIfNeeded() {
-  if (isMobile() && window.innerWidth > window.innerHeight) {
+  if (isMobile() && window.innerWidth > window.innerHeight && running) {
     document.getElementById("mobileBtns").style.display = "flex";
   }
 }
@@ -1247,7 +1249,11 @@ window.addEventListener("resize", () => {
     }
 });
 window.addEventListener("orientationchange", () => setTimeout(scaleGame, 200));
-scaleGame();
+
+// 初回起動時のレイアウト初期化
+document.addEventListener("DOMContentLoaded", () => {
+    scaleGame();
+});
 
 // ===== キー操作 =====
 document.addEventListener("keydown", e => {
