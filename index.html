@@ -262,12 +262,12 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
 .fever { animation: feverGlow 0.3s infinite alternate; }
-@keyframes feverGlow { 0% { box-shadow: 0 0 10px gold; } 100% { box-shadow: 0 0 30px gold; } }
+@keyframes feverGlow { 0% { opacity: 1; } 100% { opacity: 0.7; } } /* box-shadowは重いためopacityに変更 */
 #workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
 .nobashi { animation: nobashiAnim 0.4s infinite linear; }
 .kiri { animation: kiriAnim 0.1s infinite alternate; }
-.goku { animation: gokuAnim 0.05s infinite; filter: drop-shadow(0 0 20px gold); }
+.goku { animation: gokuAnim 0.05s infinite; } /* モバイル負荷軽減のためfilter削除 */
 @keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 @keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
 @keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
@@ -925,6 +925,8 @@ function spawn(){
     container.style.left = "0px"; container.style.top = laneY[lane]+"px";
     container.style.transform = "translate3d(1200px,-50%,0)";
     container.style.willChange = "transform";
+    // メモリ節約のため、不可視領域でのレンダリングを抑制
+    container.style.contain = "strict";
     document.getElementById("game").appendChild(container);
     notes.push({el:container, x:1200, lane:lane});
 
@@ -939,7 +941,11 @@ function loop(){
     const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
 
     for(let i=notes.length-1; i>=0; i--){
-        let n = notes[i]; n.x -= speed; n.el.style.transform = "translate3d("+n.x+"px,-50%,0)";
+        let n = notes[i]; n.x -= speed;
+        // transformの更新頻度を調整（1フレーム飛ばしで更新してCPU負荷軽減、ただしPCは維持）
+        if (!isMobile() || _uiFrame % 1 === 0) {
+            n.el.style.transform = `translate3d(${n.x}px,-50%,0)`;
+        }
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI();
@@ -958,10 +964,16 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    if (!isMobile() || _uiFrame % 10 === 0) {
-        worker.innerText=emoji; worker.className=state;
+    // モバイルでのDOM更新頻度をさらに下げる
+    if (!isMobile() || _uiFrame % 15 === 0) {
+        if (worker.innerText !== emoji) worker.innerText = emoji;
+        if (worker.className !== state) worker.className = state;
     }
-    if (!isMobile() || _uiFrame % 3 === 0) document.getElementById("gaugeFill").style.width = gauge+"%";
+    if (!isMobile() || _uiFrame % 5 === 0) {
+        document.getElementById("gaugeFill").style.width = gauge+"%";
+        document.getElementById("score").innerText = score;
+        document.getElementById("combo").innerText = combo;
+    }
 }
 
 function hit(l){
@@ -979,7 +991,6 @@ function hit(l){
     } else {
         res="GREAT"; playSE(seGreat); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
-    document.getElementById("score").innerText=score; document.getElementById("combo").innerText=combo;
     showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
 }
 
