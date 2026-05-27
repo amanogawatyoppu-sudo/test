@@ -943,11 +943,7 @@ function loop(){
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI();
-    if (isMobile()) {
-        setTimeout(() => requestAnimationFrame(loop), 16); // ~60fps cap on mobile
-    } else {
-        requestAnimationFrame(loop);
-    }
+    requestAnimationFrame(loop);
 }
 
 let _uiFrame = 0;
@@ -969,7 +965,7 @@ function updateUI() {
 }
 
 function hit(l){
-    if(laneLocked[l] || activeKeys.size > 1) return;
+    if(laneLocked[l]) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
     let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
     if(tIdx === -1) return;
@@ -1165,12 +1161,10 @@ function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 function mobileTap(i) {
     if (!running) return;
     document.getElementById(`mBtn-${i}`).classList.add("active");
-    activeKeys.add("m"+i);
     hit(i);
 }
 function mobileRelease(i) {
     document.getElementById(`mBtn-${i}`).classList.remove("active");
-    activeKeys.delete("m"+i);
     laneLocked[i] = false;
 }
 
@@ -1274,12 +1268,17 @@ document.addEventListener("keyup", e => {
         document.getElementById(`hit-${i}`).classList.remove("active");
     }
 });
+// .hit要素のpointerdownはPC用のみ（スマホはmobileBtnsで処理）
 document.querySelectorAll(".hit").forEach((el, i) => {
-    el.addEventListener("pointerdown", () => { if(running) { activeKeys.add("p"+i); hit(i); } });
+    el.addEventListener("pointerdown", (e) => {
+        if (!isMobile() && running) { activeKeys.add("p"+i); hit(i); }
+    });
 });
 window.addEventListener("pointerup", () => {
-    laneLocked=[false,false,false]; activeKeys.clear();
+    laneLocked=[false,false,false];
+    if (!isMobile()) activeKeys.clear();
     document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".mobileHitBtn").forEach(el => el.classList.remove("active"));
 });
 </script>
 </body>
