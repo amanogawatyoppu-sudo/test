@@ -92,6 +92,45 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   min-height: 36px;
 }
 
+
+/* ===== コンボフラッシュ演出 ===== */
+#comboFlash {
+  display: none;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 95; pointer-events: none;
+  justify-content: center; align-items: center;
+  flex-direction: column;
+}
+#comboFlashBg {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  opacity: 0;
+}
+#comboFlashText {
+  position: relative; z-index: 2;
+  font-family: 'Zen Old Mincho';
+  font-size: 72px;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 0 30px currentColor;
+}
+#comboFlashSub {
+  position: relative; z-index: 2;
+  font-family: 'Zen Old Mincho';
+  font-size: 24px;
+  margin-top: 6px;
+  opacity: 0.9;
+}
+@keyframes flashBg {
+  0%   { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+@keyframes flashText {
+  0%   { transform: scale(1.6); opacity: 0; }
+  20%  { transform: scale(1.0); opacity: 1; }
+  70%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.85); opacity: 0; }
+}
+
 /* ===== ランクマ中間画面 ===== */
 #rankmaLobby {
   display: none;
@@ -499,6 +538,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  </div>
  <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
  <div id="judge"></div>
+ <div id="comboFlash"><div id="comboFlashBg"></div><div id="comboFlashText"></div><div id="comboFlashSub"></div></div>
  <div id="countdown"><div id="countdownNum">3</div></div>
 </div>
 
@@ -907,6 +947,7 @@ function hit(l){
     if(tIdx === -1) return;
     let t = notes[tIdx], diff = Math.abs(t.x - HIT_X), res;
     combo++;
+    checkComboMilestone(combo);
     if(diff < 65){
         res="PERFECT"; playSE(sePerfect);
         score += (500 + combo*10) * (fever?2:1);
@@ -916,6 +957,35 @@ function hit(l){
     }
     document.getElementById("score").innerText=score; document.getElementById("combo").innerText=combo;
     showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
+}
+
+
+// ===== コンボフラッシュ =====
+const comboMilestones = [
+  { n: 50,  text: "50コンボ！",  sub: "そばの腕が上がってきたぞ！",  color: "#44ccff", bg: "rgba(0,150,255,0.18)" },
+  { n: 100, text: "100コンボ！！", sub: "越前職人の領域に入った！",   color: "#ffcc00", bg: "rgba(255,180,0,0.22)" },
+  { n: 200, text: "200コンボ！！！", sub: "これが…越前極の境地か…！", color: "#ff4400", bg: "rgba(255,60,0,0.25)" },
+];
+let flashTimer = null;
+function checkComboMilestone(c) {
+  const m = comboMilestones.find(m => m.n === c);
+  if (!m) return;
+  const el = document.getElementById("comboFlash");
+  const bg = document.getElementById("comboFlashBg");
+  const txt = document.getElementById("comboFlashText");
+  const sub = document.getElementById("comboFlashSub");
+  if (flashTimer) clearTimeout(flashTimer);
+  el.style.display = "flex";
+  bg.style.background = m.bg;
+  bg.style.animation = "none"; void bg.offsetWidth;
+  bg.style.animation = "flashBg 1.0s ease-out forwards";
+  txt.style.color = m.color;
+  txt.style.animation = "none"; void txt.offsetWidth;
+  txt.style.animation = "flashText 1.0s ease-out forwards";
+  txt.innerText = m.text;
+  sub.style.color = m.color;
+  sub.innerText = m.sub;
+  flashTimer = setTimeout(() => { el.style.display = "none"; }, 1000);
 }
 
 function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE(seMiss); }
