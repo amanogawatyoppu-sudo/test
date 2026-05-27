@@ -237,13 +237,15 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 #judge { position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap; }
 .showJudge { animation: judgeAnim 0.3s ease-out forwards; }
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
-#bottomArea { position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%); width: 1100px; height: 300px; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
-#gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
+
+/* ===== 下部エリア（茹で上がりゲージ・絵文字） ===== */
+#bottomArea { position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%); width: 1100px; height: 160px; display: none; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; gap: 8px; }
+#gaugeWrapper { width: 80%; height: 26px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
-#gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
+#gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 16px; color: white; text-shadow: 1px 1px 2px black; }
 .fever { animation: feverGlow 0.3s infinite alternate; }
 @keyframes feverGlow { 0% { box-shadow: 0 0 10px gold; } 100% { box-shadow: 0 0 30px gold; } }
-#workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
+#workerArea { font-size: 90px; height: 110px; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
 .nobashi { animation: nobashiAnim 0.4s infinite linear; }
 .kiri { animation: kiriAnim 0.1s infinite alternate; }
@@ -252,6 +254,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 @keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
 @keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
 @keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
+
 #result, #ranking { display:none; position:fixed; width:100%; height:100%; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); z-index: 200; overflow-y: auto; left:0; top:0; box-sizing: border-box; }
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
@@ -381,7 +384,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   .hit { width: 110px; height: 110px; font-size: 32px; }
   #bottomArea { width: 100vw; }
   #gaugeWrapper { width: 90%; }
-  #workerArea { font-size: 70px; height: 90px; }
+  #workerArea { font-size: 64px; height: 74px; }
   .info-text { font-size: 16px; margin-right: 10px; }
   #judge { font-size: 44px; }
   #rankDisplay { font-size: 36px; }
@@ -607,7 +610,7 @@ const sobaTrivia = [
     "越前そばは比較的太麺なのが特徴。噛めば噛むほどそばの甘みと風味が増す、それが越前流だ。",
     "福井のそばは明治時代、今庄駅で売られた駅そばが旅人に絶賛されたことで全国に名が広まった。停車時間に食べる一杯が、伝説を作った。",
     "大根おろしとそばの組み合わせは栄養学的にも理にかなっている。大根のジアスターゼがそばのたんぱく質の消化を助け、ルチンとビタミンCが血管を強くする。",
-    "福井は「全日本素人そば打ち名人大会」を1996年から開催している、日本屈指のそば打ちの聖地だ。",
+    "福井は「全日本素人そば打ち名人大会」を1996年から開催している、日本屈指 of そば打ちの聖地だ。",
     "越前おろしそばのだしのかけ方は大きく3通り。大根おろしを別添えにする店、だしに混ぜる店、絞り汁だけ使う店。それぞれに哲学がある。",
     "福井県全域で在来種のそばが栽培されており、特に丸岡産のそばは香りの高さで名高い。小粒だが殻が薄く、コシの強さが自慢だ。"
 ];
@@ -746,12 +749,11 @@ async function loadLobbyTop3() {
     }
 }
 
-// ===== ★ 対策1: Web Audio API の実装 =====
+// ===== Web Audio API の実装 =====
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 const soundBuffers = { perfect: null, great: null, miss: null };
 
-// 音声を事前ロード・デコードする関数
 async function loadSound(name, url) {
     try {
         const response = await fetch(url);
@@ -761,12 +763,10 @@ async function loadSound(name, url) {
         console.error("音声の読み込みに失敗:", url, e);
     }
 }
-// ページ読み込み時にロード開始
 loadSound('perfect', 'perfect.mp3');
 loadSound('great', 'great.mp3');
 loadSound('miss', 'miss.mp3');
 
-// 超軽量な再生関数（メインスレッドをブロックしない）
 function playSE(type) {
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
@@ -789,7 +789,6 @@ let pendingRankmaMode = "";
 
 // ===== ランクマ モーダル =====
 function openRankma(mode) {
-    // ユーザーインタラクションのタイミングでオーディオコンテキストをアクティブ化（スマホ対策）
     if (audioCtx.state === 'suspended') audioCtx.resume();
     pendingRankmaMode = mode;
     const input = document.getElementById("nameModalInput");
@@ -839,7 +838,7 @@ async function confirmRankmaName() {
     }, msg.innerText ? 1400 : 0);
 }
 
-// ===== 通常スタート =====
+// ===== スタート関連 =====
 function startNormal(sec) { 
     if (audioCtx.state === 'suspended') audioCtx.resume();
     isRankmaMode = false; 
@@ -851,7 +850,6 @@ function startNormalInfinite() {
     startInfinite(); 
 }
 
-// ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startWithCountdown(() => {}); }
 
@@ -953,7 +951,6 @@ function loop(){
         if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI();
-    // スマホでのタイマーズレを防ぎ描画を滑らかにするため、一本化
     requestAnimationFrame(loop);
 }
 
@@ -969,7 +966,6 @@ function updateUI() {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
     }
-    // スマホの負荷を減らすためDOM更新頻度を適度に間引く
     if (!isMobile() || _uiFrame % 6 === 0) {
         if(worker) { worker.innerText=emoji; worker.className=state; }
     }
@@ -990,12 +986,12 @@ function hit(l){
     checkComboMilestone(combo);
     if(diff < 65){
         res="PERFECT"; 
-        playSE('perfect'); // 引数を文字列に変更
+        playSE('perfect');
         score += (500 + combo*10) * (fever?2:1);
         if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
     } else {
         res="GREAT"; 
-        playSE('great');   // 引数を文字列に変更
+        playSE('great');
         totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
     document.getElementById("score").innerText=score; document.getElementById("combo").innerText=combo;
@@ -1033,7 +1029,7 @@ function missEffect(){
     combo=0; gauge=0; totalMissCount++; 
     document.getElementById("combo").innerText=0; 
     showJudge("MISS"); 
-    playSE('miss'); // 引数を文字列に変更
+    playSE('miss');
 }
 
 function showJudge(res){
@@ -1186,6 +1182,7 @@ function mobileRelease(i) {
 
 const isMobile = () => window.innerWidth <= 1200 || /Mobi|Android/i.test(navigator.userAgent);
 
+// ===== スマホの画面比率に合わせたレイアウト計算修正 =====
 function scaleGame() {
   const overlay = document.getElementById("rotateOverlay");
   const mobileBtns = document.getElementById("mobileBtns");
@@ -1226,24 +1223,30 @@ function scaleGame() {
   const GAME_W = 1100;
   const GAME_H = 380;
 
+  // ゲーム画面が使える高さを上半分（最大55%）に設定
   const topAreaH = vh * 0.55;
   const scaleX = vw / GAME_W;
   const scaleY = topAreaH / GAME_H;
   const scale = Math.min(scaleX, scaleY, 1);
   _currentScale = scale;
 
+  // ゲーム画面（#game）を配置
   const scaledH = GAME_H * scale;
   game.style.transform = `translate(-50%, 0) scale(${scale})`;
   game.style.left = "50%";
-  game.style.top = `${(topAreaH - scaledH) / 2}px`;
+  game.style.top = "4px"; // 画面の一番上ギリギリに寄せる
 
-  const gaugeTop = (topAreaH - scaledH) / 2 + scaledH + 4;
-  bottom.style.position = "fixed";
+  // ★ 修正：ゲーム画面のすぐ真下にピタッとくっつくように計算
+  const gaugeTop = scaledH + 8;
+  bottom.style.position = "absolute";
   bottom.style.top = `${gaugeTop}px`;
   bottom.style.left = "50%";
   bottom.style.transform = "translateX(-50%)";
   bottom.style.width = `${vw}px`;
-  bottom.style.height = `${vh * 0.45 - 4}px`;
+  
+  // 下半分のタップボタンに被らない高さに収める
+  const availableBottomH = vh - gaugeTop - (vh * 0.45); 
+  bottom.style.height = `${Math.max(100, availableBottomH)}px`;
 }
 
 function showMobileBtnsIfNeeded() {
@@ -1280,7 +1283,7 @@ document.addEventListener("keydown", e => {
     if (!running) return;
     const k = e.key.toLowerCase();
     if (!["a","s","l"].includes(k) || activeKeys.has(k)) return;
-    activeKeys.add(k); if(k alienation="a") hit(0); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
+    activeKeys.add(k); if(k==="a") hit(0); if(k==="s") hit(1); if(k==="l") hit(2);
 });
 document.addEventListener("keyup", e => {
     if (!e || !e.key) return;
