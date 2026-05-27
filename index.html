@@ -436,6 +436,34 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   .lobby-top3-card { padding: 8px 12px; }
   .lobby-mode-btns { margin-bottom: 12px; }
 }
+
+/* ===== 縦持ちスマホ専用 ===== */
+@media (max-width: 1200px) and (orientation: portrait) {
+  body { overflow-y: auto; }
+
+  #titleScreen {
+    position: relative; min-height: 100vh;
+    overflow-y: auto; justify-content: flex-start;
+    padding: 30px 16px 40px; box-sizing: border-box;
+  }
+  #title { font-size: 40px; margin-bottom: 4px; }
+  .menuBtn { width: 80vw; max-width: 300px; }
+  #rankmaEntryBtn { width: 80vw; max-width: 300px; }
+
+  #rankmaLobby {
+    position: relative; min-height: 100vh;
+    padding: 24px 16px 40px;
+  }
+  .lobby-top3-wrapper { flex-direction: column; align-items: center; }
+  .lobby-top3-card { width: 90vw; max-width: 360px; }
+  .lobby-mode-btns { flex-direction: column; align-items: center; }
+  .lobbyModeBtn { width: 80vw; max-width: 300px; }
+
+  #ranking { position: relative; min-height: 100vh; overflow-y: auto; }
+  .rank-container { flex-direction: column; }
+
+  #result { position: relative; min-height: 100vh; overflow-y: auto; }
+}
 </style>
 </head>
 <body>
@@ -1159,12 +1187,20 @@ function scaleGame() {
     return;
   }
 
-  if (window.innerHeight > window.innerWidth) {
+  const isPortrait = window.innerHeight > window.innerWidth;
+
+  // 縦持ち回転オーバーレイはプレイ中のみ表示
+  if (isPortrait && running) {
     overlay.style.display = "flex";
     mobileBtns.style.display = "none";
     return;
   }
   overlay.style.display = "none";
+
+  // 縦持ちのままゲーム以外の画面を表示する場合はスケール処理をスキップ
+  if (isPortrait) {
+    return;
+  }
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
