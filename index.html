@@ -963,31 +963,24 @@ async function fetchRankPosition() {
 
         // 月間番付での順位
         const monthArr = data.month || [];
-        const monthPos = monthArr.findIndex(d => d.score <= score);
-        const monthRank = monthPos === -1 ? null : monthPos + 1;
+        // 全件データで正確な順位を計算
+        const monthAllArr = data.monthTotal || data.month || [];
+        const rekidaiAllArr = data.rekidaiTotal || data.rekidai || [];
 
-        // 歴代番付での順位
-        const rekidaiArr = data.rekidai || [];
-        const rekidaiPos = rekidaiArr.findIndex(d => d.score <= score);
-        const rekidaiRank = rekidaiPos === -1 ? null : rekidaiPos + 1;
+        const calcRank = (arr) => arr.filter(d => d.score > score).length + 1;
+        const monthRank = calcRank(monthAllArr);
+        const rekidaiRank = calcRank(rekidaiAllArr);
+        const monthTotal = monthAllArr.length;
+        const rekidaiTotal = rekidaiAllArr.length;
+
+        const medal = (r) => r === 1 ? "🥇" : r === 2 ? "🥈" : r === 3 ? "🥉" : "";
+        const flame = (r) => r <= 3 ? " 🔥" : "";
 
         let text = "";
         if (isRankmaMode) {
-            if (monthRank === null) {
-                text = `今月番付 <span style="color:#888;font-size:28px;">圏外</span>（トップ10入りを目指せ）`;
-            } else {
-                const medal = monthRank === 1 ? "🥇" : monthRank === 2 ? "🥈" : monthRank === 3 ? "🥉" : "";
-                text = `${medal} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> 相当`;
-                if (monthRank <= 3) text += " 🔥";
-            }
+            text = `${medal(monthRank)} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> / ${monthTotal}人中${flame(monthRank)}`;
         } else {
-            if (rekidaiRank === null) {
-                text = `歴代番付 <span style="color:#888;font-size:28px;">圏外</span>（トップ10入りを目指せ）`;
-            } else {
-                const medal = rekidaiRank === 1 ? "🥇" : rekidaiRank === 2 ? "🥈" : rekidaiRank === 3 ? "🥉" : "";
-                text = `${medal} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> 相当`;
-                if (rekidaiRank <= 3) text += " 🔥";
-            }
+            text = `${medal(rekidaiRank)} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> / ${rekidaiTotal}人中${flame(rekidaiRank)}`;
         }
         el.style.color = "white";
         el.innerHTML = text;
