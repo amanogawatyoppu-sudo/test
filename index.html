@@ -1119,8 +1119,24 @@ function endGame(){
     document.getElementById("result").style.display="block";
     document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
     let rank = "修行中";
-    if(currentMode==="30"||currentMode==="60"){ if(totalMissCount===0 && combo>0) rank="越前極"; else if(score>40000) rank="伝説級"; }
-    else { if(score>=500000) rank="越前極"; else if(score>=200000) rank="伝説級"; }
+    if(currentMode==="30" || currentMode==="60") {
+        if(totalMissCount === 0 && combo > 0) rank = "越前極";
+        else if(score >= 45000) rank = "神速";
+        else if(score >= 35000) rank = "伝説級";
+        else if(score >= 25000) rank = "達人級";
+        else if(score >= 15000) rank = "一人前";
+        else if(score >= 5000)  rank = "見習い";
+        else rank = "修行中";
+    } else {
+        // 終わりなき修行（無限モード）
+        if(score >= 1000000) rank = "越前極";
+        else if(score >= 700000) rank = "神速";
+        else if(score >= 400000) rank = "伝説級";
+        else if(score >= 200000) rank = "達人級";
+        else if(score >= 100000) rank = "一人前";
+        else if(score >= 30000)  rank = "見習い";
+        else rank = "修行中";
+    }
     document.getElementById("rankDisplay").innerText = `称号: ${rank}`;
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 
