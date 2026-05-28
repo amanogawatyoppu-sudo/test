@@ -791,7 +791,28 @@ let pendingRankmaMode = "";
 const sePerfect = new Audio('perfect.mp3');
 const seGreat = new Audio('great.mp3');
 const seMiss = new Audio('miss.mp3');
-function playSE(audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(()=>{}); }
+// 音声再生の最適化（スマホでの遅延とフリーズ防止）
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+const audioBuffers = {};
+async function loadSE(name, url) {
+    try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        audioBuffers[name] = await audioContext.decodeAudioData(arrayBuffer);
+    } catch (e) { console.error("Audio load error:", name, e); }
+}
+loadSE('perfect', 'perfect.mp3');
+loadSE('great', 'great.mp3');
+loadSE('miss', 'miss.mp3');
+
+function playSE(name) {
+    if (audioContext.state === 'suspended') audioContext.resume();
+    if (!audioBuffers[name]) return;
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBuffers[name];
+    source.connect(audioContext.destination);
+    source.start(0);
+}
 
 // ===== ランクマ モーダル =====
 function openRankma(mode) {
@@ -940,13 +961,17 @@ function loop(){
     if(!running) return;
     const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
 
+    // ノーツ移動の最適化（一括で更新）
+    const gameEl = document.getElementById("game");
     for(let i=notes.length-1; i>=0; i--){
         let n = notes[i]; n.x -= speed;
-        // transformの更新頻度を調整（1フレーム飛ばしで更新してCPU負荷軽減、ただしPCは維持）
-        if (!isMobile() || _uiFrame % 1 === 0) {
-            n.el.style.transform = `translate3d(${n.x}px,-50%,0)`;
+        n.el.style.transform = `translate3d(${n.x}px,-50%,0)`;
+        if(n.x < -150){
+            n.el.remove();
+            notes.splice(i,1);
+            missEffect();
+            if(isInfinite){ endGame(); return; }
         }
-        if(n.x < -150){ n.el.remove(); notes.splice(i,1); missEffect(); if(isInfinite){ endGame(); return; } }
     }
     updateUI();
     requestAnimationFrame(loop);
@@ -965,14 +990,13 @@ function updateUI() {
         if(gauge>0) gauge-=0.1;
     }
     // モバイルでのDOM更新頻度をさらに下げる
-    if (!isMobile() || _uiFrame % 15 === 0) {
+    // UI更新の最適化（必要な時だけ更新）
+    if (_uiFrame % (isMobile() ? 10 : 2) === 0) {
         if (worker.innerText !== emoji) worker.innerText = emoji;
         if (worker.className !== state) worker.className = state;
-    }
-    if (!isMobile() || _uiFrame % 5 === 0) {
         document.getElementById("gaugeFill").style.width = gauge+"%";
-        document.getElementById("score").innerText = score;
-        document.getElementById("combo").innerText = combo;
+        document.getElementById("score").textContent = score;
+        document.getElementById("combo").textContent = combo;
     }
 }
 
@@ -985,11 +1009,11 @@ function hit(l){
     combo++;
     checkComboMilestone(combo);
     if(diff < 65){
-        res="PERFECT"; playSE(sePerfect);
+        res="PERFECT"; playSE('perfect');
         score += (500 + combo*10) * (fever?2:1);
         if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
     } else {
-        res="GREAT"; playSE(seGreat); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
+        res="GREAT"; playSE('great'); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
     showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
 }
@@ -1023,13 +1047,17 @@ function checkComboMilestone(c) {
   flashTimer = setTimeout(() => { el.style.display = "none"; }, 1000);
 }
 
-function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE(seMiss); }
+function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE('miss'); }
 
 function showJudge(res){
     const j = document.getElementById("judge");
-    j.innerText = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
+    j.textContent = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
     j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
-    j.classList.remove("showJudge"); void j.offsetWidth; j.classList.add("showJudge");
+    j.classList.remove("showJudge");
+    // リフローを最小限にする
+    requestAnimationFrame(() => {
+        j.classList.add("showJudge");
+    });
 }
 
 function endGame(){
