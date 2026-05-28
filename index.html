@@ -561,10 +561,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
   <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
  </div>
- <div class="lane-container">
-  <div id="lane1" class="lane"></div><div id="lane2" class="lane"></div><div id="lane3" class="lane"></div>
- </div>
- <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
+ <canvas id="gameCanvas" width="1100" height="380" style="position:absolute; top:0; left:0; z-index:5;"></canvas>
+	 <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
  <div id="judge"></div>
  <div id="comboFlash"><div id="comboFlashBg"></div><div id="comboFlashText"></div><div id="comboFlashSub"></div></div>
  <div id="countdown"><div id="countdownNum">3</div></div>
@@ -787,6 +785,34 @@ let laneLocked = [false, false, false];
 let isRankmaMode = false;
 let rankmaName = "";
 let pendingRankmaMode = "";
+let lastTime = 0;
+
+// Canvas & Pooling
+let canvas, ctx;
+const notePool = [];
+const POOL_SIZE = 40;
+const laneImages = [];
+const noteLoadedImages = [];
+
+function initCanvas() {
+    canvas = document.getElementById("gameCanvas");
+    ctx = canvas.getContext("2d", { alpha: false }); // パフォーマンス向上のためalphaをfalseに
+    
+    // アセットのプリロード
+    const laneSources = ['lane_a.png', 'lane_b.png', 'lane_c.png'];
+    laneSources.forEach((src, i) => {
+        const img = new Image(); img.src = src; laneImages[i] = img;
+    });
+    noteImages.forEach((src, i) => {
+        const img = new Image(); img.src = src; noteLoadedImages[i] = img;
+    });
+
+    // オブジェクトプールの初期化
+    for (let i = 0; i < POOL_SIZE; i++) {
+        notePool.push({ active: false, x: 0, lane: 0 });
+    }
+}
+window.addEventListener('load', initCanvas);
 
 const sePerfect = new Audio('perfect.mp3');
 const seGreat = new Audio('great.mp3');
@@ -876,7 +902,7 @@ function startWithCountdown(afterCallback) {
     // まずゲームエリアを表示（ノーツはまだ動かさない）
     score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
-    notes.forEach(n => n.el.remove()); notes = [];
+    notePool.forEach(n => n.active = false);
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("rankmaLobby").classList.remove("open");
     document.getElementById("game").style.display="block";
@@ -917,6 +943,7 @@ function startWithCountdown(afterCallback) {
         }
     }
     step();
+    lastTime = performance.now(); // ゲーム開始時に時間をリセット
 }
 
 function setupTimer(sec){
@@ -938,41 +965,61 @@ function currentMobileScale() { return _currentScale; }
 
 function spawn(){
     if(!running) return;
-    let lane = Math.floor(Math.random()*3);
-    let container = document.createElement("div");
-    container.className = "note-container";
-    let img = document.createElement("img"); img.src = noteImages[lane]; img.className = "soba-img";
-    container.appendChild(img);
-    container.style.left = "0px"; container.style.top = laneY[lane]+"px";
-    container.style.transform = "translate3d(1200px,-50%,0)";
-    container.style.willChange = "transform";
-    // メモリ節約のため、不可視領域でのレンダリングを抑制
-    container.style.contain = "strict";
-    document.getElementById("game").appendChild(container);
-    notes.push({el:container, x:1200, lane:lane});
+    
+    // プールから未使用のノーツを探す
+    let n = notePool.find(p => !p.active);
+    if (n) {
+        n.active = true;
+        n.lane = Math.floor(Math.random() * 3);
+        n.x = 1200;
+    }
 
-    // 生成間隔（パソコン版と同じロジックを強制）
-    const interval = isInfinite
-        ? Math.max(160, 450 - combo*1.5)
-        : 320;
+    const interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
     setTimeout(spawn, interval);
 }
 
-function loop(){
+function loop(timestamp){
     if(!running) return;
-    // 速度計算（パソコン版と同じロジックを強制）
-    const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
+    
+    if (!lastTime) lastTime = timestamp;
+    const deltaTime = (timestamp - lastTime) / (1000 / 60);
+    lastTime = timestamp;
 
-    for(let i=notes.length-1; i>=0; i--){
-        let n = notes[i]; n.x -= speed;
-        n.el.style.transform = `translate3d(${n.x}px,-50%,0)`;
-        if(n.x < -150){
-            n.el.remove();
-            notes.splice(i,1);
-            missEffect();
-            if(isInfinite){ endGame(); return; }
+    const baseSpeed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
+    const speed = baseSpeed * (deltaTime || 1);
+
+    // Canvasクリア
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, 1100, 380);
+
+    // レーン背景描画
+    for (let i = 0; i < 3; i++) {
+        if (laneImages[i] && laneImages[i].complete) {
+            ctx.globalAlpha = 0.8;
+            ctx.drawImage(laneImages[i], 0, (380/3)*i, 1100, 380/3);
+            ctx.globalAlpha = 1.0;
         }
     }
+
+    // ノーツ移動 & 描画
+    for (let n of notePool) {
+        if (!n.active) continue;
+        n.x -= speed;
+        
+        if (n.x < -150) {
+            n.active = false;
+            missEffect();
+            if (isInfinite) { endGame(); return; }
+            continue;
+        }
+
+        const img = noteLoadedImages[n.lane];
+        if (img && img.complete) {
+            // translate & scale 相当の描画
+            ctx.drawImage(img, n.x, laneY[n.lane] - 60, 120, 120);
+        }
+    }
+
     updateUI();
     requestAnimationFrame(loop);
 }
@@ -1003,9 +1050,12 @@ function updateUI() {
 function hit(l){
     if(laneLocked[l]) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
-    let tIdx = notes.findIndex(n => n.lane===l && Math.abs(n.x - HIT_X) < 120);
-    if(tIdx === -1) return;
-    let t = notes[tIdx], diff = Math.abs(t.x - HIT_X), res;
+    
+    // notePoolから判定対象を探す
+    let t = notePool.find(n => n.active && n.lane === l && Math.abs(n.x - HIT_X) < 120);
+    if(!t) return;
+    
+    let diff = Math.abs(t.x - HIT_X), res;
     combo++;
     checkComboMilestone(combo);
     if(diff < 65){
@@ -1015,7 +1065,8 @@ function hit(l){
     } else {
         res="GREAT"; playSE('great'); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
-    showJudge(res); t.el.remove(); notes.splice(tIdx, 1);
+    showJudge(res); 
+    t.active = false; // プールに戻す
 }
 
 
@@ -1208,7 +1259,12 @@ function mobileRelease(i) {
 }
 
 // ===== スマホ対応 =====
-const isMobile = () => window.innerWidth <= 1200 || /Mobi|Android/i.test(navigator.userAgent);
+// タブレットも含めてモバイルUIを適用（iPad等の判定を強化）
+const isMobile = () => {
+    return window.innerWidth <= 1280 || 
+           /Mobi|Android|iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+           (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
+};
 
 function scaleGame() {
   const overlay = document.getElementById("rotateOverlay");
