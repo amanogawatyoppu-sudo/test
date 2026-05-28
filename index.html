@@ -951,6 +951,7 @@ function spawn(){
     document.getElementById("game").appendChild(container);
     notes.push({el:container, x:1200, lane:lane});
 
+    // 生成間隔（パソコン版と同じロジックを強制）
     const interval = isInfinite
         ? Math.max(160, 450 - combo*1.5)
         : 320;
@@ -959,10 +960,9 @@ function spawn(){
 
 function loop(){
     if(!running) return;
+    // 速度計算（パソコン版と同じロジックを強制）
     const speed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
 
-    // ノーツ移動の最適化（一括で更新）
-    const gameEl = document.getElementById("game");
     for(let i=notes.length-1; i>=0; i--){
         let n = notes[i]; n.x -= speed;
         n.el.style.transform = `translate3d(${n.x}px,-50%,0)`;
@@ -990,8 +990,8 @@ function updateUI() {
         if(gauge>0) gauge-=0.1;
     }
     // モバイルでのDOM更新頻度をさらに下げる
-    // UI更新の最適化（必要な時だけ更新）
-    if (_uiFrame % (isMobile() ? 10 : 2) === 0) {
+    // UI更新（パフォーマンスを維持しつつPC版に近い頻度へ）
+    if (_uiFrame % 2 === 0) {
         if (worker.innerText !== emoji) worker.innerText = emoji;
         if (worker.className !== state) worker.className = state;
         document.getElementById("gaugeFill").style.width = gauge+"%";
