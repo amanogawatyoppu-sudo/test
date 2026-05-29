@@ -349,17 +349,17 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   background: none; border: none; color: #666; font-size: 13px; cursor: pointer; text-decoration: underline;
 }
 
-/* ===== スマホタップボタン (和風モダン刷新) ===== */
+/* ===== スマホタップボタン (和風・省スペース版) ===== */
 .mobileHitBtn {
   flex: 1;
-  max-width: 31%;
-  aspect-ratio: 1.5 / 1;
+  max-width: 30%;
+  aspect-ratio: 2 / 1; /* 横長にして高さを抑える */
   height: auto;
-  background: linear-gradient(135deg, rgba(30,30,35,0.9), rgba(10,10,15,0.95));
-  border: 2px solid rgba(255,255,255,0.15);
-  border-radius: 12px;
-  color: rgba(255,255,255,0.8);
-  font-size: 42px;
+  background: radial-gradient(circle at center, rgba(50,50,55,0.95), rgba(15,15,20,0.98));
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px; /* 少し角に丸みを持たせる程度に調整 */
+  color: rgba(255,255,255,0.9);
+  font-size: 36px;
   font-family: 'Zen Old Mincho', serif;
   font-weight: 900;
   cursor: pointer;
@@ -368,38 +368,35 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.05);
-  transition: transform 0.05s cubic-bezier(0.1, 0, 0.1, 1), border-color 0.1s, box-shadow 0.1s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  transition: transform 0.05s, border-color 0.1s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   z-index: 1;
 }
 
-/* ボタンごとのテーマカラー */
-#mBtn-0 { border-bottom: 4px solid #ff4444; text-shadow: 0 0 10px rgba(255,68,68,0.5); }
-#mBtn-1 { border-bottom: 4px solid #44aaff; text-shadow: 0 0 10px rgba(68,170,255,0.5); }
-#mBtn-2 { border-bottom: 4px solid #44ff88; text-shadow: 0 0 10px rgba(68,255,136,0.5); }
+/* 和の装飾：ボタンの縁取りを二重円（紋章風）に */
+#mBtn-0 { border: 3px double #ff4444; box-shadow: inset 0 0 20px rgba(255,68,68,0.3); }
+#mBtn-1 { border: 3px double #44aaff; box-shadow: inset 0 0 20px rgba(68,170,255,0.3); }
+#mBtn-2 { border: 3px double #44ff88; box-shadow: inset 0 0 20px rgba(68,255,136,0.3); }
 
-/* 装飾用の和柄背景（疑似要素） */
+/* 背景に和の「家紋」をイメージした装飾 */
 .mobileHitBtn::before {
-  content: "";
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
-  background-size: 12px 12px;
-  pointer-events: none;
-  z-index: -1;
+  content: "☸"; /* 法輪のような紋章 */
+  position: absolute; opacity: 0.08; font-size: 80px; transform: rotate(0deg);
+  transition: transform 1s linear;
 }
+.mobileHitBtn.active::before { transform: rotate(90deg); }
 
-/* アクティブ（タップ中）の演出 */
 .mobileHitBtn.active {
-  transform: scale(0.92) translateY(4px);
-  background: linear-gradient(135deg, rgba(60,60,70,0.95), rgba(20,20,30,1));
-  border-color: rgba(255,255,255,0.5);
+  transform: scale(0.9) translateY(2px);
+  background: #fff;
+  color: #000;
 }
 
-#mBtn-0.active { box-shadow: 0 0 30px rgba(255,68,68,0.6); border-bottom-width: 2px; }
-#mBtn-1.active { box-shadow: 0 0 30px rgba(68,170,255,0.6); border-bottom-width: 2px; }
-#mBtn-2.active { box-shadow: 0 0 30px rgba(68,255,136,0.6); border-bottom-width: 2px; }
+#mBtn-0.active { box-shadow: 0 0 40px #ff4444; border-color: #ff4444; }
+#mBtn-1.active { box-shadow: 0 0 40px #44aaff; border-color: #44aaff; }
+#mBtn-2.active { box-shadow: 0 0 40px #44ff88; border-color: #44ff88; }
 
 /* 波紋エフェクト（CSSアニメーション） */
 .mobileHitBtn::after {
@@ -617,7 +614,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 </div>
 
 <!-- スマホ専用タップボタン -->
-<div id="mobileBtns" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:45%; z-index:50; justify-content:space-around; align-items:center; padding:0 12px; box-sizing:border-box; background:rgba(0,0,0,0.5);">
+<div id="mobileBtns" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:38%; z-index:50; justify-content:space-around; align-items:center; padding:0 12px 10px; box-sizing:border-box; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
   <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
   <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
   <button class="mobileHitBtn" id="mBtn-2" onpointerdown="mobileTap(2)" onpointerup="mobileRelease(2)">L</button>
@@ -1406,7 +1403,7 @@ function scaleGame() {
   bottom.style.left = "50%";
   bottom.style.transform = "translateX(-50%)";
   bottom.style.width = `${vw}px`;
-  bottom.style.height = `${vh * 0.45 - 4}px`;
+  bottom.style.height = `${vh * 0.40 - 4}px`; // 高さを少し削る
 
   if (running) {
     mobileBtns.style.display = "flex";
