@@ -1349,7 +1349,11 @@ function mobileRelease(i) {
 // ===== スマホ対応 =====
 // タブレットも含めてモバイルUIを適用（iPad等の判定を強化）
 const isMobile = () => {
-    return window.innerWidth <= 1280 || 
+    // タッチポイントがあるか（タッチパネル搭載か）を最優先でチェック
+    const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+    
+    return hasTouch || 
+           window.innerWidth <= 1280 || 
            /Mobi|Android|iPad|iPhone|iPod/i.test(navigator.userAgent) ||
            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
 };
