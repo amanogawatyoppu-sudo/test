@@ -349,30 +349,73 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   background: none; border: none; color: #666; font-size: 13px; cursor: pointer; text-decoration: underline;
 }
 
-/* ===== スマホタップボタン ===== */
+/* ===== スマホタップボタン (和風モダン刷新) ===== */
 .mobileHitBtn {
   flex: 1;
-  max-width: 32%;
-  aspect-ratio: 16 / 9;
+  max-width: 31%;
+  aspect-ratio: 1.5 / 1;
   height: auto;
-  background: rgba(0, 0, 0, 0.6);
-  border: 3px solid rgba(100, 180, 255, 0.6);
-  border-radius: 20px;
-  color: rgba(255,255,255,0.7);
-  font-size: 48px;
-  font-family: 'Zen Old Mincho';
-  font-weight: bold;
+  background: linear-gradient(135deg, rgba(30,30,35,0.9), rgba(10,10,15,0.95));
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 12px;
+  color: rgba(255,255,255,0.8);
+  font-size: 42px;
+  font-family: 'Zen Old Mincho', serif;
+  font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 0 18px rgba(80,160,255,0.3), inset 0 0 20px rgba(0,0,0,0.5);
-  transition: background 0.05s, box-shadow 0.05s, color 0.05s;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.05);
+  transition: transform 0.05s cubic-bezier(0.1, 0, 0.1, 1), border-color 0.1s, box-shadow 0.1s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  z-index: 1;
 }
+
+/* ボタンごとのテーマカラー */
+#mBtn-0 { border-bottom: 4px solid #ff4444; text-shadow: 0 0 10px rgba(255,68,68,0.5); }
+#mBtn-1 { border-bottom: 4px solid #44aaff; text-shadow: 0 0 10px rgba(68,170,255,0.5); }
+#mBtn-2 { border-bottom: 4px solid #44ff88; text-shadow: 0 0 10px rgba(68,255,136,0.5); }
+
+/* 装飾用の和柄背景（疑似要素） */
+.mobileHitBtn::before {
+  content: "";
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+  background-size: 12px 12px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* アクティブ（タップ中）の演出 */
 .mobileHitBtn.active {
-  background: rgba(255, 215, 0, 0.25);
-  border-color: gold;
-  color: gold;
-  box-shadow: 0 0 40px rgba(255,215,0,0.5), inset 0 0 20px rgba(255,215,0,0.1);
+  transform: scale(0.92) translateY(4px);
+  background: linear-gradient(135deg, rgba(60,60,70,0.95), rgba(20,20,30,1));
+  border-color: rgba(255,255,255,0.5);
+}
+
+#mBtn-0.active { box-shadow: 0 0 30px rgba(255,68,68,0.6); border-bottom-width: 2px; }
+#mBtn-1.active { box-shadow: 0 0 30px rgba(68,170,255,0.6); border-bottom-width: 2px; }
+#mBtn-2.active { box-shadow: 0 0 30px rgba(68,255,136,0.6); border-bottom-width: 2px; }
+
+/* 波紋エフェクト（CSSアニメーション） */
+.mobileHitBtn::after {
+  content: "";
+  position: absolute;
+  width: 100%; height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+  pointer-events: none;
+}
+.mobileHitBtn.active::after {
+  transform: scale(2);
+  opacity: 1;
+  transition: 0s;
 }
 
 /* ===== 縦持ち警告オーバーレイ ===== */
