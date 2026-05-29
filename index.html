@@ -1053,7 +1053,13 @@ function hit(l){
     
     // notePoolから判定対象を探す
     let t = notePool.find(n => n.active && n.lane === l && Math.abs(n.x - HIT_X) < 120);
-    if(!t) return;
+    
+    // 【空打ちペナルティ】ノーツがないのに叩いた場合、ミス扱いにする
+    if(!t) {
+        missEffect();
+        showJudge("MISS");
+        return;
+    }
     
     let diff = Math.abs(t.x - HIT_X), res;
     combo++;
