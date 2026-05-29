@@ -855,14 +855,19 @@ function closeNameModal() {
     document.getElementById("nameModal").classList.remove("open");
 }
 
+let isConfirming = false;
 async function confirmRankmaName() {
-    const name = document.getElementById("nameModalInput").value.trim();
+    if (isConfirming) return;
+    const nameInput = document.getElementById("nameModalInput");
+    const name = nameInput.value.trim();
     const msg = document.getElementById("nameModalMsg");
     if (!name) { msg.className=""; msg.innerText = "名前を入力せよ。"; return; }
     if (name === "名無し") { msg.className=""; msg.innerText = "その名は名乗れぬ。"; return; }
 
+    isConfirming = true;
     const btn = document.getElementById("nameModalConfirm");
     btn.disabled = true; btn.innerText = "確認中...";
+    nameInput.disabled = true;
     msg.className = ""; msg.innerText = "";
 
     try {
@@ -879,7 +884,7 @@ async function confirmRankmaName() {
     }
 
     rankmaName = name;
-    btn.disabled = false; btn.innerText = "この名で参戦する";
+    btn.innerText = "参戦準備中...";
 
     setTimeout(() => {
         closeNameModal();
@@ -887,6 +892,13 @@ async function confirmRankmaName() {
         isRankmaMode = true;
         if (pendingRankmaMode === "infinite") startInfinite();
         else startGame(parseInt(pendingRankmaMode));
+        
+        setTimeout(() => { 
+            isConfirming = false; 
+            btn.disabled = false;
+            nameInput.disabled = false;
+            btn.innerText = "この名で参戦する";
+        }, 1000);
     }, msg.innerText ? 1400 : 0);
 }
 
@@ -898,7 +910,11 @@ function startNormalInfinite() { isRankmaMode = false; startInfinite(); }
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startWithCountdown(() => {}); }
 
+let isStarting = false;
 function startWithCountdown(afterCallback) {
+    if (isStarting) return;
+    isStarting = true;
+
     // まずゲームエリアを表示（ノーツはまだ動かさない）
     score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
@@ -939,6 +955,7 @@ function startWithCountdown(afterCallback) {
                 running = true; loop(); spawn();
                 showMobileBtnsIfNeeded();
                 afterCallback();
+                isStarting = false; // 完全に開始してからフラグ解除
             }, 650);
         }
     }
@@ -1104,7 +1121,16 @@ function checkComboMilestone(c) {
   flashTimer = setTimeout(() => { el.style.display = "none"; }, 1000);
 }
 
-function missEffect(){ combo=0; gauge=0; totalMissCount++; document.getElementById("combo").innerText=0; showJudge("MISS"); playSE('miss'); }
+function missEffect(){ 
+    combo=0; gauge=0; totalMissCount++; 
+    document.getElementById("combo").innerText=0; 
+    showJudge("MISS"); 
+    playSE('miss'); 
+    // 無限モードなら即終了
+    if(isInfinite && running) {
+        endGame();
+    }
+}
 
 function showJudge(res){
     const j = document.getElementById("judge");
