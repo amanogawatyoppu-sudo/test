@@ -256,6 +256,21 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .info-text { font-size:24px; color:gold; font-family: 'Zen Old Mincho'; margin-right: 20px;}
 #judge { position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap; }
 .showJudge { animation: judgeAnim 0.3s ease-out forwards; }
+
+/* ===== 虹極上（KAMI-PERFECT）演出 ===== */
+@keyframes kamiRainbow {
+  0%   { color: #ff4444; text-shadow: 0 0 20px #ff4444; }
+  20%  { color: #ffaa00; text-shadow: 0 0 20px #ffaa00; }
+  40%  { color: #44ff44; text-shadow: 0 0 20px #44ff44; }
+  60%  { color: #44aaff; text-shadow: 0 0 20px #44aaff; }
+  80%  { color: #cc44ff; text-shadow: 0 0 20px #cc44ff; }
+  100% { color: #ff4444; text-shadow: 0 0 20px #ff4444; }
+}
+#judge.kami {
+  animation: judgeAnim 0.3s ease-out forwards, kamiRainbow 0.4s linear infinite;
+  font-size: 70px;
+}
+
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
 #bottomArea { position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%); width: 1100px; height: 300px; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
 #gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
@@ -623,6 +638,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <div id="result">
  <h1 id="resultTitle">修行終了</h1>
  <div id="finalScore" style="font-size:24px;"></div>
+ <div id="accuracyDisplay" style="font-size:20px; color:#cccccc; margin:4px 0; font-family:'Zen Old Mincho';"></div>
  <div id="rankDisplay"></div>
  <div id="rankPositionDisplay"></div>
  <div id="triviaArea"></div>
@@ -819,7 +835,7 @@ async function loadLobbyTop3() {
 }
 
 let notes=[], score=0, combo=0, running=false, isInfinite=false, currentMode="30";
-let gauge=0, fever=false, timerInterval, totalMissCount=0;
+let gauge=0, fever=false, timerInterval, totalMissCount=0, kamiCount=0, perfectCount=0;
 let activeKeys = new Set();
 let laneLocked = [false, false, false];
 let isRankmaMode = false;
@@ -870,6 +886,7 @@ async function loadSE(name, url) {
 loadSE('perfect', 'perfect.mp3');
 loadSE('great', 'great.mp3');
 loadSE('miss', 'miss.mp3');
+loadSE('kami', 'kami.mp3');
 
 function playSE(name) {
     if (audioContext.state === 'suspended') audioContext.resume();
@@ -956,7 +973,7 @@ function startWithCountdown(afterCallback) {
     isStarting = true;
 
     // まずゲームエリアを表示（ノーツはまだ動かさない）
-    score=0; combo=0; gauge=0; fever=false; totalMissCount=0;
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
     document.getElementById("titleScreen").style.display="none";
@@ -1121,8 +1138,14 @@ function hit(l){
     let diff = Math.abs(t.x - HIT_X), res;
     combo++;
     checkComboMilestone(combo);
-    if(diff < 65){
+    if(diff < 15){
+        res="KAMI"; playSE('kami');
+        kamiCount++; perfectCount++;
+        score += (700 + combo*15) * (fever?2:1);
+        if(!fever){ gauge+=15; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+    } else if(diff < 65){
         res="PERFECT"; playSE('perfect');
+        perfectCount++;
         score += (500 + combo*10) * (fever?2:1);
         if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
     } else {
@@ -1174,13 +1197,18 @@ function missEffect(){
 
 function showJudge(res){
     const j = document.getElementById("judge");
-    j.textContent = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
-    j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
-    j.classList.remove("showJudge");
-    // リフローを最小限にする
-    requestAnimationFrame(() => {
-        j.classList.add("showJudge");
-    });
+    if (res === "KAMI") {
+        j.textContent = "虹極上";
+        j.className = "kami showJudge";
+        j.classList.remove("showJudge");
+        requestAnimationFrame(() => { j.classList.add("showJudge"); });
+    } else {
+        j.className = "";
+        j.textContent = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
+        j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
+        j.classList.remove("showJudge");
+        requestAnimationFrame(() => { j.classList.add("showJudge"); });
+    }
 }
 
 function endGame(){
@@ -1210,6 +1238,13 @@ function endGame(){
         else rank = "修行中";
     }
     document.getElementById("rankDisplay").innerText = `称号: ${rank}`;
+    // 精度表示
+    const totalJudged = perfectCount + totalMissCount;
+    const accuracy = totalJudged > 0 ? ((perfectCount / totalJudged) * 100).toFixed(2) : "0.00";
+    const kamiRate = perfectCount > 0 ? ((kamiCount / perfectCount) * 100).toFixed(1) : "0.0";
+    document.getElementById("accuracyDisplay").innerHTML =
+        `精度: <span style="color:gold;">${accuracy}%</span>　` +
+        `虹極上: <span style="color:#ff88ff;">${kamiCount}回</span> / 極上${perfectCount}回 (${kamiRate}%)`;
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 
     if (isRankmaMode) {
