@@ -259,16 +259,16 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .showJudge { animation: judgeAnim 0.3s ease-out forwards; }
 
 /* ===== 虹極上（KAMI-PERFECT）演出 ===== */
-@keyframes kamiRainbow {
-  0%   { color: #ff4444; text-shadow: 0 0 20px #ff4444; }
-  20%  { color: #ffaa00; text-shadow: 0 0 20px #ffaa00; }
-  40%  { color: #44ff44; text-shadow: 0 0 20px #44ff44; }
-  60%  { color: #44aaff; text-shadow: 0 0 20px #44aaff; }
-  80%  { color: #cc44ff; text-shadow: 0 0 20px #cc44ff; }
-  100% { color: #ff4444; text-shadow: 0 0 20px #ff4444; }
+@keyframes kamiAnim {
+  0%   { opacity:1; transform:translate(-50%,-50%) scale(1.6); color:#ff4444; text-shadow:0 0 20px #ff4444; }
+  20%  { opacity:1; transform:translate(-50%,-50%) scale(1.0); color:#ffaa00; text-shadow:0 0 20px #ffaa00; }
+  40%  { color:#44ff44; text-shadow:0 0 20px #44ff44; }
+  60%  { color:#44aaff; text-shadow:0 0 20px #44aaff; }
+  80%  { opacity:1; color:#cc44ff; text-shadow:0 0 20px #cc44ff; }
+  100% { opacity:0; transform:translate(-50%,-120%) scale(1); color:#ff4444; }
 }
 #judge.kami {
-  animation: judgeAnim 0.3s ease-out forwards, kamiRainbow 0.4s linear infinite;
+  animation: kamiAnim 0.8s ease-out forwards;
   font-size: 70px;
 }
 
@@ -1139,7 +1139,7 @@ function hit(l){
     let diff = Math.abs(t.x - HIT_X), res;
     combo++;
     checkComboMilestone(combo);
-    if(diff < 15){
+    if(diff < 30){
         res="KAMI"; playSE('kami');
         kamiCount++; perfectCount++;
         score += (700 + combo*15) * (fever?2:1);
