@@ -267,7 +267,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   80%  { opacity:1; color:#cc44ff; text-shadow:0 0 20px #cc44ff; }
   100% { opacity:0; transform:translate(-50%,-120%) scale(1); color:#ff4444; }
 }
-#judge.kami {
+#judge.kami, #judge.kamiAnim {
   animation: kamiAnim 0.8s ease-out forwards;
   font-size: 70px;
 }
@@ -1198,19 +1198,20 @@ function missEffect(){
 
 function showJudge(res){
     const j = document.getElementById("judge");
+    // アニメーションを確実にリセットするため一度DOMから切り離して戻す
+    const parent = j.parentNode;
+    const next = j.nextSibling;
+    parent.removeChild(j);
     if (res === "KAMI") {
         j.textContent = "虹極上";
-        j.className = "kami";
+        j.className = "kami kamiAnim";
         j.style.color = "";
-        void j.offsetWidth;
-        j.classList.add("showJudge");
     } else {
-        j.className = "";
+        j.className = "showJudge";
         j.textContent = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
         j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
-        void j.offsetWidth;
-        j.classList.add("showJudge");
     }
+    parent.insertBefore(j, next);
 }
 
 function endGame(){
