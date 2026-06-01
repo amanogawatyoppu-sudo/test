@@ -300,6 +300,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .rank-item { font-size: 22px; margin: 12px 0; text-align: left; padding-left: 20px; display: flex; justify-content: space-between; }
 .rank-item .score-val { color: gold; font-weight: bold; }
 #modeTitleLabel { font-size: 26px; color: white; font-family: 'Zen Old Mincho'; margin-bottom: 20px; }
+.rankTab { padding: 10px 22px; font-size: 16px; font-family: 'Zen Old Mincho'; font-weight: bold; border: 2px solid #555; border-radius: 8px; background: rgba(255,255,255,0.05); color: #aaa; cursor: pointer; transition: all 0.15s; }
+.rankTab.active { border-color: #ffcc00; color: #ffcc00; background: rgba(255,204,0,0.1); }
 
 /* ===== ランクマ名前入力モーダル ===== */
 #nameModal {
@@ -651,7 +653,8 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
       <div style="font-size:12px; color:#666; margin-top:8px;">月間番付へは <span style="color:#ff8844;">⚔️ ランクマッチ</span> から参戦せよ。</div>
     </div>
     <div id="rankmaSaveArea" style="display:none;">
-      <div style="font-size:18px; color:#ffcc00; margin-bottom:14px;">⚔️ 参戦名：<strong id="rankmaNameLabel" style="color:gold;font-size:22px;"></strong></div>
+      <div style="font-size:18px; color:#ffcc00; margin-bottom:6px;">⚔️ 参戦名：<strong id="rankmaNameLabel" style="color:gold;font-size:22px;"></strong></div>
+      <div id="rankmaThisPlayPerfect" style="font-size:15px; color:#ff88ff; margin-bottom:14px;"></div>
       <button class="menuBtn" onclick="saveRankmaScore()">スコアを番付に刻む</button>
     </div>
  </div>
@@ -661,15 +664,33 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 <div id="ranking">
  <h1 id="rankTitle">世界番付</h1>
  <div id="modeTitleLabel"></div>
- <div class="rank-container">
-    <div class="rank-column month">
-        <h2 id="monthLabelHeader">今月の月間番付</h2>
-        <div id="monthRankList"></div>
-    </div>
-    <div class="rank-column rekidai">
-        <h2>歴代番付</h2>
-        <div id="rekidaiRankList"></div>
-    </div>
+ <!-- タブ -->
+ <div style="display:flex; justify-content:center; gap:10px; margin-bottom:16px;">
+   <button id="tabScore" class="rankTab active" onclick="switchRankTab('score')">🏆 スコア番付</button>
+   <button id="tabPerfect" class="rankTab" onclick="switchRankTab('perfect')">✨ 累計極上番付</button>
+ </div>
+ <!-- スコア番付 -->
+ <div id="rankPanelScore">
+   <div class="rank-container">
+     <div class="rank-column month">
+       <h2 id="monthLabelHeader">今月の月間番付</h2>
+       <div id="monthRankList"></div>
+     </div>
+     <div class="rank-column rekidai">
+       <h2>歴代番付</h2>
+       <div id="rekidaiRankList"></div>
+     </div>
+   </div>
+ </div>
+ <!-- 累計極上番付（月間ランクマ専用） -->
+ <div id="rankPanelPerfect" style="display:none;">
+   <div style="font-size:13px; color:#888; margin-bottom:12px;">ランクマッチで積み上げた今月の極上回数ランキング</div>
+   <div class="rank-container">
+     <div class="rank-column month">
+       <h2 id="perfectMonthLabel">今月の累計極上番付</h2>
+       <div id="monthPerfectList"></div>
+     </div>
+   </div>
  </div>
  <br>
  <button class="menuBtn" onclick="location.reload()">戻る</button>
@@ -677,6 +698,21 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbygiit5TLOFBonR2Hz9svLuVDum5gKtfoG_R0_ImgjwBnEiXL75t4aqBbFbfotDN90/exec";
+
+// ===== プレイヤーUUID（ブラウザに永続保存） =====
+function getOrCreateUUID() {
+    let uuid = localStorage.getItem("sobamichi_uuid");
+    if (!uuid) {
+        uuid = crypto.randomUUID ? crypto.randomUUID()
+             : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                 const r = Math.random() * 16 | 0;
+                 return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+               });
+        localStorage.setItem("sobamichi_uuid", uuid);
+    }
+    return uuid;
+}
+const PLAYER_UUID = getOrCreateUUID();
 
 const HIT_X = 65;
 const laneY = [63, 190, 316];
@@ -1254,6 +1290,7 @@ function endGame(){
         document.getElementById("normalSaveArea").style.display = "none";
         document.getElementById("rankmaSaveArea").style.display = "block";
         document.getElementById("rankmaNameLabel").innerText = rankmaName;
+        document.getElementById("rankmaThisPlayPerfect").innerText = `今回の極上: ${perfectCount}回（虹極上: ${kamiCount}回）→ 累計に加算されます`;
     } else {
         document.getElementById("normalSaveArea").style.display = "block";
         document.getElementById("rankmaSaveArea").style.display = "none";
@@ -1322,7 +1359,7 @@ async function saveRankmaScore() {
     try {
         await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true })
+            body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true, perfectCount, uuid: PLAYER_UUID })
         });
         showRanking();
     } catch(e){
@@ -1332,42 +1369,56 @@ async function saveRankmaScore() {
     }
 }
 
+// ===== 番付タブ切り替え =====
+let currentRankTab = 'score';
+function switchRankTab(tab) {
+    currentRankTab = tab;
+    document.getElementById("rankPanelScore").style.display = tab === 'score' ? 'block' : 'none';
+    document.getElementById("rankPanelPerfect").style.display = tab === 'perfect' ? 'block' : 'none';
+    document.getElementById("tabScore").className = "rankTab" + (tab === 'score' ? ' active' : '');
+    document.getElementById("tabPerfect").className = "rankTab" + (tab === 'perfect' ? ' active' : '');
+}
+
 // ===== 番付表示 =====
 async function showRanking(){
     document.getElementById("titleScreen").style.display="none";
     document.getElementById("result").style.display="none";
     document.getElementById("ranking").style.display="block";
+    switchRankTab('score');
 
     const now = new Date();
     const modeLabel = currentMode === "infinite" ? "終わりなき修行部門" : currentMode + "秒修行部門";
     const rankmaLabel = isRankmaMode ? " ⚔️ ランクマ" : "";
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
     document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 限定番付`;
+    document.getElementById("perfectMonthLabel").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 累計極上番付`;
 
     const mList = document.getElementById("monthRankList");
     const rList = document.getElementById("rekidaiRankList");
-    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中...";
+    const pList = document.getElementById("monthPerfectList");
+    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中..."; pList.innerHTML = "取得中...";
 
     try {
         const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
         const data = await res.json();
 
-        const renderList = (arr, el) => {
+        const renderList = (arr, el, unit) => {
             if (!arr || arr.length === 0) {
                 el.innerHTML = `<div style="color:#aaa;padding:10px;">まだ誰も刻んでおらぬ…</div>`;
                 return;
             }
             const medals = ["🥇","🥈","🥉"];
             el.innerHTML = arr.map((d,i) =>
-                `<div class="rank-item"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}点</span></div>`
+                `<div class="rank-item"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`
             ).join("");
         };
 
-        renderList(data.month || [], mList);
-        renderList(data.rekidai || [], rList);
+        renderList(data.month || [], mList, "点");
+        renderList(data.rekidai || [], rList, "点");
+        renderList(data.monthPerfect || [], pList, "回");
 
     } catch(e){
-        mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗";
+        mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗"; pList.innerHTML="取得失敗";
     }
 }
 
