@@ -1379,7 +1379,8 @@ async function fetchRankPosition() {
     el.style.color = "#aaa";
     el.innerText = "番付照合中...";
     try {
-        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
+        // キャッシュ回避のためのタイムスタンプ
+        const res = await fetch(`${GAS_URL}?mode=${currentMode}&t=${Date.now()}`);
         const data = await res.json();
 
         // 月間番付での順位
@@ -1435,7 +1436,11 @@ async function saveRankmaScore() {
             method: "POST",
             body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true, perfectCount, uuid: PLAYER_UUID })
         });
-        showRanking();
+        // サーバー側の反映を待つために少し待機
+        btn.innerText = "反映待ち...";
+        setTimeout(() => {
+            showRanking();
+        }, 1500);
     } catch(e){
         console.error(e);
         alert("通信失敗。もう一度試してくれ。");
@@ -1471,23 +1476,45 @@ async function showRanking(){
     mList.innerHTML = "取得中..."; rList.innerHTML = "取得中..."; pList.innerHTML = "取得中...";
 
     try {
-        const res = await fetch(`${GAS_URL}?mode=${currentMode}`);
+        // キャッシュ回避のためのタイムスタンプ
+        const res = await fetch(`${GAS_URL}?mode=${currentMode}&t=${Date.now()}`);
         const data = await res.json();
 
-        const renderList = (arr, el, unit) => {
+        const renderList = (arr, el, unit, isPerfectTab = false) => {
             if (!arr || arr.length === 0) {
                 el.innerHTML = `<div style="color:#aaa;padding:10px;">まだ誰も刻んでおらぬ…</div>`;
                 return;
             }
             const medals = ["🥇","🥈","🥉"];
-            el.innerHTML = arr.map((d,i) =>
-                `<div class="rank-item"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`
-            ).join("");
+            
+            // 自分の順位を探す
+            let myRank = -1;
+            if (isRankmaMode) {
+                myRank = arr.findIndex(d => d.name === rankmaName);
+            } else {
+                const nameInput = document.getElementById("nameInput").value;
+                if (nameInput) myRank = arr.findIndex(d => d.name === nameInput);
+            }
+
+            let html = arr.slice(0, 10).map((d,i) => {
+                const isMe = (i === myRank);
+                const style = isMe ? 'background:rgba(255,215,0,0.2); border-radius:5px;' : '';
+                return `<div class="rank-item" style="${style}"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`;
+            }).join("");
+
+            // 10位以下に自分がいる場合、特別行として追加
+            if (myRank >= 10) {
+                const d = arr[myRank];
+                html += `<div style="border-top:1px dashed #555; margin:5px 0;"></div>`;
+                html += `<div class="rank-item" style="background:rgba(255,215,0,0.2); border-radius:5px;"><span>${myRank+1}位: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`;
+            }
+
+            el.innerHTML = html;
         };
 
         renderList(data.month || [], mList, "点");
         renderList(data.rekidai || [], rList, "点");
-        renderList(data.monthPerfect || [], pList, "回");
+        renderList(data.monthPerfect || [], pList, "回", true);
 
     } catch(e){
         mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗"; pList.innerHTML="取得失敗";
