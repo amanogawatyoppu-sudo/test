@@ -1091,6 +1091,9 @@ function startWithCountdown(afterCallback) {
     score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
+    // ロビーを確実に閉じてからゲーム画面へ
+    document.getElementById("rankmaLobby").classList.remove("open");
+    document.getElementById("nameModal").classList.remove("open");
     switchScreen("game");
     document.getElementById("bottomArea").style.display="flex";
     const tag = document.getElementById("rankmaTag");
