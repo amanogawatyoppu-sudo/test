@@ -689,10 +689,10 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
  </div>
  <!-- 累計極上番付（月間ランクマ専用） -->
  <div id="rankPanelPerfect" style="display:none;">
-   <div style="font-size:13px; color:#888; margin-bottom:12px;">ランクマッチで積み上げた今月の極上回数ランキング</div>
+   <div style="font-size:13px; color:#888; margin-bottom:12px;">ランクマッチで積み上げた極上回数の総合ランキング（全部門合算）</div>
    <div class="rank-container">
      <div class="rank-column month">
-       <h2 id="perfectMonthLabel">今月の累計極上番付</h2>
+       <h2 id="perfectMonthLabel">累計極上番付（全部門合算）</h2>
        <div id="monthPerfectList"></div>
      </div>
    </div>
@@ -1091,9 +1091,6 @@ function startWithCountdown(afterCallback) {
     score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
-    // ロビーを確実に閉じてからゲーム画面へ
-    document.getElementById("rankmaLobby").classList.remove("open");
-    document.getElementById("nameModal").classList.remove("open");
     switchScreen("game");
     document.getElementById("bottomArea").style.display="flex";
     const tag = document.getElementById("rankmaTag");
@@ -1471,7 +1468,7 @@ async function showRanking(){
     const rankmaLabel = isRankmaMode ? " ⚔️ ランクマ" : "";
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
     document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 限定番付`;
-    document.getElementById("perfectMonthLabel").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 累計極上番付`;
+    document.getElementById("perfectMonthLabel").innerText = `累計極上番付（全部門合算）`;
 
     const mList = document.getElementById("monthRankList");
     const rList = document.getElementById("rekidaiRankList");
