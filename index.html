@@ -1469,13 +1469,11 @@ async function showRanking(){
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
     document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 限定番付`;
     document.getElementById("perfectMonthLabel").innerText = `累計極上番付（全部門合算）`;
-    document.getElementById("perfectMonthLabel").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 累計極上番付`;
 
     const mList = document.getElementById("monthRankList");
     const rList = document.getElementById("rekidaiRankList");
     const pList = document.getElementById("monthPerfectList");
-    const pList = document.getElementById("monthPerfectList");
-    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中..."; if(pList) pList.innerHTML = "取得中..."; pList.innerHTML = "取得中...";
+    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中..."; if(pList) pList.innerHTML = "取得中...";
 
     try {
         // キャッシュ回避のためのタイムスタンプ
@@ -1517,7 +1515,6 @@ async function showRanking(){
         renderList(data.month || [], mList, "点");
         renderList(data.rekidai || [], rList, "点");
         if(pList) renderList(data.monthPerfect || [], pList, "回");
-        renderList(data.monthPerfect || [], pList, "回", true);
 
     } catch(e){
         mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗"; pList.innerHTML="取得失敗";
