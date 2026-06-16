@@ -274,7 +274,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 }
 
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
-#bottomArea { position: absolute; left: 50%; top: 72%; transform: translate(-50%, -50%); width: 1100px; height: 300px; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
+#bottomArea { position: fixed; left: 50%; top: calc(28% + 190px + 20px); transform: translateX(-50%); width: 1100px; height: 220px; display: none; flex-direction: column; align-items: center; justify-content: space-around; z-index: 250; }
 #gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
