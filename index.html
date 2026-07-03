@@ -305,6 +305,107 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
 .rankTab.active { border-color: #ffcc00; color: #ffcc00; background: rgba(255,204,0,0.1); }
 
 /* ===== ランクマ名前入力モーダル ===== */
+/* ===== 一時停止ボタン・オーバーレイ ===== */
+#pauseBtn {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  z-index: 90;
+  background: rgba(0,0,0,0.5);
+  border: 2px solid gold;
+  color: gold;
+  border-radius: 8px;
+  font-size: 18px;
+  width: 38px;
+  height: 34px;
+  cursor: pointer;
+  line-height: 1;
+}
+#pauseOverlay {
+  display: none;
+  position: fixed;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  z-index: 380;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+#pauseOverlay.open { display: flex; }
+#pauseOverlayBox {
+  border: 3px solid gold;
+  border-radius: 16px;
+  padding: 36px 50px;
+  background: rgba(20,15,0,0.98);
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255,215,0,0.25);
+}
+#pauseOverlayBox h2 {
+  font-family: 'Zen Old Mincho';
+  font-size: 28px;
+  color: gold;
+  margin: 0 0 20px;
+}
+
+/* ===== 復活クイズ ===== */
+#quizOverlay {
+  display: none;
+  position: fixed;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.92);
+  z-index: 390;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+#quizOverlay.open { display: flex; }
+#quizBox {
+  border: 3px solid gold;
+  border-radius: 16px;
+  padding: 32px 40px;
+  background: rgba(20,15,0,0.98);
+  text-align: center;
+  box-shadow: 0 0 50px rgba(255,215,0,0.25);
+  max-width: 560px;
+  width: 88%;
+  box-sizing: border-box;
+}
+#quizBox h2 {
+  font-family: 'Zen Old Mincho';
+  font-size: 24px;
+  color: #ff8844;
+  margin: 0 0 6px;
+}
+#quizBox .quiz-sub {
+  color: #bbb;
+  font-size: 13px;
+  margin: 0 0 18px;
+}
+#quizQuestion {
+  color: #fff;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+#quizChoices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.quizChoiceBtn {
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+.quizChoiceBtn:disabled { opacity: 0.6; cursor: default; }
+#quizResultMsg {
+  min-height: 22px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 #nameModal {
   display: none;
   position: fixed;
@@ -537,6 +638,25 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
   <p>スマホを横向きにして<br>遊んでくれ！</p>
 </div>
 
+<!-- 一時停止オーバーレイ -->
+<div id="pauseOverlay">
+  <div id="pauseOverlayBox">
+    <h2>⏸ 一時停止中</h2>
+    <button class="menuBtn" onclick="togglePause()">再開する</button>
+  </div>
+</div>
+
+<!-- 復活クイズ -->
+<div id="quizOverlay">
+  <div id="quizBox">
+    <h2>茹で過ぎた…！</h2>
+    <p class="quiz-sub">越前そばクイズに正解すれば、もう一度立ち上がれる。</p>
+    <div id="quizQuestion"></div>
+    <div id="quizChoices"></div>
+    <div id="quizResultMsg"></div>
+  </div>
+</div>
+
 <!-- ランクマ名前入力モーダル -->
 <div id="nameModal">
   <div id="nameModalBox">
@@ -623,6 +743,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
    <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
   </div>
+  <button id="pauseBtn" onclick="togglePause()">⏸</button>
   <canvas id="gameCanvas" width="1100" height="380" style="position:absolute; top:0; left:0; z-index:5;"></canvas>
   <div id="hit-0" class="hit red">A</div><div id="hit-1" class="hit blue">S</div><div id="hit-2" class="hit green">L</div>
   <div id="judge"></div>
@@ -929,6 +1050,9 @@ let isRankmaMode = false;
 let rankmaName = "";
 let pendingRankmaMode = "";
 let lastTime = 0;
+let isPaused = false;
+let quizActive = false;
+let quizUsedThisRun = false;
 
 // Canvas & Pooling
 let canvas, ctx;
@@ -1084,26 +1208,7 @@ function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCou
 function startInfinite(){ isInfinite=true; currentMode="infinite"; startWithCountdown(() => {}); }
 
 let isStarting = false;
-function startWithCountdown(afterCallback) {
-    if (isStarting) return;
-    isStarting = true;
-
-    // まずゲームエリアを表示（ノーツはまだ動かさない）
-    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
-    activeKeys.clear(); laneLocked=[false,false,false];
-    notePool.forEach(n => n.active = false);
-    switchScreen("game");
-    document.getElementById("bottomArea").style.display="flex";
-    const tag = document.getElementById("rankmaTag");
-    if (isRankmaMode) {
-        document.getElementById("rankmaTagName").innerText = rankmaName;
-        tag.style.display = "inline";
-    } else {
-        tag.style.display = "none";
-    }
-    scaleGame();
-
-    // カウントダウン開始
+function runCountdown(onComplete) {
     const overlay = document.getElementById("countdown");
     const num = document.getElementById("countdownNum");
     overlay.style.display = "flex";
@@ -1122,22 +1227,52 @@ function startWithCountdown(afterCallback) {
         } else {
             setTimeout(() => {
                 overlay.style.display = "none";
-                // ここでゲーム本体をスタート
-                running = true; loop(); spawn();
-                showMobileBtnsIfNeeded();
-                afterCallback();
-                isStarting = false; // 完全に開始してからフラグ解除
+                onComplete();
             }, 650);
         }
     }
     step();
-    lastTime = performance.now(); // ゲーム開始時に時間をリセット
 }
 
+function startWithCountdown(afterCallback) {
+    if (isStarting) return;
+    isStarting = true;
+
+    // まずゲームエリアを表示（ノーツはまだ動かさない）
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
+    quizUsedThisRun = false; isPaused = false; quizActive = false;
+    activeKeys.clear(); laneLocked=[false,false,false];
+    notePool.forEach(n => n.active = false);
+    switchScreen("game");
+    document.getElementById("bottomArea").style.display="flex";
+    const tag = document.getElementById("rankmaTag");
+    if (isRankmaMode) {
+        document.getElementById("rankmaTagName").innerText = rankmaName;
+        tag.style.display = "inline";
+    } else {
+        tag.style.display = "none";
+    }
+    scaleGame();
+
+    runCountdown(() => {
+        // ここでゲーム本体をスタート
+        lastTime = performance.now(); // カウントダウン後にリセットし、初回フレームの飛びを防ぐ
+        running = true; loop(); spawn();
+        showMobileBtnsIfNeeded();
+        afterCallback();
+        isStarting = false; // 完全に開始してからフラグ解除
+    });
+}
+
+let timeLeft = 0;
 function setupTimer(sec){
-    let timeLeft = sec;
+    timeLeft = sec;
     document.getElementById("timeDisplay").style.display="inline";
     document.getElementById("timeLeft").innerText = timeLeft;
+    startTimerInterval();
+}
+
+function startTimerInterval(){
     timerInterval = setInterval(() => {
         timeLeft--; document.getElementById("timeLeft").innerText = timeLeft;
         if(timeLeft <= 0) { clearInterval(timerInterval); endGame(); }
@@ -1200,7 +1335,7 @@ function loop(timestamp){
         if (n.x < -150) {
             n.active = false;
             missEffect();
-            if (isInfinite) { endGame(); return; }
+            if (isInfinite) { return; } // missEffect内で復活クイズ or 終了処理済み
             continue;
         }
 
@@ -1306,10 +1441,108 @@ function missEffect(){
     document.getElementById("combo").innerText=0; 
     showJudge("MISS"); 
     playSE('miss'); 
-    // 無限モードなら即終了
+    // 無限モードなら、初回のミスに限り復活クイズのチャンスを与える
     if(isInfinite && running) {
-        endGame();
+        if (!quizUsedThisRun) {
+            quizUsedThisRun = true;
+            triggerRevivalQuiz();
+        } else {
+            endGame();
+        }
     }
+}
+
+// ===== 無限モード：復活クイズ =====
+const sobaQuiz = [
+  { q: "越前おろしそばの起源は、西暦何年頃とされている？", choices: ["1601年頃", "1868年頃", "1945年頃", "2007年頃"], answer: 0 },
+  { q: "越前そば文化の原点は、朝倉孝景が何のためにそばを栽培させたことに遡る？", choices: ["献上品", "籠城用の非常食", "年貢の代わり", "茶菓子"], answer: 1 },
+  { q: "福井のそばが全国に名を広めたきっかけは、どこの駅そばが旅人に絶賛されたことか？", choices: ["福井駅", "敦賀駅", "今庄駅", "小浜駅"], answer: 2 },
+  { q: "越前おろしそばは2007年、農林水産省の何に選定された？", choices: ["世界遺産", "農山漁村の郷土料理百選", "国宝", "無形文化財"], answer: 1 },
+  { q: "そばに含まれ、血管を強くする成分は？", choices: ["ルチン", "カフェイン", "タウリン", "カテキン"], answer: 0 },
+  { q: "大根おろしの何という成分が、そばのたんぱく質の消化を助ける？", choices: ["ジアスターゼ", "クエン酸", "タンニン", "ペクチン"], answer: 0 },
+  { q: "越前そばの麺の太さの特徴は？", choices: ["極細麺", "太麺", "半生麺", "米粉麺"], answer: 1 },
+  { q: "福井県が1996年から開催している、そば打ちの大会とは？", choices: ["全国そば打ち選手権", "全日本素人そば打ち名人大会", "越前そば祭り", "そば職人甲子園" ], answer: 1 },
+  { q: "越前市でおろしそばを食べ、普段しないお代わりを所望されたのは誰？", choices: ["昭和天皇", "徳川家康", "織田信長", "松尾芭蕉"], answer: 0 },
+];
+
+function triggerRevivalQuiz(){
+    quizActive = true;
+    running = false;
+    if (!isInfinite) clearInterval(timerInterval);
+
+    const q = sobaQuiz[Math.floor(Math.random() * sobaQuiz.length)];
+    document.getElementById("quizQuestion").innerText = q.q;
+    const choicesEl = document.getElementById("quizChoices");
+    choicesEl.innerHTML = "";
+    q.choices.forEach((choice, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "menuBtn quizChoiceBtn";
+        btn.innerText = choice;
+        btn.onclick = () => answerQuiz(idx === q.answer);
+        choicesEl.appendChild(btn);
+    });
+    document.getElementById("quizResultMsg").innerText = "";
+    document.getElementById("quizOverlay").classList.add("open");
+}
+
+function answerQuiz(correct){
+    const choicesEl = document.getElementById("quizChoices");
+    Array.from(choicesEl.children).forEach(b => b.disabled = true);
+    const msg = document.getElementById("quizResultMsg");
+
+    if (correct) {
+        msg.style.color = "#4dff88";
+        msg.innerText = "正解！復活する…！";
+    } else {
+        msg.style.color = "#ff4444";
+        msg.innerText = "不正解…ここまでか…";
+    }
+
+    setTimeout(() => {
+        document.getElementById("quizOverlay").classList.remove("open");
+        quizActive = false;
+        if (correct) {
+            notePool.forEach(n => n.active = false);
+            runCountdown(() => {
+                lastTime = performance.now();
+                running = true;
+                loop();
+                spawn();
+            });
+        } else {
+            endGame();
+        }
+    }, 1400);
+}
+
+// ===== 一時停止 =====
+function togglePause(){
+    if (isStarting || quizActive) return;
+    if (isPaused) resumeGame(); else pauseGame();
+}
+
+function pauseGame(){
+    if (!running) return;
+    isPaused = true;
+    running = false;
+    clearInterval(timerInterval);
+    document.getElementById("pauseOverlay").classList.add("open");
+    const btn = document.getElementById("pauseBtn");
+    if (btn) btn.innerText = "▶";
+}
+
+function resumeGame(){
+    document.getElementById("pauseOverlay").classList.remove("open");
+    const btn = document.getElementById("pauseBtn");
+    if (btn) btn.innerText = "⏸";
+    runCountdown(() => {
+        lastTime = performance.now();
+        running = true;
+        isPaused = false;
+        loop();
+        spawn();
+        if (!isInfinite) startTimerInterval();
+    });
 }
 
 function showJudge(res){
