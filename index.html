@@ -1170,7 +1170,9 @@ function loop(timestamp){
     if(!running) return;
     
     if (!lastTime) lastTime = timestamp;
-    const deltaTime = (timestamp - lastTime) / (1000 / 60);
+    // 処理落ち後に一気にワープするのを防ぐため、1フレームあたりの経過量に上限をかける
+    const rawDelta = (timestamp - lastTime) / (1000 / 60);
+    const deltaTime = Math.min(rawDelta, 3);
     lastTime = timestamp;
 
     const baseSpeed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
@@ -1190,7 +1192,8 @@ function loop(timestamp){
     }
 
     // ノーツ移動 & 描画
-    for (let n of notePool) {
+    for (let ni = 0; ni < notePool.length; ni++) {
+        const n = notePool[ni];
         if (!n.active) continue;
         n.x -= speed;
         
@@ -1311,20 +1314,20 @@ function missEffect(){
 
 function showJudge(res){
     const j = document.getElementById("judge");
-    // アニメーションを確実にリセットするため一度DOMから切り離して戻す
-    const parent = j.parentNode;
-    const next = j.nextSibling;
-    parent.removeChild(j);
+    let cls, text, color;
     if (res === "KAMI") {
-        j.textContent = "虹極上";
-        j.className = "kami kamiAnim";
-        j.style.color = "";
+        text = "虹極上"; cls = "kami kamiAnim"; color = "";
     } else {
-        j.className = "showJudge";
-        j.textContent = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
-        j.style.color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
+        cls = "showJudge";
+        text = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
+        color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
     }
-    parent.insertBefore(j, next);
+    // DOMの着脱ではなく、class解除→offsetWidth強制リフロー→再設定でアニメーションを再トリガー（軽量）
+    j.className = "";
+    void j.offsetWidth;
+    j.textContent = text;
+    j.style.color = color;
+    j.className = cls;
 }
 
 function endGame(){
