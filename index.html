@@ -1841,14 +1841,16 @@ function scaleGame() {
   game.style.left = "50%";
   game.style.top = `${(topAreaH - scaledH) / 2}px`;
 
+  // 予測計算ではなく、実際に描画されたゲーム画面の下端を基準にゲージ類を配置する
+  // （画面高さの推定がズレても、ゲージがゲーム画面と重ならないようにするため）
+  const gameRect = game.getBoundingClientRect();
   const bottom = document.getElementById("bottomArea");
-  const gaugeTop = (topAreaH - scaledH) / 2 + scaledH + 4;
   bottom.style.position = "fixed";
-  bottom.style.top = `${gaugeTop}px`;
+  bottom.style.top = `${gameRect.bottom + 4}px`;
   bottom.style.left = "50%";
   bottom.style.transform = "translateX(-50%)";
   bottom.style.width = `${vw}px`;
-  bottom.style.height = `${vh * 0.40 - 4}px`; // 高さを少し削る
+  bottom.style.height = `${Math.max(vh - gameRect.bottom - 4, 60)}px`;
 
   if (running) {
     mobileBtns.style.display = "flex";
