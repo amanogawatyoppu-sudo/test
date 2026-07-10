@@ -1829,7 +1829,7 @@ function scaleGame() {
   const GAME_W = 1100;
   const GAME_H = 380;
 
-  const topAreaH = vh * 0.55;
+  const topAreaH = vh * 0.5;
   const scaleX = vw / GAME_W;
   const scaleY = topAreaH / GAME_H;
   const scale = Math.min(scaleX, scaleY, 1);
@@ -1845,12 +1845,20 @@ function scaleGame() {
   // （画面高さの推定がズレても、ゲージがゲーム画面と重ならないようにするため）
   const gameRect = game.getBoundingClientRect();
   const bottom = document.getElementById("bottomArea");
+  const MIN_BOTTOM_H = 90; // ゲージ+ワーカー表示に最低限必要な高さ
+  let bottomTop = gameRect.bottom + 4;
+  let bottomHeight = vh - bottomTop - 4;
+  if (bottomHeight < MIN_BOTTOM_H) {
+      // 画面内に収まりきらない場合は、下端基準にして必ず画面内に表示する
+      bottomTop = Math.max(vh - MIN_BOTTOM_H - 4, gameRect.bottom + 4);
+      bottomHeight = Math.max(vh - bottomTop - 4, MIN_BOTTOM_H);
+  }
   bottom.style.position = "fixed";
-  bottom.style.top = `${gameRect.bottom + 4}px`;
+  bottom.style.top = `${bottomTop}px`;
   bottom.style.left = "50%";
   bottom.style.transform = "translateX(-50%)";
   bottom.style.width = `${vw}px`;
-  bottom.style.height = `${Math.max(vh - gameRect.bottom - 4, 60)}px`;
+  bottom.style.height = `${bottomHeight}px`;
 
   if (running) {
     mobileBtns.style.display = "flex";
