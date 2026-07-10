@@ -1808,7 +1808,9 @@ function scaleGame() {
     return;
   }
 
-  const isPortrait = window.innerHeight > window.innerWidth;
+  const vw0 = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
+  const vh0 = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  const isPortrait = vh0 > vw0;
 
   // 縦持ち回転オーバーレイはプレイ中のみ表示
   if (isPortrait && running) {
@@ -1823,8 +1825,8 @@ function scaleGame() {
     return;
   }
 
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const vw = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
+  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   const GAME_W = 1100;
   const GAME_H = 380;
 
@@ -1872,7 +1874,18 @@ window.addEventListener("resize", () => {
         fireCtx.canvas.height = window.innerHeight;
     }
 });
-window.addEventListener("orientationchange", () => setTimeout(scaleGame, 200));
+// iOSのSafariは画面回転直後、アドレスバーのアニメーションが終わるまで
+// innerWidth/innerHeightが正しい値を返さないことがあるため、
+// 回転後に少し時間を置いて複数回リトライして確実に正しいサイズを掴む。
+function scaleGameWithRetries() {
+    scaleGame();
+    [100, 300, 600, 1000].forEach(delay => setTimeout(scaleGame, delay));
+}
+window.addEventListener("orientationchange", scaleGameWithRetries);
+// visualViewportが使える環境ではそちらの変化も拾う（アドレスバーの表示/非表示等でより正確）
+if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scaleGame);
+}
 scaleGame();
 
 // ===== キー操作 =====
