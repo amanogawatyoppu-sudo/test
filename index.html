@@ -1829,30 +1829,32 @@ function scaleGame() {
   const GAME_W = 1100;
   const GAME_H = 380;
 
-  const topAreaH = vh * 0.5;
+  // レイアウト方針：ゲーム画面は上端に詰めて表示し、空きスペースを作らない。
+  // 下部にゲージ用の固定スペースと、A/S/Lタップボタン用のスペースを確保してから、
+  // 残りの高さいっぱいまでゲーム画面を拡大する。
+  const TOP_MARGIN = 8;
+  const GAP = 4;
+  const BOTTOM_AREA_H = 90; // ゲージ＋ワーカー表示用の固定高さ
+  const mobileBtnsH = vh * 0.38; // A/S/Lタップボタン用に確保する高さ
+
+  const availableForGameH = vh - mobileBtnsH - TOP_MARGIN - GAP - BOTTOM_AREA_H;
   const scaleX = vw / GAME_W;
-  const scaleY = topAreaH / GAME_H;
+  const scaleY = availableForGameH / GAME_H;
   const scale = Math.min(scaleX, scaleY, 1);
   _currentScale = scale;
 
   const game = document.getElementById("gameInternal");
-  const scaledH = GAME_H * scale;
   game.style.transform = `translate(-50%, 0) scale(${scale})`;
   game.style.left = "50%";
-  game.style.top = `${(topAreaH - scaledH) / 2}px`;
+  game.style.top = `${TOP_MARGIN}px`;
 
   // 予測計算ではなく、実際に描画されたゲーム画面の下端を基準にゲージ類を配置する
   // （画面高さの推定がズレても、ゲージがゲーム画面と重ならないようにするため）
   const gameRect = game.getBoundingClientRect();
   const bottom = document.getElementById("bottomArea");
-  const MIN_BOTTOM_H = 90; // ゲージ+ワーカー表示に最低限必要な高さ
-  let bottomTop = gameRect.bottom + 4;
-  let bottomHeight = vh - bottomTop - 4;
-  if (bottomHeight < MIN_BOTTOM_H) {
-      // 画面内に収まりきらない場合は、下端基準にして必ず画面内に表示する
-      bottomTop = Math.max(vh - MIN_BOTTOM_H - 4, gameRect.bottom + 4);
-      bottomHeight = Math.max(vh - bottomTop - 4, MIN_BOTTOM_H);
-  }
+  const bottomTop = gameRect.bottom + GAP;
+  // ボタン欄と重ならないよう、残りスペース内に収まる高さへクランプする
+  const bottomHeight = Math.max(Math.min(BOTTOM_AREA_H, vh - mobileBtnsH - bottomTop - GAP), 40);
   bottom.style.position = "fixed";
   bottom.style.top = `${bottomTop}px`;
   bottom.style.left = "50%";
