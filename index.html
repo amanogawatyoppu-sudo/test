@@ -742,7 +742,7 @@ body{ margin:0; background:black; color:white; font-family:'Noto Serif JP'; over
    <span class="info-text">連打: <span id="combo">0</span></span>
    <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
-   <span class="info-text" style="color:#666; font-size:11px;">build:v6-globalerr</span>
+   <span class="info-text" style="color:#666; font-size:9px;" id="debugUAText">build:v7-uacheck</span>
   </div>
   <button id="pauseBtn" onclick="togglePause()">⏸</button>
   <canvas id="gameCanvas" width="1100" height="380" style="position:absolute; top:0; left:0; z-index:5;"></canvas>
@@ -1836,6 +1836,11 @@ function scaleGame() {
 function scaleGameInner() {
   const overlay = document.getElementById("rotateOverlay");
   const mobileBtns = document.getElementById("mobileBtns");
+
+  const uaBox = document.getElementById("debugUAText");
+  if (uaBox) {
+    uaBox.innerText = `v7 isMobile:${isMobile()} touch:${isTouchMode} maxTP:${navigator.maxTouchPoints} plat:${navigator.platform} ua:${navigator.userAgent.slice(0,60)}`;
+  }
 
   if (!isMobile()) {
     overlay.style.display = "none";
