@@ -282,16 +282,16 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 }
 
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
-#bottomArea { position: fixed; left: 50%; top: calc(28% + 190px + 16px); transform: translateX(-50%); width: 1100px; height: 230px; display: none; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14px; z-index: 250; box-sizing: border-box; }
-/* ゲージ行（ゲージ＋職人アイコン）と、その下のA/S/Lボタン */
-#gaugeRow { width: 80%; display: flex; align-items: center; gap: 12px; }
-#hitBtns { width: 80%; flex: 1; min-height: 0; display: flex; gap: 3%; justify-content: center; touch-action: none; }
-#gaugeWrapper { flex: 1; min-width: 0; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
+#bottomArea { position: fixed; left: 50%; top: calc(28% + 190px + 20px); transform: translateX(-50%); width: 1100px; height: 220px; display: none; flex-direction: column; align-items: center; justify-content: space-around; z-index: 250; box-sizing: border-box; }
+/* ゲージ＋職人アイコン。A/S/Lボタン（#hitBtns）はスマホ・タブレットのときだけ表示する */
+#gaugeRow { width: 80%; display: flex; flex-direction: column; align-items: center; }
+#hitBtns { display: none; width: 100%; flex: 1; min-height: 0; gap: 3%; justify-content: center; touch-action: none; }
+#gaugeWrapper { width: 100%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
 .fever { animation: feverGlow 0.3s infinite alternate; }
 @keyframes feverGlow { 0% { opacity: 1; } 100% { opacity: 0.7; } } /* box-shadowは重いためopacityに変更 */
-#workerArea { font-size: 44px; width: 90px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+#workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
 .nobashi { animation: nobashiAnim 0.4s infinite linear; }
 .kiri { animation: kiriAnim 0.1s infinite alternate; }
@@ -567,8 +567,9 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
     width: 100px !important; font-size: 12px !important; padding: 8px !important; margin: 4px !important;
   }
   .hit { width: 110px; height: 110px; font-size: 32px; }
-  #bottomArea { width: 100vw; }
-  #gaugeRow, #hitBtns { width: 90%; }
+  #bottomArea { width: 100vw; justify-content:center; gap:2px; }
+  #gaugeRow { width: 90%; }
+  #workerArea { font-size: 70px; height: 90px; }
   .info-text { font-size: 16px; margin-right: 10px; }
   #judge { font-size: 44px; }
   #rankDisplay { font-size: 36px; }
@@ -608,7 +609,8 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 /* ===== スマホ操作時のプレイ画面（JSがbodyにmobileLayoutを付ける） =====
    レーンを上端に寄せ、その下にゲージ、さらに下にA/S/Lボタンを並べる。
    端末負荷とズレ防止のため、職人アイコンとボタンの演出アニメーションは無効化する。 */
-body.mobileLayout #bottomArea { gap: 4px; }
+body.mobileLayout #bottomArea { gap: 4px; justify-content: flex-start; }
+body.mobileLayout #hitBtns { display: flex; }
 body.mobileLayout #gaugeRow, body.mobileLayout #hitBtns { width: 100%; }
 body.mobileLayout #gaugeWrapper { height: 16px; border-width: 1px; }
 body.mobileLayout #gaugeWrapper.fever { animation: none; }
@@ -780,7 +782,7 @@ body.mobileLayout .mobileHitBtn.active { transform: none; }
         <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
         <div id="workerArea"><div id="workerEmoji">🥣</div></div>
     </div>
-    <!-- A/S/Lボタン（ゲージの下）。タップ・クリックで叩ける。キー操作時も光る。 -->
+    <!-- A/S/Lボタン（ゲージの下）。スマホ・タブレットのときだけ表示（body.mobileLayout）。 -->
     <div id="hitBtns">
         <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
         <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
