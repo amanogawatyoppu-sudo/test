@@ -282,13 +282,16 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 }
 
 @keyframes judgeAnim { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -120%) scale(1); } }
-#bottomArea { position: fixed; left: 50%; top: calc(28% + 190px + 20px); transform: translateX(-50%); width: 1100px; height: 220px; display: none; flex-direction: column; align-items: center; justify-content: space-around; z-index: 250; }
-#gaugeWrapper { width: 80%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
+#bottomArea { position: fixed; left: 50%; top: calc(28% + 190px + 16px); transform: translateX(-50%); width: 1100px; height: 230px; display: none; flex-direction: column; align-items: center; justify-content: flex-start; gap: 14px; z-index: 250; box-sizing: border-box; }
+/* ゲージ行（ゲージ＋職人アイコン）と、その下のA/S/Lボタン */
+#gaugeRow { width: 80%; display: flex; align-items: center; gap: 12px; }
+#hitBtns { width: 80%; flex: 1; min-height: 0; display: flex; gap: 3%; justify-content: center; touch-action: none; }
+#gaugeWrapper { flex: 1; min-width: 0; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
 .fever { animation: feverGlow 0.3s infinite alternate; }
 @keyframes feverGlow { 0% { opacity: 1; } 100% { opacity: 0.7; } } /* box-shadowは重いためopacityに変更 */
-#workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
+#workerArea { font-size: 44px; width: 90px; height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 .kone { animation: koneAnim 0.6s infinite ease-in-out; }
 .nobashi { animation: nobashiAnim 0.4s infinite linear; }
 .kiri { animation: kiriAnim 0.1s infinite alternate; }
@@ -480,9 +483,8 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 /* ===== スマホタップボタン (和風・省スペース版) ===== */
 .mobileHitBtn {
   flex: 1;
-  max-width: 30%;
-  aspect-ratio: 2 / 1; /* 横長にして高さを抑える */
-  height: auto;
+  min-width: 0;
+  height: 100%;
   background: radial-gradient(circle at center, rgba(50,50,55,0.95), rgba(15,15,20,0.98));
   border: 2px solid rgba(255,255,255,0.1);
   border-radius: 12px; /* 少し角に丸みを持たせる程度に調整 */
@@ -565,9 +567,8 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
     width: 100px !important; font-size: 12px !important; padding: 8px !important; margin: 4px !important;
   }
   .hit { width: 110px; height: 110px; font-size: 32px; }
-  #bottomArea { width: 100vw; justify-content:center; gap:2px; }
-  #gaugeWrapper { width: 90%; }
-  #workerArea { font-size: 70px; height: 90px; }
+  #bottomArea { width: 100vw; }
+  #gaugeRow, #hitBtns { width: 90%; }
   .info-text { font-size: 16px; margin-right: 10px; }
   #judge { font-size: 44px; }
   #rankDisplay { font-size: 36px; }
@@ -584,12 +585,6 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   .lobbyModeBtn { width: 130px; font-size: 16px; padding: 14px 6px; }
   .lobby-top3-wrapper { gap: 10px; }
   .lobby-top3-card { min-width: 140px; }
-  #mobileBtns {
-    bottom: var(--safe-bottom) !important;
-    padding-left: calc(12px + var(--safe-left)) !important;
-    padding-right: calc(12px + var(--safe-right)) !important;
-    padding-bottom: calc(10px + var(--safe-bottom)) !important;
-  }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
@@ -608,12 +603,20 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   .lobby-top3-wrapper { margin-bottom: 12px; }
   .lobby-top3-card { padding: 8px 12px; }
   .lobby-mode-btns { margin-bottom: 12px; }
-  /* 横持ちスマホでは、ゲージと職人アイコンを小さくしてタップ欄を圧迫しない */
-  #bottomArea { justify-content:center; gap:2px; }
-  #gaugeWrapper { height:14px; border-width:1px; }
-  #gaugeText { font-size:11px; }
-  #workerArea { font-size:42px; height:42px; line-height:1; }
 }
+
+/* ===== スマホ操作時のプレイ画面（JSがbodyにmobileLayoutを付ける） =====
+   レーンを上端に寄せ、その下にゲージ、さらに下にA/S/Lボタンを並べる。
+   端末負荷とズレ防止のため、職人アイコンとボタンの演出アニメーションは無効化する。 */
+body.mobileLayout #bottomArea { gap: 4px; }
+body.mobileLayout #gaugeRow, body.mobileLayout #hitBtns { width: 100%; }
+body.mobileLayout #gaugeWrapper { height: 16px; border-width: 1px; }
+body.mobileLayout #gaugeWrapper.fever { animation: none; }
+body.mobileLayout #gaugeText { font-size: 11px; }
+body.mobileLayout #workerArea { display: none; }
+body.mobileLayout .mobileHitBtn { transition: none; font-size: 28px; }
+body.mobileLayout .mobileHitBtn::before, body.mobileLayout .mobileHitBtn::after { display: none; }
+body.mobileLayout .mobileHitBtn.active { transform: none; }
 
 /* ===== 縦持ちスマホ専用 ===== */
 @media (max-width: 1200px) and (orientation: portrait) {
@@ -761,7 +764,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
    <span class="info-text">連打: <span id="combo">0</span></span>
    <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
-   <span class="info-text" style="display:none; color:#666; font-size:9px;" id="debugUAText">build:v7-uacheck</span>
+   <span class="info-text" style="display:none; color:#666; font-size:9px;" id="debugUAText">build:v8</span>
   </div>
   <button id="pauseBtn" onclick="togglePause()">⏸</button>
   <canvas id="gameCanvas" width="1100" height="380" style="position:absolute; top:0; left:0; z-index:5;"></canvas>
@@ -773,15 +776,16 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 </div>
 
 <div id="bottomArea">
-    <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
-    <div id="workerArea"><div id="workerEmoji">🥣</div></div>
-</div>
-
-<!-- スマホ専用タップボタン -->
-<div id="mobileBtns" style="display:none; position:fixed; bottom:0; left:0; width:100%; height:38%; z-index:50; justify-content:space-around; align-items:center; padding:0 12px 10px; box-sizing:border-box; background:linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
-  <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
-  <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
-  <button class="mobileHitBtn" id="mBtn-2" onpointerdown="mobileTap(2)" onpointerup="mobileRelease(2)">L</button>
+    <div id="gaugeRow">
+        <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
+        <div id="workerArea"><div id="workerEmoji">🥣</div></div>
+    </div>
+    <!-- A/S/Lボタン（ゲージの下）。タップ・クリックで叩ける。キー操作時も光る。 -->
+    <div id="hitBtns">
+        <button class="mobileHitBtn" id="mBtn-0" onpointerdown="mobileTap(0)" onpointerup="mobileRelease(0)">A</button>
+        <button class="mobileHitBtn" id="mBtn-1" onpointerdown="mobileTap(1)" onpointerup="mobileRelease(1)">S</button>
+        <button class="mobileHitBtn" id="mBtn-2" onpointerdown="mobileTap(2)" onpointerup="mobileRelease(2)">L</button>
+    </div>
 </div>
 
 <div id="result">
@@ -1428,6 +1432,7 @@ function updateUI() {
 function hit(l){
     if(laneLocked[l]) return;
     laneLocked[l] = true; document.getElementById(`hit-${l}`).classList.add("active");
+    document.getElementById(`mBtn-${l}`).classList.add("active");
     
     // notePoolから判定対象を探す
     let t = notePool.find(n => n.active && n.lane === l && Math.abs(n.x - HIT_X) < 120);
@@ -1621,7 +1626,6 @@ function showJudge(res){
 
 function endGame(){
     running=false; clearInterval(timerInterval);
-    document.getElementById("mobileBtns").style.display = "none";
     switchScreen("result");
     document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
     let rank = "修行中";
@@ -1872,27 +1876,32 @@ function scaleGame() {
 
 function scaleGameInner() {
   const overlay = document.getElementById("rotateOverlay");
-  const mobileBtns = document.getElementById("mobileBtns");
+  const game = document.getElementById("gameInternal");
+  const bottom = document.getElementById("bottomArea");
 
   const uaBox = document.getElementById("debugUAText");
   if (uaBox) {
-    uaBox.innerText = `v7 isMobile:${isMobile()} touch:${isTouchMode} maxTP:${navigator.maxTouchPoints} plat:${navigator.platform} ua:${navigator.userAgent.slice(0,60)}`;
+    uaBox.innerText = `v8 isMobile:${isMobile()} touch:${isTouchMode} maxTP:${navigator.maxTouchPoints} plat:${navigator.platform} ua:${navigator.userAgent.slice(0,60)}`;
   }
 
-  if (!isMobile()) {
+  const mobile = isMobile();
+  document.body.classList.toggle("mobileLayout", mobile);
+
+  if (!mobile) {
     overlay.style.display = "none";
-    mobileBtns.style.display = "none";
+    // スマホ用に付けたインライン配置を外し、CSSのPCレイアウトに戻す
+    ["transform", "left", "top"].forEach(p => game.style[p] = "");
+    ["position", "top", "left", "transform", "width", "height", "padding"].forEach(p => bottom.style[p] = "");
     return;
   }
 
-  const vw0 = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
-  const vh0 = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-  const isPortrait = vh0 > vw0;
+  const vw = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
+  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+  const isPortrait = vh > vw;
 
   // 縦持ち回転オーバーレイはプレイ中のみ表示
   if (isPortrait && running) {
     overlay.style.display = "flex";
-    mobileBtns.style.display = "none";
     return;
   }
   overlay.style.display = "none";
@@ -1902,71 +1911,47 @@ function scaleGameInner() {
     return;
   }
 
-  const vw = (window.visualViewport && window.visualViewport.width) || window.innerWidth;
-  const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
   // viewport-fit=cover時のノッチ・ホームインジケーター領域を避ける。
   const rootStyle = getComputedStyle(document.documentElement);
   const inset = name => Number.parseFloat(rootStyle.getPropertyValue(name)) || 0;
-  const safeTop = Math.max(8, inset("--safe-top"));
+  const safeTop = Math.max(4, inset("--safe-top"));
   const safeRight = inset("--safe-right");
-  const safeBottom = inset("--safe-bottom");
+  const safeBottom = Math.max(6, inset("--safe-bottom"));
   const safeLeft = inset("--safe-left");
-  // 枠線まで含めた実寸を使う。従来は1100×380だけで計算しており、端末幅いっぱいで数px切れていた。
+  // 枠線まで含めた実寸
   const GAME_FRAME_W = 1106;
   const GAME_FRAME_H = 386;
 
-  // レイアウト方針：ゲーム画面は上端に詰めて表示し、空きスペースを作らない。
-  // 下部にゲージ用の固定スペースと、A/S/Lタップボタン用のスペースを確保してから、
-  // 残りの高さいっぱいまでゲーム画面を拡大する。
-  const TOP_MARGIN = safeTop;
+  // レイアウト：上から「レーン（上端に詰める）→ ゲージ → A/S/Lボタン」の縦一列。
+  // ボタン用に最低限の高さを確保し、残りでレーンをできるだけ大きく表示する。
   const GAP = 4;
-  const BOTTOM_AREA_H = 64; // 横向きスマホではゲージ＋ワーカーをコンパクトにする
-  const fallbackMobileBtnsH = vh * 0.38 + safeBottom;
-  // 表示中は実寸を優先するため、端末の安全領域やブラウザUI変化にも追従する。
-  const mobileBtnsH = Math.max(mobileBtns.getBoundingClientRect().height, fallbackMobileBtnsH);
-
-  const availableForGameH = Math.max(0, vh - mobileBtnsH - TOP_MARGIN - GAP - BOTTOM_AREA_H);
-  const availableForGameW = Math.max(0, vw - safeLeft - safeRight);
-  const scaleX = availableForGameW / GAME_FRAME_W;
-  const scaleY = availableForGameH / GAME_FRAME_H;
-  const scale = Math.max(0, Math.min(scaleX, scaleY, 1));
+  const GAUGE_H = 18;
+  const BTN_MIN_H = Math.max(64, vh * 0.3);
+  const availableW = Math.max(0, vw - safeLeft - safeRight);
+  const availableGameH = Math.max(0, vh - safeTop - safeBottom - GAP * 2 - GAUGE_H - BTN_MIN_H);
+  const scale = Math.max(0, Math.min(availableW / GAME_FRAME_W, availableGameH / GAME_FRAME_H, 1));
   _currentScale = scale;
 
-  const game = document.getElementById("gameInternal");
+  const centerX = safeLeft + availableW / 2;
   game.style.transform = `translate(-50%, 0) scale(${scale})`;
-  game.style.left = `${safeLeft + availableForGameW / 2}px`;
-  game.style.top = `${TOP_MARGIN}px`;
+  game.style.left = `${centerX}px`;
+  game.style.top = `${safeTop}px`;
 
-  // 予測計算ではなく、実際に描画されたゲーム画面の下端を基準にゲージ類を配置する
-  // （画面高さの推定がズレても、ゲージがゲーム画面と重ならないようにするため）
+  // 実際に描画されたレーンの下端を基準に、ゲージとボタンを画面下端まで敷き詰める
   const gameRect = game.getBoundingClientRect();
-  const bottom = document.getElementById("bottomArea");
   const bottomTop = gameRect.bottom + GAP;
-  // ボタン欄と重ならないよう、残りスペース内に収まる高さへクランプする。
-  // 最低値を強制しないことで、極端に低い画面でタップボタンへ重なるのを防ぐ。
-  const bottomHeight = Math.max(0, Math.min(BOTTOM_AREA_H, vh - mobileBtnsH - bottomTop - GAP));
   bottom.style.position = "fixed";
   bottom.style.top = `${bottomTop}px`;
-  bottom.style.left = `${safeLeft + availableForGameW / 2}px`;
+  bottom.style.left = `${centerX}px`;
   bottom.style.transform = "translateX(-50%)";
-  bottom.style.width = `${availableForGameW}px`;
-  bottom.style.height = `${bottomHeight}px`;
-  bottom.style.display = bottomHeight >= 32 ? "flex" : "none";
-
-  if (running) {
-    mobileBtns.style.display = "flex";
-  }
+  bottom.style.width = `${availableW}px`;
+  bottom.style.height = `${Math.max(0, vh - safeBottom - bottomTop)}px`;
+  bottom.style.padding = "0 8px";
 }
 
+// A/S/Lボタンはゲージ下に常設したため、ここではレイアウトの再計算のみ行う（呼び出し元との互換用）
 function showMobileBtnsIfNeeded() {
-  const btns = document.getElementById("mobileBtns");
-  // 実行中 かつ (モバイル端末 または タッチモード) かつ 横画面
-  if (running && isMobile() && window.innerWidth > window.innerHeight) {
-    btns.style.display = "flex";
-  } else {
-    btns.style.display = "none";
-  }
-  scaleGame(); // レイアウト再計算
+  scaleGame();
 }
 
 window.addEventListener("resize", () => {
@@ -2015,9 +2000,10 @@ document.addEventListener("keyup", e => {
     if(["a","s","l"].includes(k)){
         let i = k==="a"?0:k==="s"?1:2; laneLocked[i]=false;
         document.getElementById(`hit-${i}`).classList.remove("active");
+        document.getElementById(`mBtn-${i}`).classList.remove("active");
     }
 });
-// .hit要素のpointerdownはPC用のみ（スマホはmobileBtnsで処理）
+// .hit要素のpointerdownはPC用のみ（スマホはゲージ下のA/S/Lボタンで処理）
 document.querySelectorAll(".hit").forEach((el, i) => {
     el.addEventListener("pointerdown", (e) => {
         if (!isMobile() && running) { activeKeys.add("p"+i); hit(i); }
