@@ -20,9 +20,9 @@ html {
 body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; overscroll-behavior:none; }
 
 /* ===== タイトル画面 ===== */
-#titleScreen, #rankmaLobby, #game, #result, #ranking { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
+#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
 #titleScreen { display:flex; flex-direction:column; justify-content:center; align-items:center; z-index: 100; background: rgba(0,0,0,0.8); overflow-y: auto; padding: 10px 0; box-sizing: border-box; }
-#rankmaLobby, #game, #result, #ranking { display: none; z-index: 100; }
+#rankmaLobby, #game, #result, #ranking, #mypage { display: none; z-index: 100; }
 #title{ font-size:52px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); margin: 0 0 2px; }
 .menuBtn{ width:240px;padding:10px;margin:5px; font-size:20px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
 
@@ -563,6 +563,46 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .mobileHitBtn.active .btnIcon { opacity: 1; }
 .mobileHitBtn.active .btnKey { color: #1a1206; text-shadow: none; }
 
+/* ===== マイページ・キャラ・ガチャ ===== */
+#mypage { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
+#mypage h1 { font-family: 'Zen Old Mincho'; color: gold; margin: 4px 0; font-size: 32px; }
+#mpName { color: #ddd; font-size: 18px; margin-bottom: 4px; }
+#mpStatus { color: #ff8844; min-height: 22px; font-size: 14px; }
+.mp-wrap { max-width: 900px; margin: 0 auto; }
+.mp-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+.mp-card { flex: 1; min-width: 240px; background: rgba(255,255,255,0.04); border: 2px solid #444; border-radius: 12px; padding: 14px; box-sizing: border-box; }
+.mp-card h3 { font-family: 'Zen Old Mincho'; color: #ffcc44; margin: 0 0 10px; font-size: 16px; border-bottom: 1px dashed #555; padding-bottom: 6px; }
+#mpSelectedEmoji { font-size: 64px; line-height: 1.1; }
+#mpSelectedName { font-family: 'Zen Old Mincho'; font-size: 20px; color: white; }
+#mpSelectedDesc { font-size: 13px; color: #9fe; margin-top: 4px; }
+.mp-note { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.6; }
+#mpCoins { font-size: 34px; color: gold; font-family: 'Zen Old Mincho'; }
+.gachaBtn { width: 46%; min-width: 120px; margin: 6px 1%; padding: 12px 4px; font-size: 16px; font-family: 'Zen Old Mincho'; font-weight: bold; color: white; border-radius: 10px; cursor: pointer; border: 2px solid #ffcc44; background: linear-gradient(135deg, #7a3d00, #d98200); }
+.gachaBtn.ten { background: linear-gradient(135deg, #7a0030, #e0306a); border-color: #ff88bb; }
+.gachaBtn:disabled { opacity: 0.4; cursor: default; }
+.mp-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.mp-stat { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px; }
+.mp-stat .lbl { font-size: 12px; color: #aaa; }
+.mp-stat .val { font-size: 20px; color: gold; font-weight: bold; }
+.mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.charCard { position: relative; border: 2px solid var(--rc, #555); border-radius: 12px; padding: 10px 6px; background: rgba(255,255,255,0.04); cursor: pointer; color: white; font-family: 'Noto Serif JP'; text-align: center; }
+.charCard.locked { cursor: default; opacity: 0.45; }
+.charCard.selected { background: rgba(255,215,0,0.14); box-shadow: 0 0 14px rgba(255,215,0,0.5); }
+.charCard .cEmoji { font-size: 44px; line-height: 1.2; }
+.charCard .cName { font-size: 14px; font-family: 'Zen Old Mincho'; }
+.charCard .cDesc { font-size: 11px; color: #9fe; margin-top: 2px; min-height: 28px; }
+.charCard .cRar { position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: bold; color: var(--rc, #aaa); }
+.charCard .cCount { position: absolute; top: 4px; right: 6px; font-size: 11px; color: #ccc; }
+.charCard .cBadge { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); font-size: 11px; background: gold; color: #000; border-radius: 8px; padding: 1px 8px; white-space: nowrap; }
+#gachaOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 420; overflow-y: auto; padding: 20px 12px; box-sizing: border-box; text-align: center; }
+#gachaOverlay.open { display: block; }
+#gachaOverlay h2 { font-family: 'Zen Old Mincho'; color: gold; margin: 6px 0 16px; }
+#gachaResults { max-width: 760px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+#gachaResults .charCard { cursor: default; animation: gachaIn 0.35s ease-out both; }
+#gachaResults .charCard.r-SSR { box-shadow: 0 0 24px rgba(255,204,0,0.8); }
+#gachaResults .charCard.r-SR { box-shadow: 0 0 16px rgba(204,102,255,0.7); }
+@keyframes gachaIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
+
 /* ===== 縦持ち警告オーバーレイ ===== */
 #rotateOverlay {
   display: none;
@@ -700,7 +740,7 @@ body.mobileLayout #workerArea { display: none; }
 <!-- ランクマ名前入力モーダル -->
 <div id="nameModal">
   <div id="nameModalBox">
-    <h2>⚔️ ランクマッチ参戦</h2>
+    <h2 id="nameModalTitle">⚔️ ランクマッチ参戦</h2>
     <p class="modal-sub" id="nameModalSub">職人の名とパスワードを入力せよ。<br>初回登録時にパスワードが設定される。以降は同じパスワードで積み重ねが引き継がれる。</p>
     <input id="nameModalInput" type="text" maxlength="8" placeholder="職人の名（8文字まで）" style="margin-bottom:10px;">
     <input id="nameModalPass" type="password" maxlength="20" placeholder="パスワード（初回は自由に設定）"
@@ -768,7 +808,8 @@ body.mobileLayout #workerArea { display: none; }
 
  <!-- 番付閲覧 -->
  <div style="margin-top:4px; border-top:1px solid #333; padding-top:8px;">
-   <div style="color:#888; font-size:12px; margin-bottom:4px; letter-spacing:1px;">番付を見る</div>
+   <button class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+   <div style="color:#888; font-size:12px; margin:8px 0 4px; letter-spacing:1px;">番付を見る</div>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('30')">30秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('60')">60秒番付</button>
    <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('infinite')">無限番付</button>
@@ -782,6 +823,7 @@ body.mobileLayout #workerArea { display: none; }
    <span class="info-text">連打: <span id="combo">0</span></span>
    <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
+   <span class="info-text" id="charTag" style="display:none; color:#9fe;"></span>
    <span class="info-text" style="display:none; color:#666; font-size:9px;" id="debugUAText">build:v8</span>
   </div>
   <button id="pauseBtn" onclick="togglePause()">⏸</button>
@@ -826,7 +868,52 @@ body.mobileLayout #workerArea { display: none; }
       <button class="menuBtn" onclick="saveRankmaScore()">スコアを番付に刻む</button>
     </div>
  </div>
+ <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
  <button class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
+ <button class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+</div>
+
+<!-- ===== マイページ ===== -->
+<div id="mypage">
+ <div class="mp-wrap">
+  <h1>🏠 マイページ</h1>
+  <div id="mpName"></div>
+  <div id="mpStatus"></div>
+  <div class="mp-row">
+    <div class="mp-card">
+      <h3>修行に連れて行く職人</h3>
+      <div id="mpSelectedEmoji">❔</div>
+      <div id="mpSelectedName">まだいない</div>
+      <div id="mpSelectedDesc"></div>
+      <button class="lobby-back-btn" id="mpUnselectBtn" style="margin-top:8px; display:none;" onclick="selectCharacter('')">連れて行かない</button>
+      <div class="mp-note">能力は修行モードだけで効く。<br>ランクマッチは公平のため能力なし。</div>
+    </div>
+    <div class="mp-card">
+      <h3>🌾 そば粉（ガチャ用）</h3>
+      <div id="mpCoins">0</div>
+      <button class="gachaBtn" id="gacha1Btn" onclick="pullGacha(1)">1回引く<br><small>🌾100</small></button><button class="gachaBtn ten" id="gacha10Btn" onclick="pullGacha(10)">10連<br><small>🌾900・SR以上1体確定</small></button>
+      <div class="mp-note">そば粉は修行・ランクマを遊ぶとスコアに応じて貯まる。<br>排出率 SSR 2% / SR 8% / R 30% / N 60%。かぶりはそば粉で返ってくる。</div>
+    </div>
+  </div>
+  <div class="mp-card" style="margin-bottom:14px;">
+    <h3>戦績</h3>
+    <div class="mp-stats" id="mpStats"></div>
+  </div>
+  <div class="mp-card">
+    <h3 id="mpCollectionTitle">職人図鑑</h3>
+    <div class="mp-grid" id="mpCollection"></div>
+  </div>
+  <br>
+  <button class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button><br>
+  <button class="lobby-back-btn" style="margin-top:10px;" onclick="logout()">ログアウト</button>
+ </div>
+</div>
+
+<!-- ガチャ結果 -->
+<div id="gachaOverlay">
+  <h2 id="gachaTitle">ガチャ結果</h2>
+  <div id="gachaResults"></div>
+  <button class="menuBtn" onclick="document.getElementById('gachaOverlay').classList.remove('open')">閉じる</button>
 </div>
 
 <div id="ranking">
@@ -913,7 +1000,7 @@ function escapeHtml(v) {
 
 // ===== 画面遷移管理 =====
 function switchScreen(screenId) {
-    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking"];
+    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage"];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -1181,16 +1268,26 @@ function playSE(name) {
     source.start(0);
 }
 
-// ===== ランクマ モーダル =====
-function openRankma(mode) {
-    pendingRankmaMode = mode;
+// ===== ログイン（ランクマ参戦・マイページ共通）モーダル =====
+let nameModalPurpose = "rankma"; // "rankma" | "mypage"
+function nameModalConfirmLabel() { return nameModalPurpose === "mypage" ? "ログインする" : "この名で参戦する"; }
+
+function openLoginModal(purpose) {
+    nameModalPurpose = purpose;
     const input = document.getElementById("nameModalInput");
-    input.value = rankmaName || "";
+    input.value = rankmaName || (account ? account.name : "");
     document.getElementById("nameModalPass").value = "";
     document.getElementById("nameModalMsg").innerText = "";
     document.getElementById("nameModalMsg").className = "";
+    document.getElementById("nameModalTitle").innerText = purpose === "mypage" ? "🏠 マイページにログイン" : "⚔️ ランクマッチ参戦";
+    document.getElementById("nameModalConfirm").innerText = nameModalConfirmLabel();
     document.getElementById("nameModal").classList.add("open");
     setTimeout(() => input.focus(), 80);
+}
+
+function openRankma(mode) {
+    pendingRankmaMode = mode;
+    openLoginModal("rankma");
 }
 
 function closeNameModal() {
@@ -1198,6 +1295,14 @@ function closeNameModal() {
 }
 
 let isConfirming = false;
+function resetNameModalControls() {
+    const btn = document.getElementById("nameModalConfirm");
+    btn.disabled = false; btn.innerText = nameModalConfirmLabel();
+    document.getElementById("nameModalInput").disabled = false;
+    document.getElementById("nameModalPass").disabled = false;
+    isConfirming = false;
+}
+
 async function confirmRankmaName() {
     if (isConfirming) return;
     const nameInput = document.getElementById("nameModalInput");
@@ -1217,35 +1322,53 @@ async function confirmRankmaName() {
     nameInput.disabled = true; passInput.disabled = true;
     msg.className = ""; msg.innerText = "";
 
+    let authed = false;
     try {
         // GASにパスワード認証リクエスト
         const res = await fetch(GAS_URL, {
             method: "POST",
-            body: JSON.stringify({ action: "auth", name, pass, mode: pendingRankmaMode })
+            body: JSON.stringify({ action: "auth", name, pass, mode: pendingRankmaMode || "30" })
         });
         const result = await res.json();
 
         if (result.status === "new") {
+            authed = true;
             msg.className = "info";
             msg.innerText = `「${name}」で新規登録した。このパスワードを忘れるな。`;
         } else if (result.status === "ok") {
+            authed = true;
             msg.className = "info";
             msg.innerText = result.score > 0
                 ? `認証成功。現在のスコア: ${result.score}点 / 累計極上: ${result.perfect}回`
                 : "認証成功。いざ参戦せよ。";
         } else if (result.status === "wrong_pass") {
             msg.className = ""; msg.innerText = "パスワードが違う。";
-            btn.disabled = false; btn.innerText = "この名で参戦する";
-            nameInput.disabled = false; passInput.disabled = false;
-            isConfirming = false; return;
+            resetNameModalControls(); return;
         } else {
             msg.className = ""; msg.innerText = "認証エラー。もう一度試せ。";
-            btn.disabled = false; btn.innerText = "この名で参戦する";
-            nameInput.disabled = false; passInput.disabled = false;
-            isConfirming = false; return;
+            resetNameModalControls(); return;
         }
     } catch(e) {
+        if (nameModalPurpose === "mypage") {
+            msg.className = ""; msg.innerText = "通信失敗。もう一度試せ。";
+            resetNameModalControls(); return;
+        }
         msg.className = ""; msg.innerText = "通信失敗。そのまま参戦する。";
+    }
+
+    // 認証できたら、この名前でマイページ（そば粉・キャラ）にもログインした状態にする
+    if (authed) {
+        if (!account || account.name !== name) { profile = null; playerStats = null; }
+        setAccount(name, pass);
+    }
+
+    if (nameModalPurpose === "mypage") {
+        setTimeout(() => {
+            closeNameModal();
+            resetNameModalControls();
+            openMyPage();
+        }, 700);
+        return;
     }
 
     rankmaName = name;
@@ -1257,18 +1380,12 @@ async function confirmRankmaName() {
         // ここではロビーのタイマー停止と炎の停止だけ行い、画面遷移はstartGame等に任せる
         clearInterval(tauntTimer);
         stopFire();
-        
+
         isRankmaMode = true;
         if (pendingRankmaMode === "infinite") startInfinite();
         else startGame(parseInt(pendingRankmaMode));
-        
-        setTimeout(() => { 
-            isConfirming = false; 
-            btn.disabled = false;
-            nameInput.disabled = false;
-            passInput.disabled = false;
-            btn.innerText = "この名で参戦する";
-        }, 1000);
+
+        setTimeout(resetNameModalControls, 1000);
     }, msg.innerText ? 1400 : 0);
 }
 
@@ -1322,6 +1439,21 @@ function startWithCountdown(afterCallback) {
     document.getElementById("pauseBtn").innerText = "⏸";
     switchScreen("game");
     document.getElementById("bottomArea").style.display="flex";
+    // 連れて行くキャラの能力（修行モードのみ。ランクマは公平のため無効）
+    const ch = activeCharacter();
+    buff = { ...BASE_BUFF, ...(ch ? ch.buff : {}) };
+    shieldLeft = buff.shield;
+    gauge = buff.startGauge;
+    const charTag = document.getElementById("charTag");
+    if (ch) {
+        charTag.textContent = `${ch.emoji} ${ch.name}`;
+        charTag.style.display = "inline";
+    } else if (isRankmaMode && profile && profile.selected) {
+        charTag.textContent = "（ランクマは能力なし）";
+        charTag.style.display = "inline";
+    } else {
+        charTag.style.display = "none";
+    }
     const tag = document.getElementById("rankmaTag");
     if (isRankmaMode) {
         document.getElementById("rankmaTagName").innerText = rankmaName;
@@ -1412,7 +1544,7 @@ function loop(timestamp){
         if (n.x < -150) {
             n.active = false;
             missEffect();
-            if (isInfinite) { return; } // missEffect内で復活クイズ or 終了処理済み
+            if (!running) { return; } // missEffect内で復活クイズ or 終了処理済み
             continue;
         }
 
@@ -1434,7 +1566,7 @@ function updateUI() {
     let state="kone", emoji="🥣";
     if(fever){
         state="goku"; emoji=combo>50?"🍜💨":"🥢😋";
-        gauge-=0.5; if(gauge<=0){ gauge=0; fever=false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
+        gauge-=buff.feverDrain; if(gauge<=0){ gauge=0; fever=false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
     } else {
         if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
         if(gauge>0) gauge-=0.1;
@@ -1460,24 +1592,23 @@ function hit(l){
     
     // 【空打ちペナルティ】ノーツがないのに叩いた場合、ミス扱いにする
     if(!t) {
-        missEffect();
-        showJudge("MISS");
+        missEffect(); // 判定表示もmissEffect内で行う
         return;
     }
     
     let diff = Math.abs(t.x - HIT_X), res;
     combo++;
     checkComboMilestone(combo);
-    if(diff < 30){
+    if(diff < buff.kamiWin){
         res="KAMI"; playSE('kami');
         kamiCount++; perfectCount++;
-        score += (700 + combo*15) * (fever?2:1);
-        if(!fever){ gauge+=15; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
-    } else if(diff < 65){
+        score += Math.round((700 + combo*15) * (fever?2:1) * buff.scoreMul);
+        if(!fever){ gauge+=15*buff.gaugeMul; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+    } else if(diff < buff.perfectWin){
         res="PERFECT"; playSE('perfect');
         perfectCount++;
-        score += (500 + combo*10) * (fever?2:1);
-        if(!fever){ gauge+=10; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+        score += Math.round((500 + combo*10) * (fever?2:1) * buff.scoreMul);
+        if(!fever){ gauge+=10*buff.gaugeMul; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
     } else {
         res="GREAT"; playSE('great'); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
@@ -1515,6 +1646,12 @@ function checkComboMilestone(c) {
 }
 
 function missEffect(){ 
+    // 身代わりの能力：ミスを1回だけ帳消しにする（連打も途切れない）
+    if (shieldLeft > 0) {
+        shieldLeft--;
+        showJudge("GUARD");
+        return;
+    }
     combo=0; gauge=0; totalMissCount++; 
     document.getElementById("combo").innerText=0; 
     showJudge("MISS"); 
@@ -1632,6 +1769,8 @@ function showJudge(res){
     let cls, text, color;
     if (res === "KAMI") {
         text = "虹極上"; cls = "kami kamiAnim"; color = "";
+    } else if (res === "GUARD") {
+        text = "身代わり"; cls = "showJudge"; color = "#66ffee";
     } else {
         cls = "showJudge";
         text = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
@@ -1696,6 +1835,8 @@ function endGame(){
 
     // 順位表示（非同期で取得）
     fetchRankPosition();
+    // そば粉の獲得（ログイン中のみ）
+    earnCoins();
 }
 
 async function fetchRankPosition() {
@@ -1846,6 +1987,206 @@ async function showRanking(){
 }
 
 function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
+
+// ===== マイページ・キャラクター・ガチャ =====
+// idとレア度はGAS側(gas/Code.gs)のGACHA_POOLと必ず一致させること。
+// 絵は仮で絵文字。画像にするときは emoji の代わりに画像パスを持たせ、charCardHtml()の表示を変える。
+const CHARACTERS = {
+    minarai:       { name: "見習い小僧",   emoji: "👦",   r: "N",   desc: "得点+3%",                    buff: { scoreMul: 1.03 } },
+    oroshi_musume: { name: "おろし娘",     emoji: "👧",   r: "N",   desc: "ゲージがたまりやすい(+15%)", buff: { gaugeMul: 1.15 } },
+    kamaban:       { name: "釜番の爺",     emoji: "👴",   r: "N",   desc: "得点+5%",                    buff: { scoreMul: 1.05 } },
+    shokunin:      { name: "蕎麦打ち職人", emoji: "👨‍🍳", r: "R",   desc: "得点+10%",                   buff: { scoreMul: 1.10 } },
+    ekiin:         { name: "今庄の駅員",   emoji: "🧑‍✈️", r: "R",   desc: "ゲージ40%から開始",           buff: { startGauge: 40 } },
+    ashigaru:      { name: "朝倉の足軽",   emoji: "💂",   r: "R",   desc: "ミスを1回だけ帳消し",         buff: { shield: 1 } },
+    honda:         { name: "府中城主",     emoji: "🤴",   r: "SR",  desc: "得点+20%",                   buff: { scoreMul: 1.20 } },
+    kaneko:        { name: "金子権左衛門", emoji: "🧔",   r: "SR",  desc: "極上の判定が広い",            buff: { perfectWin: 78 } },
+    sennin:        { name: "越前そば仙人", emoji: "🧙",   r: "SSR", desc: "得点+25%・フィーバー長持ち",   buff: { scoreMul: 1.25, feverDrain: 0.3 } },
+    oroshi_ryu:    { name: "おろし龍",     emoji: "🐉",   r: "SSR", desc: "虹極上の判定が広い・得点+15%", buff: { kamiWin: 40, scoreMul: 1.15 } },
+};
+const RARITY_COLOR = { N: "#aaaaaa", R: "#44aaff", SR: "#cc66ff", SSR: "#ffcc00" };
+const RARITY_RANK = { SSR: 0, SR: 1, R: 2, N: 3 };
+const BASE_BUFF = { scoreMul: 1, gaugeMul: 1, startGauge: 0, shield: 0, perfectWin: 65, kamiWin: 30, feverDrain: 0.5 };
+let buff = { ...BASE_BUFF };
+let shieldLeft = 0;
+
+// ログイン情報はタブを閉じるまで保持（「タイトルへ」でページを再読込しても消えないように）
+let account = null;
+try { account = JSON.parse(sessionStorage.getItem("sobamichi_account") || "null"); } catch (e) { account = null; }
+let profile = null;      // { coins, chars:{id:所持数}, selected, plays, totalEarned }
+let playerStats = null;  // { best:{"30","60","infinite"}, perfect }
+let serverApi = 0;
+
+function setAccount(name, pass) {
+    account = { name, pass };
+    try { sessionStorage.setItem("sobamichi_account", JSON.stringify(account)); } catch (e) {}
+}
+function clearAccount() {
+    account = null; profile = null; playerStats = null;
+    try { sessionStorage.removeItem("sobamichi_account"); } catch (e) {}
+}
+function logout() {
+    clearAccount();
+    switchScreen("titleScreen");
+}
+
+function activeCharacter() {
+    if (isRankmaMode || !profile || !profile.selected) return null;
+    return CHARACTERS[profile.selected] || null;
+}
+
+// サーバー(GAS)がマイページ機能(v5)に対応しているか。古いGASに新しいactionを送ると
+// スコア保存の処理に流れて番付に空の行が書き込まれてしまうため、必ずこれを確認してから送る。
+async function ensureApi() {
+    if (serverApi) return serverApi;
+    const res = await fetch(`${GAS_URL}?mode=30&t=${Date.now()}`);
+    const data = await res.json();
+    serverApi = Number(data.apiVersion) || 0;
+    return serverApi;
+}
+
+// マイページ系のリクエスト。未ログイン・サーバー未対応なら null を返す
+async function playerAction(action, extra = {}) {
+    if (!account) return null;
+    if (await ensureApi() < 5) return null;
+    const res = await fetch(GAS_URL, {
+        method: "POST",
+        body: JSON.stringify({ action, name: account.name, pass: account.pass, ...extra })
+    });
+    const data = await res.json();
+    if (data.profile) profile = data.profile;
+    if (data.stats) playerStats = data.stats;
+    if (data.status === "wrong_pass" || data.status === "no_user") clearAccount();
+    return data;
+}
+
+async function openMyPage() {
+    if (!account) { openLoginModal("mypage"); return; }
+    switchScreen("mypage");
+    const status = document.getElementById("mpStatus");
+    status.textContent = "読込中...";
+    renderMyPage();
+    try {
+        const res = await playerAction("profile");
+        if (!res) {
+            status.textContent = "サーバーがまだマイページに対応していない（GASの更新待ち）。";
+            return;
+        }
+        if (res.status !== "ok") {
+            status.textContent = "ログインが切れた。タイトルからもう一度ログインしてくれ。";
+            renderMyPage();
+            return;
+        }
+        status.textContent = "";
+        renderMyPage();
+    } catch (e) {
+        status.textContent = "通信失敗。もう一度試してくれ。";
+    }
+}
+
+function charCardHtml(id, opts = {}) {
+    const c = CHARACTERS[id];
+    if (!c) return "";
+    const rc = RARITY_COLOR[c.r];
+    if (!(opts.count > 0)) {
+        return `<div class="charCard locked" style="--rc:${rc}"><span class="cRar">${c.r}</span><div class="cEmoji">❔</div><div class="cName">？？？</div><div class="cDesc"></div></div>`;
+    }
+    const cls = ["charCard", "r-" + c.r];
+    if (opts.selected) cls.push("selected");
+    const onclick = opts.clickable ? ` onclick="selectCharacter('${id}')"` : "";
+    const count = opts.count > 1 ? `<span class="cCount">×${opts.count}</span>` : "";
+    const badge = opts.badge ? `<span class="cBadge">${opts.badge}</span>` : "";
+    const style = `--rc:${rc};` + (opts.delay ? `animation-delay:${opts.delay}s;` : "");
+    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${c.emoji}</div><div class="cName">${c.name}</div><div class="cDesc">${c.desc}</div>${badge}</div>`;
+}
+
+function renderMyPage() {
+    document.getElementById("mpName").innerHTML = account ? `職人 <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
+    const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
+    const sel = CHARACTERS[p.selected];
+    document.getElementById("mpSelectedEmoji").textContent = sel ? sel.emoji : "❔";
+    document.getElementById("mpSelectedName").textContent = sel ? sel.name : "まだいない";
+    document.getElementById("mpSelectedDesc").textContent = sel ? `能力：${sel.desc}` : "ガチャで仲間を集めよう";
+    document.getElementById("mpUnselectBtn").style.display = sel ? "inline-block" : "none";
+    document.getElementById("mpCoins").textContent = `🌾 ${p.coins}`;
+    document.getElementById("gacha1Btn").disabled = !profile || p.coins < 100;
+    document.getElementById("gacha10Btn").disabled = !profile || p.coins < 900;
+
+    const st = playerStats || { best: {}, perfect: 0 };
+    const stat = (lbl, val) => `<div class="mp-stat"><div class="lbl">${lbl}</div><div class="val">${val}</div></div>`;
+    document.getElementById("mpStats").innerHTML =
+        stat("30秒 最高", (st.best["30"] || 0) + "点") +
+        stat("60秒 最高", (st.best["60"] || 0) + "点") +
+        stat("無限 最高", (st.best["infinite"] || 0) + "点") +
+        stat("累計極上", (st.perfect || 0) + "回") +
+        stat("プレイ回数", (p.plays || 0) + "回");
+
+    const ids = Object.keys(CHARACTERS).sort((a, b) => RARITY_RANK[CHARACTERS[a].r] - RARITY_RANK[CHARACTERS[b].r]);
+    const ownedNum = ids.filter(id => p.chars[id] > 0).length;
+    document.getElementById("mpCollectionTitle").textContent = `職人図鑑（${ownedNum} / ${ids.length}）　タップで連れて行く職人を選ぶ`;
+    document.getElementById("mpCollection").innerHTML = ids.map(id =>
+        charCardHtml(id, { count: p.chars[id] || 0, selected: p.selected === id, clickable: true, badge: p.selected === id ? "連れて行く" : "" })
+    ).join("");
+}
+
+async function selectCharacter(id) {
+    if (!profile || (id && !(profile.chars[id] > 0)) || id === profile.selected) return;
+    const status = document.getElementById("mpStatus");
+    status.textContent = "変更中...";
+    try {
+        const res = await playerAction("select", { charId: id });
+        status.textContent = res && res.status === "ok" ? "" : "変更できなかった。";
+    } catch (e) { status.textContent = "通信失敗。もう一度試してくれ。"; }
+    renderMyPage();
+}
+
+let isPulling = false;
+async function pullGacha(count) {
+    if (isPulling || !profile) return;
+    isPulling = true;
+    document.getElementById("gacha1Btn").disabled = true;
+    document.getElementById("gacha10Btn").disabled = true;
+    const status = document.getElementById("mpStatus");
+    status.textContent = "ガチャを回している...";
+    try {
+        const res = await playerAction("gacha", { count });
+        if (!res) status.textContent = "サーバーがまだガチャに対応していない。";
+        else if (res.status === "no_coins") status.textContent = "そば粉が足りない。修行で稼いでこい。";
+        else if (res.status !== "ok") status.textContent = "ガチャに失敗した。もう一度試してくれ。";
+        else { status.textContent = ""; showGachaResult(res.results); }
+    } catch (e) {
+        status.textContent = "通信失敗。マイページを開き直して、そば粉と図鑑を確認してくれ。";
+    }
+    isPulling = false;
+    renderMyPage();
+}
+
+function showGachaResult(results) {
+    const best = results.reduce((m, r) => Math.min(m, RARITY_RANK[r.rarity]), 3);
+    document.getElementById("gachaTitle").textContent = best === 0 ? "✨ SSR降臨！ ✨" : best === 1 ? "SR獲得！" : "ガチャ結果";
+    document.getElementById("gachaResults").innerHTML = results.map((r, i) =>
+        charCardHtml(r.id, { count: 1, delay: i * 0.08, badge: r.dup ? `かぶり 🌾+${r.refund}` : "NEW!" })
+    ).join("");
+    document.getElementById("gachaOverlay").classList.add("open");
+}
+
+async function earnCoins() {
+    const el = document.getElementById("coinEarnDisplay");
+    if (!account) {
+        el.innerHTML = `<span style="color:#aaa; font-size:14px;">マイページにログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる。</span>`;
+        return;
+    }
+    el.textContent = "🌾 そば粉を計量中...";
+    try {
+        const res = await playerAction("earn", { score, mode: currentMode });
+        if (!res || res.status !== "ok") { el.textContent = ""; return; }
+        el.innerHTML = res.earned > 0
+            ? `🌾 そば粉 <span style="color:gold;">+${res.earned}</span>（所持 ${res.profile.coins}）`
+            : `🌾 所持そば粉 ${res.profile.coins}`;
+    } catch (e) { el.textContent = ""; }
+}
+
+// ログイン済みなら起動時にプロフィールを読み込み、連れて行くキャラの能力を使えるようにする
+if (account) playerAction("profile").catch(() => {});
 
 // ===== スマホタップボタン =====
 function mobileTap(i) {
