@@ -485,7 +485,8 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
    スマホ負荷を考えてアニメーションは使わず、押した瞬間に色が切り替わるだけにしている。 */
 .mobileHitBtn {
   --c: #7ddc3a;              /* レーン色 */
-  --glow: rgba(125,220,58,0.45);
+  --glow: rgba(125,220,58,0.55);
+  --tint: rgba(125,220,58,0.32);
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -501,13 +502,15 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   border: 2px solid var(--c);
   /* 漆の黒地＋うっすら青海波 */
   background:
-    radial-gradient(circle at 50% 120%, var(--glow), transparent 60%),
+    radial-gradient(ellipse at 50% 115%, var(--glow), transparent 65%),
+    linear-gradient(180deg, var(--tint) 0%, transparent 75%),
     radial-gradient(circle at 0 100%, transparent 14px, rgba(255,255,255,0.035) 15px, transparent 17px) 0 0 / 32px 16px,
     radial-gradient(circle at 16px 100%, transparent 14px, rgba(255,255,255,0.035) 15px, transparent 17px) 0 8px / 32px 16px,
     linear-gradient(180deg, #221d17 0%, #0d0b09 100%);
   box-shadow:
     inset 0 0 0 3px #0d0b09,
     inset 0 0 0 4px rgba(255,215,120,0.35),   /* 内側の細い金線 */
+    0 0 12px var(--glow),                      /* 普段からレーン色でほんのり光らせる */
     0 3px 8px rgba(0,0,0,0.7);
   color: #f3e6c4;
   font-family: 'Zen Old Mincho', serif;
@@ -520,9 +523,9 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   -webkit-touch-callout: none;
   container-type: size; /* 中のリングをボタンの縦横どちらにも収まる正円にするため */
 }
-#mBtn-0 { --c: #7ddc3a; --glow: rgba(125,220,58,0.30); }
-#mBtn-1 { --c: #f0a830; --glow: rgba(240,168,48,0.30); }
-#mBtn-2 { --c: #4aa8ff; --glow: rgba(74,168,255,0.30); }
+#mBtn-0 { --c: #7ddc3a; --glow: rgba(125,220,58,0.55); --tint: rgba(125,220,58,0.32); }
+#mBtn-1 { --c: #f0a830; --glow: rgba(240,168,48,0.55); --tint: rgba(240,168,48,0.32); }
+#mBtn-2 { --c: #4aa8ff; --glow: rgba(74,168,255,0.55); --tint: rgba(74,168,255,0.32); }
 
 /* レーン左端の判定リングを模した円。中にそのレーンのノーツ絵柄を入れる */
 .btnRing {
