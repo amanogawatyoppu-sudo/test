@@ -588,7 +588,10 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .charCard { position: relative; border: 2px solid var(--rc, #555); border-radius: 12px; padding: 10px 6px; background: rgba(255,255,255,0.04); cursor: pointer; color: white; font-family: 'Noto Serif JP'; text-align: center; }
 .charCard.locked { cursor: default; opacity: 0.45; }
 .charCard.selected { background: rgba(255,215,0,0.14); box-shadow: 0 0 14px rgba(255,215,0,0.5); }
-.charCard .cEmoji { font-size: 44px; line-height: 1.2; }
+.charCard .cEmoji { font-size: 44px; line-height: 1.2; height: 64px; display: flex; align-items: center; justify-content: center; }
+.charCard .cImg { height: 64px; width: 64px; object-fit: contain; }
+.mpSelImg { height: 120px; width: 120px; object-fit: contain; }
+.tagImg { height: 1.4em; width: 1.4em; object-fit: contain; vertical-align: middle; }
 .charCard .cName { font-size: 14px; font-family: 'Zen Old Mincho'; }
 .charCard .cDesc { font-size: 11px; color: #9fe; margin-top: 2px; min-height: 28px; }
 .charCard .cRar { position: absolute; top: 4px; left: 6px; font-size: 11px; font-weight: bold; color: var(--rc, #aaa); }
@@ -597,7 +600,10 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 #gachaOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 420; overflow-y: auto; padding: 20px 12px; box-sizing: border-box; text-align: center; }
 #gachaOverlay.open { display: block; }
 #gachaOverlay h2 { font-family: 'Zen Old Mincho'; color: gold; margin: 6px 0 16px; }
-#gachaResults { max-width: 760px; margin: 0 auto 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+#gachaResults { max-width: 760px; margin: 0 auto 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 16px 12px; }
+#gachaResults .charCard { width: 140px; box-sizing: border-box; }
+#gachaResults .cEmoji { height: 96px; font-size: 64px; }
+#gachaResults .cImg { height: 96px; width: 96px; }
 #gachaResults .charCard { cursor: default; animation: gachaIn 0.35s ease-out both; }
 #gachaResults .charCard.r-SSR { box-shadow: 0 0 24px rgba(255,204,0,0.8); }
 #gachaResults .charCard.r-SR { box-shadow: 0 0 16px rgba(204,102,255,0.7); }
@@ -1446,7 +1452,7 @@ function startWithCountdown(afterCallback) {
     gauge = buff.startGauge;
     const charTag = document.getElementById("charTag");
     if (ch) {
-        charTag.textContent = `${ch.emoji} ${ch.name}`;
+        charTag.innerHTML = `${charVisual(ch, "tagImg")} ${ch.name}`;
         charTag.style.display = "inline";
     } else if (isRankmaMode && profile && profile.selected) {
         charTag.textContent = "（ランクマは能力なし）";
@@ -1990,9 +1996,9 @@ function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 
 // ===== マイページ・キャラクター・ガチャ =====
 // idとレア度はGAS側(gas/Code.gs)のGACHA_POOLと必ず一致させること。
-// 絵は仮で絵文字。画像にするときは emoji の代わりに画像パスを持たせ、charCardHtml()の表示を変える。
+// img があれば画像（chars/フォルダ、背景透過・正方形推奨）、なければ絵文字で表示する。
 const CHARACTERS = {
-    minarai:       { name: "見習い小僧",   emoji: "👦",   r: "N",   desc: "得点+3%",                    buff: { scoreMul: 1.03 } },
+    minarai:       { name: "見習い小僧",   emoji: "👦",   img: "chars/minarai.webp", r: "N", desc: "得点+3%", buff: { scoreMul: 1.03 } },
     oroshi_musume: { name: "おろし娘",     emoji: "👧",   r: "N",   desc: "ゲージがたまりやすい(+15%)", buff: { gaugeMul: 1.15 } },
     kamaban:       { name: "釜番の爺",     emoji: "👴",   r: "N",   desc: "得点+5%",                    buff: { scoreMul: 1.05 } },
     shokunin:      { name: "蕎麦打ち職人", emoji: "👨‍🍳", r: "R",   desc: "得点+10%",                   buff: { scoreMul: 1.10 } },
@@ -2083,6 +2089,11 @@ async function openMyPage() {
     }
 }
 
+// キャラの見た目（画像があれば画像、なければ絵文字）
+function charVisual(c, cls) {
+    return c.img ? `<img class="${cls}" src="${c.img}" alt="${c.name}" draggable="false">` : c.emoji;
+}
+
 function charCardHtml(id, opts = {}) {
     const c = CHARACTERS[id];
     if (!c) return "";
@@ -2096,14 +2107,14 @@ function charCardHtml(id, opts = {}) {
     const count = opts.count > 1 ? `<span class="cCount">×${opts.count}</span>` : "";
     const badge = opts.badge ? `<span class="cBadge">${opts.badge}</span>` : "";
     const style = `--rc:${rc};` + (opts.delay ? `animation-delay:${opts.delay}s;` : "");
-    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${c.emoji}</div><div class="cName">${c.name}</div><div class="cDesc">${c.desc}</div>${badge}</div>`;
+    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${c.name}</div><div class="cDesc">${c.desc}</div>${badge}</div>`;
 }
 
 function renderMyPage() {
     document.getElementById("mpName").innerHTML = account ? `職人 <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
     const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
     const sel = CHARACTERS[p.selected];
-    document.getElementById("mpSelectedEmoji").textContent = sel ? sel.emoji : "❔";
+    document.getElementById("mpSelectedEmoji").innerHTML = sel ? charVisual(sel, "mpSelImg") : "❔";
     document.getElementById("mpSelectedName").textContent = sel ? sel.name : "まだいない";
     document.getElementById("mpSelectedDesc").textContent = sel ? `能力：${sel.desc}` : "ガチャで仲間を集めよう";
     document.getElementById("mpUnselectBtn").style.display = sel ? "inline-block" : "none";
