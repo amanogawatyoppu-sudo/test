@@ -8,6 +8,10 @@
 <title>無限そば道 - 音ゲー・越前おろしそば職人修業ゲーム</title>
 <meta name="description" content="PCのブラウザで遊べる無料のそば打ち音ゲー「無限そば道」。A、S、Lキーを駆使してノーツを叩き、最高称号『越前極』のハイスコア番付を目指せ！">
 <meta name="keywords" content="無限そば道,音ゲー,ブラウザゲーム,越前そば,無料ゲーム,福井">
+<meta property="og:type" content="website">
+<meta property="og:title" content="無限そば道 - 越前おろしそば職人修業ゲーム">
+<meta property="og:description" content="ブラウザで30秒から遊べるそば打ち音ゲー。A・S・Lでノーツを叩き、極上の一杯と最高称号『越前極』を目指せ！">
+<meta name="twitter:card" content="summary">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
 <style>
 html {
@@ -860,6 +864,12 @@ body.mobileLayout #workerArea { display: none; }
  <div id="accuracyDisplay" style="font-size:20px; color:#cccccc; margin:4px 0; font-family:'Zen Old Mincho';"></div>
  <div id="rankDisplay"></div>
  <div id="rankPositionDisplay"></div>
+ <!-- 今日の一杯（結果カード）。そのまま画像としてシェアできる -->
+ <canvas id="resultCard" width="1200" height="630" style="width:min(92vw, 600px); height:auto; border-radius:10px; display:block; margin:6px auto 8px;"></canvas>
+ <div style="margin-bottom:6px;">
+   <button class="menuBtn" style="width:auto; padding:10px 18px; background:linear-gradient(#444,#111); color:white; border:1px solid #888;" onclick="postToX()">𝕏 でポスト</button>
+   <button class="menuBtn" id="shareImageBtn" style="width:auto; padding:10px 18px;" onclick="shareResultImage()">📷 画像で共有</button>
+ </div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
     <div id="normalSaveArea">
@@ -1823,6 +1833,16 @@ function endGame(){
         `虹極上: <span style="color:#ff88ff;">${kamiCount}回</span> / 極上${perfectCount}回 (${kamiRate}%)`;
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 
+    // 今日の一杯（結果カード）
+    const cardChar = profile && profile.selected ? CHARACTERS[profile.selected] : null;
+    lastResult = {
+        mode: currentMode, rankma: isRankmaMode, score, title: rank,
+        accuracy, kami: kamiCount, perfect: perfectCount,
+        grade: sobaGrade(perfectCount, Number(accuracy), Number(kamiRate)),
+        character: cardChar
+    };
+    renderResultCard(lastResult).catch(() => {});
+
     // 前回の保存で無効化されたボタンを戻す（ランクマ連戦時に2戦目以降が保存できなくなるのを防ぐ）
     const normalBtn = document.querySelector("#normalSaveArea button");
     normalBtn.disabled = false; normalBtn.innerText = "歴代番付に刻む";
@@ -2198,6 +2218,230 @@ async function earnCoins() {
 
 // ログイン済みなら起動時にプロフィールを読み込み、連れて行くキャラの能力を使えるようにする
 if (account) playerAction("profile").catch(() => {});
+
+// ===== 今日の一杯（結果カード）とシェア =====
+// プレイの出来に応じて「完成したおろしそば」を描き、スコアと一緒に1200×630の画像にする。
+// この画像をそのままSNSで共有できる（Xのカード比率 1.91:1 に合わせている）。
+let lastResult = null;
+
+function mulberry32(seed) {
+    return function () {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+
+// 精度と虹極上率から一杯の格付けを決める
+function sobaGrade(perfect, accuracy, kamiRate) {
+    if (perfect === 0) return { key: "yudesugi", label: "茹で過ぎそば", color: "#999" };
+    if (accuracy >= 95 && kamiRate >= 40) return { key: "matsu", label: "極上 越前おろしそば（松）", color: "#ffd700" };
+    if (accuracy >= 85) return { key: "take", label: "上 越前おろしそば（竹）", color: "#ff9a3c" };
+    if (accuracy >= 70) return { key: "ume", label: "越前おろしそば（梅）", color: "#ff7a9a" };
+    return { key: "nami", label: "おろしそば（並）", color: "#cccccc" };
+}
+
+function drawSobaBowl(ctx, cx, cy, grade, rand) {
+    const rx = 230, ry = 78;
+    const lv = { yudesugi: 0, nami: 1, ume: 2, take: 3, matsu: 4 }[grade.key];
+
+    // 湯気
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.18)"; ctx.lineWidth = 6; ctx.lineCap = "round";
+    for (let i = 0; i < (lv === 0 ? 1 : 3); i++) {
+        const x = cx - 80 + i * 80;
+        ctx.beginPath(); ctx.moveTo(x, cy - 40);
+        ctx.bezierCurveTo(x - 30, cy - 90, x + 30, cy - 120, x, cy - 170);
+        ctx.stroke();
+    }
+    ctx.restore();
+
+    // 器の胴（漆黒。松は金縁、竹は朱縁）
+    const rimColor = lv === 4 ? "#e8c04a" : lv === 3 ? "#c8342c" : "#3a2a1e";
+    ctx.beginPath();
+    ctx.moveTo(cx - rx, cy);
+    ctx.bezierCurveTo(cx - rx, cy + 150, cx - rx * 0.45, cy + 195, cx - 80, cy + 200);
+    ctx.lineTo(cx + 80, cy + 200);
+    ctx.bezierCurveTo(cx + rx * 0.45, cy + 195, cx + rx, cy + 150, cx + rx, cy);
+    ctx.closePath();
+    const bodyGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+    bodyGrad.addColorStop(0, "#050404"); bodyGrad.addColorStop(0.35, "#2a2220"); bodyGrad.addColorStop(1, "#050404");
+    ctx.fillStyle = bodyGrad; ctx.fill();
+    // 胴の青海波（竹以上は金）
+    ctx.save(); ctx.clip();
+    ctx.strokeStyle = lv >= 3 ? "rgba(232,192,74,0.55)" : "rgba(255,255,255,0.08)"; ctx.lineWidth = 2;
+    for (let row = 0; row < 3; row++) {
+        for (let x = cx - rx; x < cx + rx; x += 44) {
+            const y = cy + 120 + row * 22, off = row % 2 ? 22 : 0;
+            ctx.beginPath(); ctx.arc(x + off, y, 20, Math.PI, 2 * Math.PI); ctx.stroke();
+        }
+    }
+    ctx.restore();
+    // 高台
+    ctx.fillStyle = "#0d0a08";
+    ctx.beginPath(); ctx.ellipse(cx, cy + 202, 95, 14, 0, 0, Math.PI * 2); ctx.fill();
+
+    // つゆ面
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "#5a3417"; ctx.fill();
+    ctx.lineWidth = 10; ctx.strokeStyle = rimColor; ctx.stroke();
+
+    // 麺・薬味は器の口の中だけに描く
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx - 12, ry - 8, 0, 0, Math.PI * 2); ctx.clip();
+    const noodle = lv === 0 ? ["#9f978a", "#b9b2a6"] : ["#b89a6a", "#e2cfa6"];
+    for (let i = 0; i < 90; i++) {
+        const x0 = cx + (rand() - 0.5) * rx * 2, y0 = cy + (rand() - 0.5) * ry * 2;
+        const x3 = x0 + (rand() - 0.5) * 260, y3 = y0 + (rand() - 0.5) * 60;
+        const path = () => {
+            ctx.beginPath(); ctx.moveTo(x0, y0);
+            ctx.bezierCurveTo(x0 + (rand() - 0.5) * 200, y0 + (rand() - 0.5) * 80, x3 + (rand() - 0.5) * 200, y3 + (rand() - 0.5) * 80, x3, y3);
+        };
+        const s = rand();
+        path(); ctx.strokeStyle = noodle[0]; ctx.lineWidth = lv === 0 ? 8 : 6; ctx.stroke();
+        ctx.strokeStyle = noodle[1]; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + s * 0.4; ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    if (lv > 0) {
+        // 大根おろし（格付けが高いほどたっぷり）
+        const mound = 30 + lv * 12, mx = cx + 20, my = cy - 12;
+        for (let i = 0; i < 26 + lv * 10; i++) {
+            const a = rand() * Math.PI * 2, r = rand() * mound;
+            ctx.beginPath(); ctx.arc(mx + Math.cos(a) * r * 1.4, my + Math.sin(a) * r * 0.55, 9 + rand() * 9, 0, Math.PI * 2);
+            ctx.fillStyle = rand() < 0.3 ? "#e9e4d8" : "#f8f6f0"; ctx.fill();
+        }
+        // ねぎ
+        for (let i = 0; i < 4 + lv * 4; i++) {
+            const x = cx + (rand() - 0.5) * rx * 1.5, y = cy + (rand() - 0.5) * ry * 1.4;
+            ctx.beginPath(); ctx.ellipse(x, y, 9, 6, rand() * Math.PI, 0, Math.PI * 2);
+            ctx.fillStyle = "#d8f0a8"; ctx.fill(); ctx.lineWidth = 3.5; ctx.strokeStyle = "#5fae2e"; ctx.stroke();
+        }
+    }
+    if (lv >= 3) {
+        // かつお節
+        for (let i = 0; i < 14 + (lv - 3) * 8; i++) {
+            const x = cx - 60 + (rand() - 0.5) * 160, y = cy - 20 + (rand() - 0.5) * 50;
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14 + rand() * 10, y + (rand() - 0.5) * 10); ctx.lineTo(x + 6, y + 10 + rand() * 6); ctx.closePath();
+            ctx.fillStyle = rand() < 0.5 ? "#c9876a" : "#e0a888"; ctx.fill();
+        }
+    }
+    ctx.restore();
+
+    if (lv === 4) {
+        // 金箔のきらめき
+        ctx.fillStyle = "#ffe27a";
+        for (let i = 0; i < 12; i++) {
+            const x = cx + (rand() - 0.5) * rx * 2.2, y = cy - 30 + (rand() - 0.5) * 200, s = 5 + rand() * 7;
+            ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x + s * 0.3, y); ctx.lineTo(x, y + s); ctx.lineTo(x - s * 0.3, y); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(x - s, y); ctx.lineTo(x, y + s * 0.3); ctx.lineTo(x + s, y); ctx.lineTo(x, y - s * 0.3); ctx.closePath(); ctx.fill();
+        }
+    }
+}
+
+function loadImage(src) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+    });
+}
+
+function modeLabelOf(mode) {
+    return mode === "infinite" ? "終わりなき修行" : `${mode}秒修行`;
+}
+
+async function renderResultCard(r) {
+    const canvas = document.getElementById("resultCard");
+    const ctx = canvas.getContext("2d");
+    const W = 1200, H = 630;
+    try { await document.fonts.load('700 40px "Zen Old Mincho"'); } catch (e) {}
+
+    // 背景（漆黒＋青海波）
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#1c1712"); bg.addColorStop(1, "#070605");
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(255,215,120,0.05)"; ctx.lineWidth = 2;
+    for (let y = 0; y < H + 40; y += 30) for (let x = 0; x < W + 60; x += 60) {
+        ctx.beginPath(); ctx.arc(x + ((y / 30) % 2 ? 30 : 0), y, 28, Math.PI, 2 * Math.PI); ctx.stroke();
+    }
+    ctx.strokeStyle = "#b8923a"; ctx.lineWidth = 6; ctx.strokeRect(10, 10, W - 20, H - 20);
+
+    // 今日の一杯
+    drawSobaBowl(ctx, 300, 330, r.grade, mulberry32(r.score + r.perfect * 7 + 1));
+
+    // 相棒キャラ（左下）
+    if (r.character && r.character.img) {
+        const img = await loadImage(r.character.img);
+        if (img) ctx.drawImage(img, 24, 420, 190, 190);
+    }
+
+    // 文字
+    const serif = '"Zen Old Mincho", "Noto Serif JP", serif';
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#ffd700"; ctx.font = `700 46px ${serif}`;
+    ctx.fillText("無限そば道", 620, 92);
+    ctx.fillStyle = "#e8dcc0"; ctx.font = `700 28px ${serif}`;
+    ctx.fillText(modeLabelOf(r.mode) + (r.rankma ? "　⚔️ランクマッチ" : ""), 620, 140);
+    ctx.fillStyle = "#ffffff"; ctx.font = `700 84px ${serif}`;
+    ctx.fillText(`${r.score.toLocaleString()}点`, 612, 240);
+    ctx.fillStyle = "#ffd700"; ctx.font = `700 40px ${serif}`;
+    ctx.fillText(`称号：${r.title}`, 620, 305);
+    ctx.fillStyle = "#cccccc"; ctx.font = `700 26px ${serif}`;
+    ctx.fillText(`精度 ${r.accuracy}%　極上 ${r.perfect}回（うち虹極上 ${r.kami}回）`, 620, 350, 560);
+
+    ctx.fillStyle = "#e8dcc0"; ctx.font = `700 26px ${serif}`;
+    ctx.fillText("今日の一杯", 620, 420);
+    ctx.fillStyle = r.grade.color; ctx.font = `700 40px ${serif}`;
+    ctx.fillText(r.grade.label, 620, 470, 560);
+
+    if (r.character) {
+        ctx.fillStyle = "#99eedd"; ctx.font = `700 24px ${serif}`;
+        ctx.fillText(`相棒：${r.character.name}`, 620, 525);
+    }
+    ctx.fillStyle = "#8a7a5a"; ctx.font = `700 22px ${serif}`;
+    ctx.fillText("#無限そば道　#越前おろしそば", 620, 585);
+}
+
+function shareText() {
+    const r = lastResult;
+    if (!r) return "";
+    return `無限そば道【${modeLabelOf(r.mode)}】で${r.score.toLocaleString()}点！\n称号：${r.title}／今日の一杯：${r.grade.label}\n#無限そば道 #越前おろしそば`;
+}
+
+function shareUrl() {
+    return location.protocol.startsWith("http") ? location.origin + location.pathname : "";
+}
+
+function postToX() {
+    const url = shareUrl();
+    const intent = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(shareText()) + (url ? "&url=" + encodeURIComponent(url) : "");
+    window.open(intent, "_blank", "noopener");
+}
+
+// 画像で共有：スマホは共有シート（LINE・インスタ等に直接送れる）、PCは画像を保存
+async function shareResultImage() {
+    const btn = document.getElementById("shareImageBtn");
+    try {
+        const blob = await new Promise(res => document.getElementById("resultCard").toBlob(res, "image/png"));
+        if (!blob) throw new Error("no blob");
+        const file = new File([blob], "musoba-result.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], text: shareText() + (shareUrl() ? "\n" + shareUrl() : "") });
+            return;
+        }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = "musoba-result.png";
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        btn.innerText = "保存した！";
+        setTimeout(() => { btn.innerText = "📷 画像で共有"; }, 1500);
+    } catch (e) {
+        if (e && e.name === "AbortError") return; // 共有シートを閉じただけ
+        btn.innerText = "共有できなかった…";
+        setTimeout(() => { btn.innerText = "📷 画像で共有"; }, 1500);
+    }
+}
 
 // ===== スマホタップボタン =====
 function mobileTap(i) {
