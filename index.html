@@ -761,7 +761,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
    <span class="info-text">連打: <span id="combo">0</span></span>
    <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
-   <span class="info-text" style="color:#666; font-size:9px;" id="debugUAText">build:v7-uacheck</span>
+   <span class="info-text" style="display:none; color:#666; font-size:9px;" id="debugUAText">build:v7-uacheck</span>
   </div>
   <button id="pauseBtn" onclick="togglePause()">⏸</button>
   <canvas id="gameCanvas" width="1100" height="380" style="position:absolute; top:0; left:0; z-index:5;"></canvas>
@@ -883,6 +883,11 @@ function getOrCreateUUID() {
     return uuid;
 }
 const PLAYER_UUID = getOrCreateUUID();
+
+// サーバーから来た名前などをHTMLに埋め込む前にエスケープする
+function escapeHtml(v) {
+    return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 // ===== 画面遷移管理 =====
 function switchScreen(screenId) {
@@ -1042,9 +1047,11 @@ async function openRankmaLobby() {
     tauntIdx = Math.floor(Math.random() * tauntLines.length);
     el.innerText = tauntLines[tauntIdx];
     el.style.animation = "tauntFade 0.5s ease-in";
+    clearInterval(tauntTimer);
     tauntTimer = setInterval(rotateTaunt, 4000);
 
-    // 炎スタート
+    // 炎スタート（多重起動を防ぐため一度止める）
+    stopFire();
     initFire();
 
     // 番付読込
@@ -1077,7 +1084,7 @@ async function loadLobbyTop3() {
                 card.innerHTML = `<h3>${labels[mode]}</h3><div class="top3-loading" style="color:#666;">まだ誰も刻んでおらぬ…</div>`;
             } else {
                 card.innerHTML = `<h3>${labels[mode]}</h3>` + arr.map((d, i) =>
-                    `<div class="lobby-top3-entry"><span class="top3-name">${medals[i]} ${d.name}</span><span class="top3-score">${d.score}点</span></div>`
+                    `<div class="lobby-top3-entry"><span class="top3-name">${medals[i]} ${escapeHtml(d.name)}</span><span class="top3-score">${escapeHtml(d.score)}点</span></div>`
                 ).join("");
             }
         } catch(e) {
@@ -1125,9 +1132,6 @@ function initCanvas() {
 }
 window.addEventListener('load', initCanvas);
 
-const sePerfect = new Audio('perfect.mp3');
-const seGreat = new Audio('great.mp3');
-const seMiss = new Audio('miss.mp3');
 // 音声再生の最適化（スマホでの遅延とフリーズ防止）
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 const audioBuffers = {};
@@ -1287,6 +1291,10 @@ function startWithCountdown(afterCallback) {
     quizUsedThisRun = false; isPaused = false; quizActive = false;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
+    // 前回プレイの表示が残らないようにリセット（ランクマはリロードせずに連戦するため）
+    document.getElementById("gaugeWrapper").classList.remove("fever");
+    document.getElementById("timeDisplay").style.display = "none";
+    document.getElementById("pauseBtn").innerText = "⏸";
     switchScreen("game");
     document.getElementById("bottomArea").style.display="flex";
     const tag = document.getElementById("rankmaTag");
@@ -1560,8 +1568,10 @@ function answerQuiz(correct){
 }
 
 // ===== 一時停止 =====
+let isResuming = false;
 function togglePause(){
-    if (isStarting || quizActive) return;
+    // 再開カウントダウン中に押すと resumeGame が二重に走り、ループとタイマーが重複するため無視する
+    if (isStarting || quizActive || isResuming) return;
     if (isPaused) resumeGame(); else pauseGame();
 }
 
@@ -1576,6 +1586,7 @@ function pauseGame(){
 }
 
 function resumeGame(){
+    isResuming = true;
     document.getElementById("pauseOverlay").classList.remove("open");
     const btn = document.getElementById("pauseBtn");
     if (btn) btn.innerText = "⏸";
@@ -1583,6 +1594,7 @@ function resumeGame(){
         lastTime = performance.now();
         running = true;
         isPaused = false;
+        isResuming = false;
         loop();
         spawn();
         if (!isInfinite) startTimerInterval();
@@ -1640,6 +1652,12 @@ function endGame(){
         `精度: <span style="color:gold;">${accuracy}%</span>　` +
         `虹極上: <span style="color:#ff88ff;">${kamiCount}回</span> / 極上${perfectCount}回 (${kamiRate}%)`;
     document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
+
+    // 前回の保存で無効化されたボタンを戻す（ランクマ連戦時に2戦目以降が保存できなくなるのを防ぐ）
+    const normalBtn = document.querySelector("#normalSaveArea button");
+    normalBtn.disabled = false; normalBtn.innerText = "歴代番付に刻む";
+    const rankmaBtn = document.querySelector("#rankmaSaveArea button");
+    rankmaBtn.disabled = false; rankmaBtn.innerText = "スコアを番付に刻む";
 
     if (isRankmaMode) {
         document.getElementById("normalSaveArea").style.display = "none";
@@ -1704,7 +1722,7 @@ async function saveRank() {
     } catch(e){
         console.error(e);
         alert("通信失敗。URLが正しいか確認してくれ。");
-        btn.disabled=false; btn.innerText="番付に刻む";
+        btn.disabled=false; btn.innerText="歴代番付に刻む";
     }
 }
 
@@ -1780,14 +1798,14 @@ async function showRanking(){
             let html = arr.slice(0, 10).map((d,i) => {
                 const isMe = (i === myRank);
                 const style = isMe ? 'background:rgba(255,215,0,0.2); border-radius:5px;' : '';
-                return `<div class="rank-item" style="${style}"><span>${medals[i]||i+1+"位"}: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`;
+                return `<div class="rank-item" style="${style}"><span>${medals[i]||i+1+"位"}: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
             }).join("");
 
             // 10位以下に自分がいる場合、特別行として追加
             if (myRank >= 10) {
                 const d = arr[myRank];
                 html += `<div style="border-top:1px dashed #555; margin:5px 0;"></div>`;
-                html += `<div class="rank-item" style="background:rgba(255,215,0,0.2); border-radius:5px;"><span>${myRank+1}位: ${d.name}</span><span class="score-val">${d.score}${unit}</span></div>`;
+                html += `<div class="rank-item" style="background:rgba(255,215,0,0.2); border-radius:5px;"><span>${myRank+1}位: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
             }
 
             el.innerHTML = html;
@@ -1976,6 +1994,8 @@ scaleGame();
 document.addEventListener("keydown", e => {
     if (!e || !e.key) return;
     if (document.getElementById("nameModal").classList.contains("open")) {
+        // 日本語入力の変換確定Enterでは送信しない
+        if (e.isComposing || e.keyCode === 229) return;
         if (e.key === "Enter") confirmRankmaName();
         if (e.key === "Escape") closeNameModal();
         return;
@@ -2003,12 +2023,15 @@ document.querySelectorAll(".hit").forEach((el, i) => {
         if (!isMobile() && running) { activeKeys.add("p"+i); hit(i); }
     });
 });
-window.addEventListener("pointerup", () => {
+function releaseAllPointers() {
     laneLocked=[false,false,false];
     if (!isMobile()) activeKeys.clear();
     document.querySelectorAll(".hit").forEach(el => el.classList.remove("active"));
     document.querySelectorAll(".mobileHitBtn").forEach(el => el.classList.remove("active"));
-});
+}
+window.addEventListener("pointerup", releaseAllPointers);
+// タッチが中断された（通知・ジェスチャー等）場合もレーンのロックを解除する
+window.addEventListener("pointercancel", releaseAllPointers);
 </script>
 </body>
 </html>
