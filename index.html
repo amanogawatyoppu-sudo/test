@@ -919,6 +919,9 @@ function switchScreen(screenId) {
         if (el) {
             if (id === "rankmaLobby") {
                 el.classList.remove("open");
+                // 開くときにインラインでdisplay:flexを付けているため、ここで明示的に消す
+                // （クラスを外すだけだと、半透明のタイトル画面の裏にロビーが透けて見えていた）
+                el.style.display = "none";
             } else {
                 el.style.display = "none";
             }
