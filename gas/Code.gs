@@ -30,6 +30,12 @@
  *    いずれも players シートの名前＋パスワードで認証してから処理する。
  *    コイン（そば粉）の加算とガチャの抽選はサーバー側で行い、クライアントの改ざんを防ぐ。
  * 9) 未知の action が来た場合は、スコア保存に流れずにエラーを返すようにした。
+ *
+ * ▼v6での追加点（今日のそば打ち＝デイリー）
+ * 10) daily シート [日付, 名前, スコア, 日時] を追加（初回アクセス時に自動作成）。
+ *     doGet に ?daily=1 を付けると今日の番付を返す（&name= を付けると自分の記録も返す）。
+ * 11) action = daily_submit で今日の記録を保存。1人1日1回目だけが残る。
+ *     日付はサーバー側の日本時間で決める（端末の時計をずらしても別の日にはできない）。
  */
 
 function doGet(e) {
@@ -39,6 +45,11 @@ function doGet(e) {
   try {
     lock.waitLock(5000);
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    // v6: 今日のそば打ち（デイリー）の番付
+    if (e.parameter.daily) {
+      return jsonOut(getDailyRanking(ss, String(e.parameter.name || "").trim()));
+    }
 
     const now = new Date();
     const currentMonthSheetName = Utilities.formatDate(now, "GMT+9", "yyyy-MM");
@@ -505,9 +516,9 @@ function runEnsurePlayersHeader() {
 // =====================================================================
 
 // フロント(index.html)はdoGetのapiVersionがこの値以上のときだけ新機能を使う
-const API_VERSION = 5;
+const API_VERSION = 6;
 
-const PLAYER_ACTIONS = ["profile", "earn", "gacha", "select"];
+const PLAYER_ACTIONS = ["profile", "earn", "gacha", "select", "daily_submit"];
 
 // キャラの排出表。idとレア度はフロント(index.html)の CHARACTERS と必ず一致させること。
 const GACHA_POOL = [
@@ -641,6 +652,11 @@ function handlePlayerAction(postData, ss) {
   const loaded = loadProfile(sheet, name);
   const p = loaded.profile;
 
+  // v6: 今日のそば打ちの記録（1日1回目だけ残す）
+  if (postData.action === "daily_submit") {
+    return jsonOut(submitDaily(ss, name, Number(postData.score)));
+  }
+
   // マイページ表示用：プロフィール＋戦績
   if (postData.action === "profile") {
     if (loaded.row < 0) saveProfile(sheet, -1, name, p); // 初回アクセスで作成（初期そば粉つき）
@@ -694,4 +710,65 @@ function handlePlayerAction(postData, ss) {
   }
 
   return jsonOut({ status: "error", message: "unknown action" });
+}
+
+// =====================================================================
+// v6: 今日のそば打ち（デイリー）
+// =====================================================================
+
+function todayJST() {
+  return Utilities.formatDate(new Date(), "GMT+9", "yyyy-MM-dd");
+}
+
+function getDailySheet(ss) {
+  let sheet = ss.getSheetByName("daily");
+  if (!sheet) {
+    sheet = ss.insertSheet("daily");
+    sheet.appendRow(["日付", "名前", "スコア", "日時"]);
+    // 日付が日付型に、数字だけの名前が数値に化けないよう文字列書式にしておく
+    sheet.getRange("A:B").setNumberFormat("@");
+  }
+  return sheet;
+}
+
+// 指定日の記録を高い順に返す
+function readDaily(ss, date) {
+  const sheet = getDailySheet(ss);
+  if (sheet.getLastRow() < 2) return [];
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  return rows
+    .filter(r => (r[0] instanceof Date ? Utilities.formatDate(r[0], "GMT+9", "yyyy-MM-dd") : String(r[0]).trim()) === date)
+    .map(r => ({ name: String(r[1]).trim(), score: Number(r[2]) || 0 }))
+    .sort((a, b) => b.score - a.score);
+}
+
+function getDailyRanking(ss, name) {
+  const date = todayJST();
+  const all = readDaily(ss, date);
+  const result = { apiVersion: API_VERSION, date: date, ranking: all.slice(0, 30), total: all.length, me: null };
+  if (name) {
+    const idx = all.findIndex(d => d.name === name);
+    if (idx >= 0) result.me = { score: all[idx].score, rank: idx + 1 };
+  }
+  return result;
+}
+
+function submitDaily(ss, name, score) {
+  const date = todayJST();
+  const all = readDaily(ss, date);
+  let recorded = false;
+  let myScore;
+  const existing = all.find(d => d.name === name);
+  if (existing) {
+    myScore = existing.score; // 今日はもう記録済み。2回目以降は残さない
+  } else {
+    if (!isFinite(score) || score < 0) return { status: "error", message: "bad score" };
+    myScore = Math.floor(score);
+    getDailySheet(ss).appendRow([date, name, myScore, new Date()]);
+    all.push({ name: name, score: myScore });
+    all.sort((a, b) => b.score - a.score);
+    recorded = true;
+  }
+  const rank = all.filter(d => d.score > myScore).length + 1;
+  return { status: "ok", recorded: recorded, date: date, score: myScore, rank: rank, total: all.length };
 }

@@ -24,9 +24,9 @@ html {
 body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; overscroll-behavior:none; }
 
 /* ===== タイトル画面 ===== */
-#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
+#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage, #daily { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
 #titleScreen { display:flex; flex-direction:column; justify-content:center; align-items:center; z-index: 100; background: rgba(0,0,0,0.8); overflow-y: auto; padding: 10px 0; box-sizing: border-box; }
-#rankmaLobby, #game, #result, #ranking, #mypage { display: none; z-index: 100; }
+#rankmaLobby, #game, #result, #ranking, #mypage, #daily { display: none; z-index: 100; }
 #title{ font-size:52px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); margin: 0 0 2px; }
 .menuBtn{ width:240px;padding:10px;margin:5px; font-size:20px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
 
@@ -568,7 +568,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .mobileHitBtn.active .btnKey { color: #1a1206; text-shadow: none; }
 
 /* ===== マイページ・キャラ・ガチャ ===== */
-#mypage { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
+#mypage, #daily { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
 #mypage h1 { font-family: 'Zen Old Mincho'; color: gold; margin: 4px 0; font-size: 32px; }
 #mpName { color: #ddd; font-size: 18px; margin-bottom: 4px; }
 #mpStatus { color: #ff8844; min-height: 22px; font-size: 14px; }
@@ -811,6 +811,8 @@ body.mobileLayout #workerArea { display: none; }
  <button class="menuBtn" onclick="startNormal(30)">30秒修行</button>
  <button class="menuBtn" onclick="startNormal(60)">60秒修行</button>
  <button class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
+ <button class="menuBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="openDaily()">📅 今日のそば打ち</button>
+ <div style="color:#8fdc7a; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">毎日全員同じ譜面・1日1回の一発勝負</div>
 
  <!-- ランクマッチ挑戦ボタン -->
  <button id="rankmaEntryBtn" onclick="openRankmaLobby()">⚔️ ランクマッチに挑戦する</button>
@@ -872,6 +874,10 @@ body.mobileLayout #workerArea { display: none; }
  </div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
+    <div id="dailyResultArea" style="display:none;">
+      <div id="dailyResultMsg" style="font-size:20px; margin:8px 0;"></div>
+      <button class="menuBtn" onclick="openDaily()">📅 今日の番付を見る</button>
+    </div>
     <div id="normalSaveArea">
       <div style="font-size:14px; color:#aaa; margin-bottom:8px; font-family:'Zen Old Mincho';">歴代番付に名を刻む</div>
       番付名：<input id="nameInput" maxlength="8" placeholder="職人の名"><br><br>
@@ -887,6 +893,23 @@ body.mobileLayout #workerArea { display: none; }
  <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
  <button class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
  <button class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+</div>
+
+<!-- ===== 今日のそば打ち（デイリー） ===== -->
+<div id="daily">
+ <div class="mp-wrap">
+  <h1>📅 今日のそば打ち</h1>
+  <div id="dlDate" style="color:#ddd; font-size:18px;"></div>
+  <div class="mp-note" style="margin-bottom:6px;">毎日、全員が同じ譜面で30秒勝負。番付に残るのは1日1回目だけ。職人の能力はなし。</div>
+  <div id="dlStatus" style="color:#ff8844; min-height:22px; font-size:14px;"></div>
+  <div id="dlMe" style="font-size:18px; margin:6px 0 12px; line-height:1.6;"></div>
+  <button class="menuBtn" id="dlStartBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="startDaily()" disabled>挑戦する</button>
+  <div class="mp-card" style="margin:16px auto; max-width:520px;">
+    <h3>今日の番付</h3>
+    <div id="dlRanking"></div>
+  </div>
+  <button class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button>
+ </div>
 </div>
 
 <!-- ===== マイページ ===== -->
@@ -1016,7 +1039,7 @@ function escapeHtml(v) {
 
 // ===== 画面遷移管理 =====
 function switchScreen(screenId) {
-    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage"];
+    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage", "daily"];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -1286,7 +1309,7 @@ function playSE(name) {
 
 // ===== ログイン（ランクマ参戦・マイページ共通）モーダル =====
 let nameModalPurpose = "rankma"; // "rankma" | "mypage"
-function nameModalConfirmLabel() { return nameModalPurpose === "mypage" ? "ログインする" : "この名で参戦する"; }
+function nameModalConfirmLabel() { return nameModalPurpose === "rankma" ? "この名で参戦する" : "ログインする"; }
 
 function openLoginModal(purpose) {
     nameModalPurpose = purpose;
@@ -1295,7 +1318,8 @@ function openLoginModal(purpose) {
     document.getElementById("nameModalPass").value = "";
     document.getElementById("nameModalMsg").innerText = "";
     document.getElementById("nameModalMsg").className = "";
-    document.getElementById("nameModalTitle").innerText = purpose === "mypage" ? "🏠 マイページにログイン" : "⚔️ ランクマッチ参戦";
+    document.getElementById("nameModalTitle").innerText =
+        purpose === "mypage" ? "🏠 マイページにログイン" : purpose === "daily" ? "📅 今日のそば打ちにログイン" : "⚔️ ランクマッチ参戦";
     document.getElementById("nameModalConfirm").innerText = nameModalConfirmLabel();
     document.getElementById("nameModal").classList.add("open");
     setTimeout(() => input.focus(), 80);
@@ -1365,7 +1389,7 @@ async function confirmRankmaName() {
             resetNameModalControls(); return;
         }
     } catch(e) {
-        if (nameModalPurpose === "mypage") {
+        if (nameModalPurpose !== "rankma") {
             msg.className = ""; msg.innerText = "通信失敗。もう一度試せ。";
             resetNameModalControls(); return;
         }
@@ -1378,11 +1402,12 @@ async function confirmRankmaName() {
         setAccount(name, pass);
     }
 
-    if (nameModalPurpose === "mypage") {
+    if (nameModalPurpose !== "rankma") {
+        const next = nameModalPurpose === "daily" ? openDaily : openMyPage;
         setTimeout(() => {
             closeNameModal();
             resetNameModalControls();
-            openMyPage();
+            next();
         }, 700);
         return;
     }
@@ -1398,6 +1423,7 @@ async function confirmRankmaName() {
         stopFire();
 
         isRankmaMode = true;
+        isDaily = false;
         if (pendingRankmaMode === "infinite") startInfinite();
         else startGame(parseInt(pendingRankmaMode));
 
@@ -1406,8 +1432,8 @@ async function confirmRankmaName() {
 }
 
 // ===== 通常スタート =====
-function startNormal(sec) { isRankmaMode = false; startGame(sec); }
-function startNormalInfinite() { isRankmaMode = false; startInfinite(); }
+function startNormal(sec) { isRankmaMode = false; isDaily = false; startGame(sec); }
+function startNormalInfinite() { isRankmaMode = false; isDaily = false; startInfinite(); }
 
 // ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
@@ -1464,8 +1490,8 @@ function startWithCountdown(afterCallback) {
     if (ch) {
         charTag.innerHTML = `${charVisual(ch, "tagImg")} ${ch.name}`;
         charTag.style.display = "inline";
-    } else if (isRankmaMode && profile && profile.selected) {
-        charTag.textContent = "（ランクマは能力なし）";
+    } else if ((isRankmaMode || isDaily) && profile && profile.selected) {
+        charTag.textContent = isDaily ? "（デイリーは能力なし）" : "（ランクマは能力なし）";
         charTag.style.display = "inline";
     } else {
         charTag.style.display = "none";
@@ -1518,7 +1544,8 @@ function spawn(){
     let n = notePool.find(p => !p.active);
     if (n) {
         n.active = true;
-        n.lane = Math.floor(Math.random() * 3);
+        // デイリーはその日の乱数で、全員同じレーンの並びにする
+        n.lane = Math.floor((isDaily && dailyRand ? dailyRand() : Math.random()) * 3);
         n.x = 1200;
     }
 
@@ -1805,7 +1832,7 @@ function endGame(){
     switchScreen("result");
     document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
     let rank = "修行中";
-    if(currentMode==="30" || currentMode==="60") {
+    if(currentMode==="30" || currentMode==="60" || currentMode==="daily") {
         if(totalMissCount === 0 && combo > 0) rank = "越前極";
         else if(score >= 45000) rank = "神速";
         else if(score >= 35000) rank = "伝説級";
@@ -1849,7 +1876,12 @@ function endGame(){
     const rankmaBtn = document.querySelector("#rankmaSaveArea button");
     rankmaBtn.disabled = false; rankmaBtn.innerText = "スコアを番付に刻む";
 
-    if (isRankmaMode) {
+    document.getElementById("dailyResultArea").style.display = isDaily ? "block" : "none";
+    if (isDaily) {
+        // デイリーは結果を自動で送る（番付名の入力は不要）
+        document.getElementById("normalSaveArea").style.display = "none";
+        document.getElementById("rankmaSaveArea").style.display = "none";
+    } else if (isRankmaMode) {
         document.getElementById("normalSaveArea").style.display = "none";
         document.getElementById("rankmaSaveArea").style.display = "block";
         document.getElementById("rankmaNameLabel").innerText = rankmaName;
@@ -1860,7 +1892,12 @@ function endGame(){
     }
 
     // 順位表示（非同期で取得）
-    fetchRankPosition();
+    if (isDaily) {
+        document.getElementById("rankPositionDisplay").innerText = "";
+        submitDailyResult();
+    } else {
+        fetchRankPosition();
+    }
     // そば粉の獲得（ログイン中のみ）
     earnCoins();
 }
@@ -2056,7 +2093,7 @@ function logout() {
 }
 
 function activeCharacter() {
-    if (isRankmaMode || !profile || !profile.selected) return null;
+    if (isRankmaMode || isDaily || !profile || !profile.selected) return null;
     return CHARACTERS[profile.selected] || null;
 }
 
@@ -2219,6 +2256,101 @@ async function earnCoins() {
 // ログイン済みなら起動時にプロフィールを読み込み、連れて行くキャラの能力を使えるようにする
 if (account) playerAction("profile").catch(() => {});
 
+// ===== 今日のそば打ち（デイリー） =====
+// 毎日、全員が同じ譜面（レーンの並び）で30秒勝負。番付に残るのは1日1回目だけ（サーバー側で判定）。
+// 公平のため職人の能力はなし。サーバー(GAS)がv6以上のときだけ使える。
+let isDaily = false;
+let dailyPractice = false;   // 今日はもう記録済みなら練習扱い
+let dailyRand = null;        // その日の譜面用の乱数
+let dailyInfo = null;        // サーバーから取った今日の番付 { date, ranking, total, me }
+
+function todayJST() {
+    return new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+}
+function shortDate(d) {
+    const [, m, day] = (d || todayJST()).split("-");
+    return `${Number(m)}/${Number(day)}`;
+}
+
+async function openDaily() {
+    if (!account) { openLoginModal("daily"); return; }
+    switchScreen("daily");
+    const status = document.getElementById("dlStatus");
+    const btn = document.getElementById("dlStartBtn");
+    btn.disabled = true;
+    status.textContent = "読込中...";
+    document.getElementById("dlDate").textContent = `${shortDate()} の譜面`;
+    document.getElementById("dlRanking").innerHTML = "";
+    document.getElementById("dlMe").textContent = "";
+    try {
+        if (await ensureApi() < 6) {
+            status.textContent = "サーバーがまだデイリーに対応していない（GASの更新待ち）。";
+            return;
+        }
+        const res = await fetch(`${GAS_URL}?daily=1&name=${encodeURIComponent(account.name)}&t=${Date.now()}`);
+        dailyInfo = await res.json();
+        status.textContent = "";
+        renderDaily();
+        btn.disabled = false;
+    } catch (e) {
+        status.textContent = "通信失敗。もう一度試してくれ。";
+    }
+}
+
+function renderDaily() {
+    const d = dailyInfo || { ranking: [], total: 0, me: null };
+    document.getElementById("dlDate").textContent = `${shortDate(d.date)} の譜面`;
+    const me = document.getElementById("dlMe");
+    const btn = document.getElementById("dlStartBtn");
+    if (d.me) {
+        me.innerHTML = `今日の記録：<span style="color:gold;">${d.me.score.toLocaleString()}点</span>（${d.me.rank}位 / ${d.total}人）<br><span style="font-size:13px; color:#aaa;">記録は1日1回目だけ。もう一度遊ぶと練習になる。</span>`;
+        btn.innerText = "練習する（記録なし）";
+    } else {
+        me.innerHTML = `<span style="color:#ffcc88;">今日はまだ挑戦していない。一発勝負だ！</span>`;
+        btn.innerText = "挑戦する";
+    }
+    const medals = ["🥇", "🥈", "🥉"];
+    document.getElementById("dlRanking").innerHTML = d.ranking.length === 0
+        ? `<div style="color:#aaa; padding:10px;">今日はまだ誰も打っておらぬ…一番乗りを狙え。</div>`
+        : d.ranking.slice(0, 10).map((r, i) => {
+            const mine = account && r.name === account.name;
+            return `<div class="rank-item" style="${mine ? "background:rgba(255,215,0,0.2); border-radius:5px;" : ""}"><span>${medals[i] || (i + 1) + "位"}: ${escapeHtml(r.name)}</span><span class="score-val">${escapeHtml(r.score)}点</span></div>`;
+        }).join("") + (d.total > 10 ? `<div style="color:#888; font-size:13px;">ほか ${d.total - 10}人</div>` : "");
+}
+
+function startDaily() {
+    if (!dailyInfo) return;
+    isRankmaMode = false;
+    isDaily = true;
+    dailyPractice = !!dailyInfo.me;
+    const seed = Number((dailyInfo.date || todayJST()).replace(/-/g, ""));
+    dailyRand = mulberry32(seed);
+    startGame(30);
+    currentMode = "daily"; // startGameが"30"にするので上書き（番付・結果表示をデイリー用にする）
+}
+
+// 結果画面：今日の記録を送って順位を表示
+async function submitDailyResult() {
+    const el = document.getElementById("dailyResultMsg");
+    if (dailyPractice) {
+        el.innerHTML = `練習なので記録なし。今日の記録：<span style="color:gold;">${dailyInfo.me.score.toLocaleString()}点</span>（${dailyInfo.me.rank}位）`;
+        return;
+    }
+    el.textContent = "今日の番付に記録中...";
+    try {
+        const res = await playerAction("daily_submit", { score });
+        if (!res || res.status !== "ok") { el.textContent = "記録できなかった。通信状況を確認してくれ。"; return; }
+        const rankText = `${res.rank}位 / ${res.total}人`;
+        if (lastResult) lastResult.dailyRank = rankText;
+        el.innerHTML = res.recorded
+            ? `📅 今日の番付 <span style="color:gold; font-size:30px;">${res.rank}位</span> / ${res.total}人中`
+            : `今日はもう記録済み（${res.score.toLocaleString()}点・${rankText}）`;
+        dailyInfo = { ...(dailyInfo || {}), me: { score: res.score, rank: res.rank }, total: res.total };
+    } catch (e) {
+        el.textContent = "通信失敗。記録できたかは「今日のそば打ち」画面で確認してくれ。";
+    }
+}
+
 // ===== 今日の一杯（結果カード）とシェア =====
 // プレイの出来に応じて「完成したおろしそば」を描き、スコアと一緒に1200×630の画像にする。
 // この画像をそのままSNSで共有できる（Xのカード比率 1.91:1 に合わせている）。
@@ -2348,6 +2480,7 @@ function loadImage(src) {
 }
 
 function modeLabelOf(mode) {
+    if (mode === "daily") return `今日のそば打ち ${shortDate()}`;
     return mode === "infinite" ? "終わりなき修行" : `${mode}秒修行`;
 }
 
@@ -2406,7 +2539,8 @@ async function renderResultCard(r) {
 function shareText() {
     const r = lastResult;
     if (!r) return "";
-    return `無限そば道【${modeLabelOf(r.mode)}】で${r.score.toLocaleString()}点！\n称号：${r.title}／今日の一杯：${r.grade.label}\n#無限そば道 #越前おろしそば`;
+    const dailyRank = r.dailyRank ? `（今日の番付 ${r.dailyRank}）` : "";
+    return `無限そば道【${modeLabelOf(r.mode)}】で${r.score.toLocaleString()}点！${dailyRank}\n称号：${r.title}／今日の一杯：${r.grade.label}\n#無限そば道 #越前おろしそば`;
 }
 
 function shareUrl() {
