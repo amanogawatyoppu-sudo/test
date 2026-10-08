@@ -623,6 +623,22 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 #gachaResults .charCard.r-SR { box-shadow: 0 0 16px rgba(204,102,255,0.7); }
 @keyframes gachaIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
 
+/* ===== 遊び方 ===== */
+#howToOverlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 430; justify-content: center; align-items: center; padding: 12px; box-sizing: border-box; overflow-y: auto; }
+#howToOverlay.open { display: flex; }
+#howToBox { border: 3px solid gold; border-radius: 16px; padding: 18px 26px; background: rgba(20,15,0,0.98); max-width: 640px; width: 100%; box-sizing: border-box; color: #eee; text-align: left; margin: auto; }
+#howToBox h2 { font-family: 'Zen Old Mincho'; color: gold; text-align: center; margin: 0 0 8px; }
+#howToBox ol { padding-left: 1.3em; line-height: 1.7; font-size: 16px; margin: 0 0 12px; }
+#howToBox li { margin-bottom: 4px; }
+#howToBox kbd { display: inline-block; border: 1px solid #ccc; border-bottom-width: 3px; border-radius: 5px; padding: 0 7px; font-family: monospace; background: #222; color: #fff; }
+#howToBox .menuBtn { display: block; margin: 0 auto; }
+@media (max-height: 500px) {
+  #howToBox { padding: 8px 18px; }
+  #howToBox h2 { font-size: 20px; margin-bottom: 2px; }
+  #howToBox ol { font-size: 13px; line-height: 1.45; margin-bottom: 6px; }
+  #howToBox .menuBtn { padding: 6px; }
+}
+
 /* ===== 縦持ち警告オーバーレイ ===== */
 #rotateOverlay {
   display: none;
@@ -735,22 +751,44 @@ body.mobileLayout #workerArea { display: none; }
 <!-- 縦持ち回転促すオーバーレイ -->
 <div id="rotateOverlay">
   <div class="rotate-icon">📱</div>
-  <p>スマホを横向きにして<br>遊んでくれ！</p>
+  <p data-en="Turn your phone sideways&lt;br&gt;to play!">スマホを横向きにして<br>遊んでくれ！</p>
+</div>
+
+<!-- 遊び方 -->
+<div id="howToOverlay">
+  <div id="howToBox">
+    <div data-en="&lt;h2&gt;🥢 How to Play&lt;/h2&gt;
+    &lt;ol&gt;
+      &lt;li&gt;Soba bowls (notes) slide in from the right. Hit each one the moment it &lt;b&gt;lines up with the A / S / L ring&lt;/b&gt; on the left.&lt;/li&gt;
+      &lt;li&gt;Computer: press &lt;kbd&gt;A&lt;/kbd&gt; &lt;kbd&gt;S&lt;/kbd&gt; &lt;kbd&gt;L&lt;/kbd&gt; on the keyboard. Phone/tablet: tap the buttons at the bottom.&lt;/li&gt;
+      &lt;li&gt;Dead center = &lt;span style=&quot;color:#ff88ff;&quot;&gt;RAINBOW&lt;/span&gt;, close = &lt;span style=&quot;color:gold;&quot;&gt;PERFECT&lt;/span&gt;, a bit off = &lt;span style=&quot;color:#44aaff;&quot;&gt;GOOD&lt;/span&gt;. Hitting when nothing is there = &lt;span style=&quot;color:#ff4444;&quot;&gt;MISS&lt;/span&gt;.&lt;/li&gt;
+      &lt;li&gt;Keep hitting PERFECTs to fill the &lt;b&gt;Boil Gauge&lt;/b&gt;. When it&#x27;s full, FEVER doubles your score!&lt;/li&gt;
+      &lt;li&gt;In Endless mode, one miss ends the run, but answer a soba quiz correctly once to come back!&lt;/li&gt;
+    &lt;/ol&gt;"><h2>🥢 遊び方</h2>
+    <ol>
+      <li>右から流れてくるそば（ノーツ）が、左の A・S・L のリングに<b>重なった瞬間</b>に叩く。</li>
+      <li>PCはキーボードの <kbd>A</kbd> <kbd>S</kbd> <kbd>L</kbd>。スマホ・タブレットは画面下のボタン。</li>
+      <li>ぴったりで <span style="color:#ff88ff;">虹極上</span>、近いと <span style="color:gold;">極上</span>、ずれると <span style="color:#44aaff;">良打</span>。何もないのに叩くと <span style="color:#ff4444;">茹で過ぎ（ミス）</span>。</li>
+      <li>極上を続けると<b>茹で上がりゲージ</b>が溜まり、満タンでフィーバー（得点2倍）！</li>
+      <li>「終わりなき修行」はミスで終了。でも1回だけ、越前そばクイズに正解すれば復活できる。</li>
+    </ol></div>
+    <button class="menuBtn" data-en="Got it!" onclick="closeHowTo()">わかった！</button>
+  </div>
 </div>
 
 <!-- 一時停止オーバーレイ -->
 <div id="pauseOverlay">
   <div id="pauseOverlayBox">
-    <h2>⏸ 一時停止中</h2>
-    <button class="menuBtn" onclick="togglePause()">再開する</button>
+    <h2 data-en="⏸ Paused">⏸ 一時停止中</h2>
+    <button data-en="Resume" class="menuBtn" onclick="togglePause()">再開する</button>
   </div>
 </div>
 
 <!-- 復活クイズ -->
 <div id="quizOverlay">
   <div id="quizBox">
-    <h2>茹で過ぎた…！</h2>
-    <p class="quiz-sub">越前そばクイズに正解すれば、もう一度立ち上がれる。</p>
+    <h2 data-en="Overcooked...!">茹で過ぎた…！</h2>
+    <p data-en="Answer the Echizen soba quiz correctly to get back up!" class="quiz-sub">越前そばクイズに正解すれば、もう一度立ち上がれる。</p>
     <div id="quizQuestion"></div>
     <div id="quizChoices"></div>
     <div id="quizResultMsg"></div>
@@ -761,13 +799,13 @@ body.mobileLayout #workerArea { display: none; }
 <div id="nameModal">
   <div id="nameModalBox">
     <h2 id="nameModalTitle">⚔️ ランクマッチ参戦</h2>
-    <p class="modal-sub" id="nameModalSub">職人の名とパスワードを入力せよ。<br>初回登録時にパスワードが設定される。以降は同じパスワードで積み重ねが引き継がれる。</p>
-    <input id="nameModalInput" type="text" maxlength="8" placeholder="職人の名（8文字まで）" style="margin-bottom:10px;">
-    <input id="nameModalPass" type="password" maxlength="20" placeholder="パスワード（初回は自由に設定）"
+    <p class="modal-sub" id="nameModalSub" data-en="Enter a nickname and a password.&lt;br&gt;The first time, this creates your account. Use the same password next time to keep your progress.&lt;br&gt;&lt;span style=&quot;color:#ff8866;&quot;&gt;⚠ Don&#x27;t use your real name or a password you use anywhere else.&lt;/span&gt;">職人の名とパスワードを入力せよ。<br>初回登録時にパスワードが設定される。以降は同じパスワードで積み重ねが引き継がれる。<br><span style="color:#ff8866;">⚠ 本名や、ほかで使っているパスワードは使わないこと。</span></p>
+    <input id="nameModalInput" type="text" maxlength="8" placeholder="職人の名（8文字まで）" data-en-ph="Nickname (max 8)" style="margin-bottom:10px;">
+    <input id="nameModalPass" type="password" maxlength="20" placeholder="パスワード（初回は自由に設定）" data-en-ph="Password (make one up)"
       style="font-size:20px; text-align:center; background:#111; color:white; border:2px solid gold; border-radius:8px; padding:10px 20px; width:100%; box-sizing:border-box; font-family:'Noto Serif JP'; margin-bottom:8px;">
     <div id="nameModalMsg"></div>
     <button id="nameModalConfirm" onclick="confirmRankmaName()">この名で参戦する</button>
-    <button id="nameModalCancel" onclick="closeNameModal()">キャンセル</button>
+    <button data-en="Cancel" id="nameModalCancel" onclick="closeNameModal()">キャンセル</button>
   </div>
 </div>
 
@@ -775,8 +813,8 @@ body.mobileLayout #workerArea { display: none; }
 <div id="rankmaLobby">
   <canvas id="fireCanvas2" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:151;"></canvas>
   <div class="lobby-content">
-    <div id="lobbyTitle">⚔️ 月間ランクマッチ</div>
-    <div class="lobby-catch">～ 真の職人だけが頂に立つ ～</div>
+    <div data-en="⚔️ Monthly Ranked Match" id="lobbyTitle">⚔️ 月間ランクマッチ</div>
+    <div data-en="~ Only true masters reach the top ~" class="lobby-catch">～ 真の職人だけが頂に立つ ～</div>
 
     <div class="taunt-box">
       <div id="tauntText">Loading...</div>
@@ -785,67 +823,71 @@ body.mobileLayout #workerArea { display: none; }
     <!-- 月間トップ3（モード別） -->
     <div class="lobby-top3-wrapper" id="lobbyTop3Wrapper">
       <div class="lobby-top3-card" id="lobbyCard30">
-        <h3>🏆 30秒の頂</h3>
-        <div class="top3-loading">読込中...</div>
+        <h3 data-en="🏆 30-sec Top 3">🏆 30秒の頂</h3>
+        <div data-en="Loading..." class="top3-loading">読込中...</div>
       </div>
       <div class="lobby-top3-card" id="lobbyCard60">
-        <h3>🏆 60秒の頂</h3>
-        <div class="top3-loading">読込中...</div>
+        <h3 data-en="🏆 60-sec Top 3">🏆 60秒の頂</h3>
+        <div data-en="Loading..." class="top3-loading">読込中...</div>
       </div>
       <div class="lobby-top3-card" id="lobbyCardInfinite">
-        <h3>🏆 無限の頂</h3>
-        <div class="top3-loading">読込中...</div>
+        <h3 data-en="🏆 Endless Top 3">🏆 無限の頂</h3>
+        <div data-en="Loading..." class="top3-loading">読込中...</div>
       </div>
     </div>
 
-    <div style="font-size:16px; color:#ff8844; font-family:'Zen Old Mincho'; margin-bottom:16px; letter-spacing:2px;">
+    <div data-en="── Choose your division ──" style="font-size:16px; color:#ff8844; font-family:'Zen Old Mincho'; margin-bottom:16px; letter-spacing:2px;">
       ── 部門を選んで参戦せよ ──
     </div>
     <div class="lobby-mode-btns">
-      <button class="lobbyModeBtn" onclick="openRankma('30')">🔥 30秒</button>
-      <button class="lobbyModeBtn" onclick="openRankma('60')">🔥 60秒</button>
-      <button class="lobbyModeBtn" onclick="openRankma('infinite')">🔥 無限</button>
+      <button data-en="🔥 30 sec" class="lobbyModeBtn" onclick="openRankma('30')">🔥 30秒</button>
+      <button data-en="🔥 60 sec" class="lobbyModeBtn" onclick="openRankma('60')">🔥 60秒</button>
+      <button data-en="🔥 Endless" class="lobbyModeBtn" onclick="openRankma('infinite')">🔥 無限</button>
     </div>
 
-    <button class="lobby-back-btn" onclick="closeRankmaLobby()">← 修行に戻る</button>
+    <button data-en="← Back" class="lobby-back-btn" onclick="closeRankmaLobby()">← 修行に戻る</button>
   </div>
 </div>
 
 <!-- タイトル画面 -->
 <div id="titleScreen">
  <div id="title">無限そば道</div>
- <div style="color:white; margin-bottom:8px; font-size:14px;">～ 絶・越前極への道 ～</div>
+ <div data-en="Endless Soba Way ~ The Road to Echizen Kiwami ~" style="color:white; margin-bottom:8px; font-size:14px;">～ 絶・越前極への道 ～</div>
 
  <!-- 通常修行 -->
- <div style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 修行モード ──</div>
+ <div data-en="── Practice ──" style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 修行モード ──</div>
  <div class="modeRow">
-   <button class="menuBtn" onclick="startNormal(30)">30秒修行</button>
-   <button class="menuBtn" onclick="startNormal(60)">60秒修行</button>
-   <button class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
+   <button data-en="30 sec" class="menuBtn" onclick="startNormal(30)">30秒修行</button>
+   <button data-en="60 sec" class="menuBtn" onclick="startNormal(60)">60秒修行</button>
+   <button data-en="Endless" class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
  </div>
- <button class="menuBtn wideBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="openDaily()">📅 今日のそば打ち</button>
- <div style="color:#8fdc7a; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">毎日全員同じ譜面・1日1回の一発勝負</div>
+ <button data-en="📅 Daily Challenge" class="menuBtn wideBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="openDaily()">📅 今日のそば打ち</button>
+ <div data-en="Same chart for everyone · one shot per day" style="color:#8fdc7a; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">毎日全員同じ譜面・1日1回の一発勝負</div>
 
  <!-- ランクマッチ挑戦ボタン -->
- <button id="rankmaEntryBtn" onclick="openRankmaLobby()">⚔️ ランクマッチに挑戦する</button>
- <div style="color:#ff8844; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">月間最強職人を決める真剣勝負</div>
+ <button data-en="⚔️ Ranked Match" id="rankmaEntryBtn" onclick="openRankmaLobby()">⚔️ ランクマッチに挑戦する</button>
+ <div data-en="Battle for this month&#x27;s top soba master" style="color:#ff8844; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">月間最強職人を決める真剣勝負</div>
 
  <!-- 番付閲覧 -->
  <div style="margin-top:4px; border-top:1px solid #333; padding-top:8px;">
-   <button class="menuBtn wideBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
-   <div style="color:#888; font-size:12px; margin:8px 0 4px; letter-spacing:1px;">番付を見る</div>
-   <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('30')">30秒番付</button>
-   <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('60')">60秒番付</button>
-   <button class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('infinite')">無限番付</button>
+   <button data-en="🏠 My Page · Gacha" class="menuBtn wideBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+   <div data-en="Leaderboards" style="color:#888; font-size:12px; margin:8px 0 4px; letter-spacing:1px;">番付を見る</div>
+   <button data-en="30 sec" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('30')">30秒番付</button>
+   <button data-en="60 sec" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('60')">60秒番付</button>
+   <button data-en="Endless" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('infinite')">無限番付</button>
+ </div>
+ <div style="margin-top:10px;">
+   <button class="lobby-back-btn" data-en="❓ How to play" onclick="openHowTo()">❓ 遊び方</button>
+   <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
  </div>
 </div>
 
 <div id="game">
  <div id="gameInternal">
   <div id="ui">
-   <span class="info-text">得点: <span id="score">0</span></span>
-   <span class="info-text">連打: <span id="combo">0</span></span>
-   <span class="info-text" id="timeDisplay" style="display:none;">残り: <span id="timeLeft">0</span>秒</span>
+   <span class="info-text"><span data-en="Score">得点</span>: <span id="score">0</span></span>
+   <span class="info-text"><span data-en="Combo">連打</span>: <span id="combo">0</span></span>
+   <span class="info-text" id="timeDisplay" style="display:none;"><span data-en="Time">残り</span>: <span id="timeLeft">0</span><span data-en="s">秒</span></span>
    <span class="info-text" id="rankmaTag" style="display:none; color:#ffcc00;">⚔️ <span id="rankmaTagName"></span></span>
    <span class="info-text" id="charTag" style="display:none; color:#9fe;"></span>
    <span class="info-text" style="display:none; color:#666; font-size:9px;" id="debugUAText">build:v8</span>
@@ -861,7 +903,7 @@ body.mobileLayout #workerArea { display: none; }
 
 <div id="bottomArea">
     <div id="gaugeRow">
-        <div id="gaugeWrapper"><div id="gaugeFill"></div><div id="gaugeText">茹で上がりゲージ</div></div>
+        <div id="gaugeWrapper"><div id="gaugeFill"></div><div data-en="Boil Gauge" id="gaugeText">茹で上がりゲージ</div></div>
         <div id="workerArea"><div id="workerEmoji">🥣</div></div>
     </div>
     <!-- A/S/Lボタン（ゲージの下）。スマホ・タブレットのときだけ表示（body.mobileLayout）。 -->
@@ -873,7 +915,7 @@ body.mobileLayout #workerArea { display: none; }
 </div>
 
 <div id="result">
- <h1 id="resultTitle">修行終了</h1>
+ <h1 data-en="Finished!" id="resultTitle">修行終了</h1>
  <div id="finalScore" style="font-size:24px;"></div>
  <div id="accuracyDisplay" style="font-size:20px; color:#cccccc; margin:4px 0; font-family:'Zen Old Mincho';"></div>
  <div id="rankDisplay"></div>
@@ -881,73 +923,73 @@ body.mobileLayout #workerArea { display: none; }
  <!-- 今日の一杯（結果カード）。そのまま画像としてシェアできる -->
  <canvas id="resultCard" width="1200" height="630" style="width:min(92vw, 600px); height:auto; border-radius:10px; display:block; margin:6px auto 8px;"></canvas>
  <div style="margin-bottom:6px;">
-   <button class="menuBtn" style="width:auto; padding:10px 18px; background:linear-gradient(#444,#111); color:white; border:1px solid #888;" onclick="postToX()">𝕏 でポスト</button>
-   <button class="menuBtn" id="shareImageBtn" style="width:auto; padding:10px 18px;" onclick="shareResultImage()">📷 画像で共有</button>
+   <button data-en="𝕏 Post" class="menuBtn" style="width:auto; padding:10px 18px; background:linear-gradient(#444,#111); color:white; border:1px solid #888;" onclick="postToX()">𝕏 でポスト</button>
+   <button data-en="📷 Share image" class="menuBtn" id="shareImageBtn" style="width:auto; padding:10px 18px;" onclick="shareResultImage()">📷 画像で共有</button>
  </div>
  <div id="triviaArea"></div>
  <div id="rankingInputArea">
     <div id="dailyResultArea" style="display:none;">
       <div id="dailyResultMsg" style="font-size:20px; margin:8px 0;"></div>
-      <button class="menuBtn" onclick="openDaily()">📅 今日の番付を見る</button>
+      <button data-en="📅 Today&#x27;s ranking" class="menuBtn" onclick="openDaily()">📅 今日の番付を見る</button>
     </div>
     <div id="normalSaveArea">
-      <div style="font-size:14px; color:#aaa; margin-bottom:8px; font-family:'Zen Old Mincho';">歴代番付に名を刻む</div>
-      番付名：<input id="nameInput" maxlength="8" placeholder="職人の名"><br><br>
-      <button class="menuBtn" onclick="saveRank()">歴代番付に刻む</button>
-      <div style="font-size:12px; color:#666; margin-top:8px;">月間番付へは <span style="color:#ff8844;">⚔️ ランクマッチ</span> から参戦せよ。</div>
+      <div data-en="Put your name on the all-time leaderboard" style="font-size:14px; color:#aaa; margin-bottom:8px; font-family:'Zen Old Mincho';">歴代番付に名を刻む</div>
+      <span data-en="Name">番付名</span>：<input id="nameInput" maxlength="8" placeholder="職人の名" data-en-ph="Nickname"><br><br>
+      <button data-en="Save to leaderboard" class="menuBtn" onclick="saveRank()">歴代番付に刻む</button>
+      <div data-en="For the monthly leaderboard, play a &lt;span style=&quot;color:#ff8844;&quot;&gt;⚔️ Ranked Match&lt;/span&gt;." style="font-size:12px; color:#666; margin-top:8px;">月間番付へは <span style="color:#ff8844;">⚔️ ランクマッチ</span> から参戦せよ。</div>
     </div>
     <div id="rankmaSaveArea" style="display:none;">
-      <div style="font-size:18px; color:#ffcc00; margin-bottom:6px;">⚔️ 参戦名：<strong id="rankmaNameLabel" style="color:gold;font-size:22px;"></strong></div>
+      <div style="font-size:18px; color:#ffcc00; margin-bottom:6px;">⚔️ <span data-en="Player">参戦名</span>：<strong id="rankmaNameLabel" style="color:gold;font-size:22px;"></strong></div>
       <div id="rankmaThisPlayPerfect" style="font-size:15px; color:#ff88ff; margin-bottom:14px;"></div>
-      <button class="menuBtn" onclick="saveRankmaScore()">スコアを番付に刻む</button>
+      <button data-en="Save score" class="menuBtn" onclick="saveRankmaScore()">スコアを番付に刻む</button>
     </div>
  </div>
  <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
- <button class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
- <button class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+ <button data-en="Title" class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
+ <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
 </div>
 
 <!-- ===== 今日のそば打ち（デイリー） ===== -->
 <div id="daily">
  <div class="mp-wrap">
-  <h1>📅 今日のそば打ち</h1>
+  <h1 data-en="📅 Daily Challenge">📅 今日のそば打ち</h1>
   <div id="dlDate" style="color:#ddd; font-size:18px;"></div>
-  <div class="mp-note" style="margin-bottom:6px;">毎日、全員が同じ譜面で30秒勝負。番付に残るのは1日1回目だけ。職人の能力はなし。</div>
+  <div data-en="Everyone plays the same chart for 30 seconds each day. Only your first try of the day counts. Character abilities are off." class="mp-note" style="margin-bottom:6px;">毎日、全員が同じ譜面で30秒勝負。番付に残るのは1日1回目だけ。職人の能力はなし。</div>
   <div id="dlStatus" style="color:#ff8844; min-height:22px; font-size:14px;"></div>
   <div id="dlMe" style="font-size:18px; margin:6px 0 12px; line-height:1.6;"></div>
   <button class="menuBtn" id="dlStartBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="startDaily()" disabled>挑戦する</button>
   <div class="mp-card" style="margin:16px auto; max-width:520px;">
-    <h3>今日の番付</h3>
+    <h3 data-en="Today&#x27;s Ranking">今日の番付</h3>
     <div id="dlRanking"></div>
   </div>
-  <button class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button>
+  <button data-en="Title" class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button>
  </div>
 </div>
 
 <!-- ===== マイページ ===== -->
 <div id="mypage">
  <div class="mp-wrap">
-  <h1>🏠 マイページ</h1>
+  <h1 data-en="🏠 My Page">🏠 マイページ</h1>
   <div id="mpName"></div>
   <div id="mpStatus"></div>
   <div class="mp-row">
     <div class="mp-card">
-      <h3>修行に連れて行く職人</h3>
+      <h3 data-en="Your Partner">修行に連れて行く職人</h3>
       <div id="mpSelectedEmoji">❔</div>
       <div id="mpSelectedName">まだいない</div>
       <div id="mpSelectedDesc"></div>
-      <button class="lobby-back-btn" id="mpUnselectBtn" style="margin-top:8px; display:none;" onclick="selectCharacter('')">連れて行かない</button>
-      <div class="mp-note">能力は修行モードだけで効く。<br>ランクマッチは公平のため能力なし。</div>
+      <button data-en="Go solo" class="lobby-back-btn" id="mpUnselectBtn" style="margin-top:8px; display:none;" onclick="selectCharacter('')">連れて行かない</button>
+      <div data-en="Abilities work in Practice only.&lt;br&gt;Ranked Match and Daily have no abilities." class="mp-note">能力は修行モードだけで効く。<br>ランクマッチは公平のため能力なし。</div>
     </div>
     <div class="mp-card">
-      <h3>🌾 そば粉（ガチャ用）</h3>
+      <h3 data-en="🌾 Soba Flour (for Gacha)">🌾 そば粉（ガチャ用）</h3>
       <div id="mpCoins">0</div>
-      <button class="gachaBtn" id="gacha1Btn" onclick="pullGacha(1)">1回引く<br><small>🌾100</small></button><button class="gachaBtn ten" id="gacha10Btn" onclick="pullGacha(10)">10連<br><small>🌾900・SR以上1体確定</small></button>
-      <div class="mp-note">そば粉は修行・ランクマを遊ぶとスコアに応じて貯まる。<br>排出率 SSR 2% / SR 8% / R 30% / N 60%。かぶりはそば粉で返ってくる。</div>
+      <button data-en="1 Pull&lt;br&gt;&lt;small&gt;🌾100&lt;/small&gt;" class="gachaBtn" id="gacha1Btn" onclick="pullGacha(1)">1回引く<br><small>🌾100</small></button><button data-en="10 Pulls&lt;br&gt;&lt;small&gt;🌾900 · SR or better guaranteed&lt;/small&gt;" class="gachaBtn ten" id="gacha10Btn" onclick="pullGacha(10)">10連<br><small>🌾900・SR以上1体確定</small></button>
+      <div data-en="Earn soba flour every time you play (more for higher scores).&lt;br&gt;Rates: SSR 2% / SR 8% / R 30% / N 60%. Duplicates are refunded in flour." class="mp-note">そば粉は修行・ランクマを遊ぶとスコアに応じて貯まる。<br>排出率 SSR 2% / SR 8% / R 30% / N 60%。かぶりはそば粉で返ってくる。</div>
     </div>
   </div>
   <div class="mp-card" style="margin-bottom:14px;">
-    <h3>戦績</h3>
+    <h3 data-en="Stats">戦績</h3>
     <div class="mp-stats" id="mpStats"></div>
   </div>
   <div class="mp-card">
@@ -955,8 +997,8 @@ body.mobileLayout #workerArea { display: none; }
     <div class="mp-grid" id="mpCollection"></div>
   </div>
   <br>
-  <button class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button><br>
-  <button class="lobby-back-btn" style="margin-top:10px;" onclick="logout()">ログアウト</button>
+  <button data-en="Title" class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button><br>
+  <button data-en="Log out" class="lobby-back-btn" style="margin-top:10px;" onclick="logout()">ログアウト</button>
  </div>
 </div>
 
@@ -964,16 +1006,16 @@ body.mobileLayout #workerArea { display: none; }
 <div id="gachaOverlay">
   <h2 id="gachaTitle">ガチャ結果</h2>
   <div id="gachaResults"></div>
-  <button class="menuBtn" onclick="document.getElementById('gachaOverlay').classList.remove('open')">閉じる</button>
+  <button data-en="Close" class="menuBtn" onclick="document.getElementById('gachaOverlay').classList.remove('open')">閉じる</button>
 </div>
 
 <div id="ranking">
- <h1 id="rankTitle">世界番付</h1>
+ <h1 data-en="Leaderboard" id="rankTitle">世界番付</h1>
  <div id="modeTitleLabel"></div>
  <!-- タブ -->
  <div style="display:flex; justify-content:center; gap:10px; margin-bottom:16px;">
-   <button id="tabScore" class="rankTab active" onclick="switchRankTab('score')">🏆 スコア番付</button>
-   <button id="tabPerfect" class="rankTab" onclick="switchRankTab('perfect')">✨ 累計極上番付</button>
+   <button data-en="🏆 Score" id="tabScore" class="rankTab active" onclick="switchRankTab('score')">🏆 スコア番付</button>
+   <button data-en="✨ Total KIWAMI" id="tabPerfect" class="rankTab" onclick="switchRankTab('perfect')">✨ 累計極上番付</button>
  </div>
  <!-- スコア番付 -->
  <div id="rankPanelScore">
@@ -983,14 +1025,14 @@ body.mobileLayout #workerArea { display: none; }
        <div id="monthRankList"></div>
      </div>
      <div class="rank-column rekidai">
-       <h2>歴代番付</h2>
+       <h2 data-en="All-Time">歴代番付</h2>
        <div id="rekidaiRankList"></div>
      </div>
    </div>
  </div>
  <!-- 累計極上番付（月間ランクマ専用） -->
  <div id="rankPanelPerfect" style="display:none;">
-   <div style="font-size:13px; color:#888; margin-bottom:12px;">ランクマッチで積み上げた今月の極上回数ランキング</div>
+   <div data-en="Total KIWAMI hits in Ranked Matches this month" style="font-size:13px; color:#888; margin-bottom:12px;">ランクマッチで積み上げた今月の極上回数ランキング</div>
    <div class="rank-container">
      <div class="rank-column month">
        <h2 id="perfectMonthLabel">今月の累計極上番付</h2>
@@ -999,7 +1041,7 @@ body.mobileLayout #workerArea { display: none; }
    </div>
  </div>
  <br>
- <button class="menuBtn" onclick="isRankmaMode ? openRankmaLobby() : location.reload()">戻る</button>
+ <button data-en="Back" class="menuBtn" onclick="isRankmaMode ? openRankmaLobby() : location.reload()">戻る</button>
 </div>
 
 <script>
@@ -1026,6 +1068,54 @@ window.addEventListener("unhandledrejection", function(e) {
     box.style.display = "block";
     box.innerText += `\nUNHANDLED PROMISE REJECTION: ${e.reason}\n`;
 });
+
+// ===== 言語（日本語 / English） =====
+// 端末の言語が日本語なら日本語、それ以外は英語で始める。タイトル画面のボタンで切り替え可能。
+let LANG = "ja";
+try {
+    LANG = localStorage.getItem("sobamichi_lang") || ((navigator.language || "ja").toLowerCase().startsWith("ja") ? "ja" : "en");
+} catch (e) {
+    LANG = (navigator.language || "ja").toLowerCase().startsWith("ja") ? "ja" : "en";
+}
+const T = (ja, en) => (LANG === "en" ? en : ja);
+// 順位の表記（日本語は「3位」、英語は「#3」）
+const rankLabel = (n) => T(`${n}位`, `#${n}`);
+// HTMLに data-en / data-en-ph で書いた英語に差し替える
+function applyStaticLang() {
+    document.documentElement.lang = LANG;
+    document.querySelectorAll("[data-en]").forEach(el => {
+        if (el.dataset.ja === undefined) el.dataset.ja = el.innerHTML;
+        el.innerHTML = LANG === "en" ? el.dataset.en : el.dataset.ja;
+    });
+    document.querySelectorAll("[data-en-ph]").forEach(el => {
+        if (el.dataset.jaPh === undefined) el.dataset.jaPh = el.placeholder;
+        el.placeholder = LANG === "en" ? el.dataset.enPh : el.dataset.jaPh;
+    });
+}
+applyStaticLang();
+function toggleLang() {
+    LANG = LANG === "en" ? "ja" : "en";
+    try { localStorage.setItem("sobamichi_lang", LANG); } catch (e) {}
+    location.reload(); // 文章を作り直すため再読込（ログイン状態はタブ内に保持される）
+}
+
+// ===== 遊び方（初回は自動表示） =====
+function openHowTo() { document.getElementById("howToOverlay").classList.add("open"); }
+function closeHowTo() {
+    document.getElementById("howToOverlay").classList.remove("open");
+    try { localStorage.setItem("sobamichi_howto_seen", "1"); } catch (e) {}
+}
+try { if (!localStorage.getItem("sobamichi_howto_seen")) openHowTo(); } catch (e) {}
+
+// ===== 名前のチェック（番付に出るので、不適切な名前は弾く） =====
+const NG_WORDS = ["fuck", "fuk", "shit", "bitch", "asshole", "dick", "cock", "pussy", "cunt", "nigg", "fag", "slut", "whore",
+    "rape", "nazi", "hitler", "porn", "penis", "vagina", "retard", "kys", "boob", "sex", "damn", "bastard", "kill",
+    "死ね", "ちんこ", "まんこ", "殺す"];
+function isBadName(name) {
+    const n = name.toLowerCase().replace(/[\s._\-]/g, "")
+        .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/@/g, "a").replace(/\$/g, "s");
+    return NG_WORDS.some(w => n.includes(w));
+}
 
 const GAS_URL = "https://script.google.com/macros/s/AKfycbygiit5TLOFBonR2Hz9svLuVDum5gKtfoG_R0_ImgjwBnEiXL75t4aqBbFbfotDN90/exec";
 
@@ -1105,7 +1195,22 @@ const HIT_CENTER_X = 85;
 const HIT_X = HIT_CENTER_X - NOTE_SIZE / 2;
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
-const sobaTrivia = [
+const sobaTrivia = LANG === "en" ? [
+    "In Fukui, people even eat oroshi soba (soba with grated daikon radish) on New Year's Eve.",
+    "Echizen oroshi soba became famous all over Japan after Emperor Showa praised it.",
+    "Fukui-style soba mixes the juice of grated daikon radish into the broth.",
+    "Echizen oroshi soba dates back to around 1601. The lord of Fuchu Castle spread soba in his town, and a cook named Kaneko Gonzaemon suggested topping it with grated daikon.",
+    "Fukui's soba story goes back to 1471, when the samurai lord Asakura Takakage had soba grown as emergency food for sieges. It can be harvested in about 75 days!",
+    "When Emperor Showa ate oroshi soba in Echizen City, he asked for a second bowl, something he normally never did.",
+    "In 2007, Echizen oroshi soba was chosen as one of Japan's 100 best local dishes by the Ministry of Agriculture.",
+    "Soba contains rutin, which is good for your blood vessels, but about 60% of it dissolves into the cooking water. That's why soba lovers drink the cooking water (soba-yu) too!",
+    "Echizen soba noodles are fairly thick. The more you chew, the sweeter and richer they taste.",
+    "In the 1800s, the soba sold at Imajo Station became a hit with travelers and made Fukui soba famous across Japan.",
+    "Daikon and soba are a smart combo: daikon's enzymes help digest soba's protein, and rutin plus vitamin C keep blood vessels healthy.",
+    "Since 1996, Fukui has hosted the All-Japan Amateur Soba Making Championship. It's a holy land for soba makers!",
+    "There are three main ways to serve Echizen oroshi soba: daikon on the side, daikon mixed into the broth, or just the daikon juice. Every shop has its own style.",
+    "Local soba is grown all over Fukui. Soba from Maruoka is famous for its rich aroma and firm texture."
+] : [
     "福井県民は、年越しそばも「おろしそば」が定番だ。",
     "越前おろしそばは、昭和天皇が絶賛されたことで全国的に有名になった。",
     "大根のしぼり汁をつゆに混ぜるスタイルが福井流だ。",
@@ -1123,7 +1228,15 @@ const sobaTrivia = [
 ];
 
 // ===== 煽り文句リスト =====
-const tauntLines = [
+const tauntLines = LANG === "en" ? [
+    "The top spot isn't yours.\nYou just haven't proven it yet.",
+    "Last month's champion is waiting for you.\nCatch them if you can.",
+    "Names on this leaderboard stay forever.\nReady to carve yours?",
+    "The Echizen Kiwami title isn't decoration.\nOnly true masters earn it.",
+    "When your combo breaks, that's your limit.\nGo break that limit today.",
+    "Don't just watch the leaderboard.\nThis is the players' battlefield.",
+    "The more soba you make, the better you get.\nBut only your best run makes the board."
+] : [
     "番付の頂は、お前の席ではない。\nまだ証明されていないだけだ。",
     "先月の1位は今も君を待っている。\n追い越せるものなら、やってみろ。",
     "この月間番付、一度刻まれた名は消えぬ。\nお前の名を刻む覚悟はあるか？",
@@ -1239,7 +1352,7 @@ async function loadLobbyTop3() {
         "60": document.getElementById("lobbyCard60"),
         "infinite": document.getElementById("lobbyCardInfinite")
     };
-    const labels = { "30": "🏆 30秒の頂", "60": "🏆 60秒の頂", "infinite": "🏆 無限の頂" };
+    const labels = { "30": T("🏆 30秒の頂", "🏆 30-sec Top 3"), "60": T("🏆 60秒の頂", "🏆 60-sec Top 3"), "infinite": T("🏆 無限の頂", "🏆 Endless Top 3") };
     const medals = ["🥇", "🥈", "🥉"];
 
     for (const mode of modes) {
@@ -1249,14 +1362,14 @@ async function loadLobbyTop3() {
             const arr = (data.month || []).slice(0, 3);
             const card = cards[mode];
             if (arr.length === 0) {
-                card.innerHTML = `<h3>${labels[mode]}</h3><div class="top3-loading" style="color:#666;">まだ誰も刻んでおらぬ…</div>`;
+                card.innerHTML = `<h3>${labels[mode]}</h3><div class="top3-loading" style="color:#666;">${T("まだ誰も刻んでおらぬ…", "No one yet...")}</div>`;
             } else {
                 card.innerHTML = `<h3>${labels[mode]}</h3>` + arr.map((d, i) =>
-                    `<div class="lobby-top3-entry"><span class="top3-name">${medals[i]} ${escapeHtml(d.name)}</span><span class="top3-score">${escapeHtml(d.score)}点</span></div>`
+                    `<div class="lobby-top3-entry"><span class="top3-name">${medals[i]} ${escapeHtml(d.name)}</span><span class="top3-score">${escapeHtml(d.score)}${T("点", " pts")}</span></div>`
                 ).join("");
             }
         } catch(e) {
-            cards[mode].querySelector(".top3-loading") && (cards[mode].querySelector(".top3-loading").innerText = "取得失敗");
+            cards[mode].querySelector(".top3-loading") && (cards[mode].querySelector(".top3-loading").innerText = T("取得失敗", "Couldn't load"));
         }
     }
 }
@@ -1326,7 +1439,7 @@ function playSE(name) {
 
 // ===== ログイン（ランクマ参戦・マイページ共通）モーダル =====
 let nameModalPurpose = "rankma"; // "rankma" | "mypage"
-function nameModalConfirmLabel() { return nameModalPurpose === "rankma" ? "この名で参戦する" : "ログインする"; }
+function nameModalConfirmLabel() { return nameModalPurpose === "rankma" ? T("この名で参戦する", "Enter the match") : T("ログインする", "Log in"); }
 
 function openLoginModal(purpose) {
     nameModalPurpose = purpose;
@@ -1336,7 +1449,9 @@ function openLoginModal(purpose) {
     document.getElementById("nameModalMsg").innerText = "";
     document.getElementById("nameModalMsg").className = "";
     document.getElementById("nameModalTitle").innerText =
-        purpose === "mypage" ? "🏠 マイページにログイン" : purpose === "daily" ? "📅 今日のそば打ちにログイン" : "⚔️ ランクマッチ参戦";
+        purpose === "mypage" ? T("🏠 マイページにログイン", "🏠 Log in to My Page")
+        : purpose === "daily" ? T("📅 今日のそば打ちにログイン", "📅 Log in for the Daily Challenge")
+        : T("⚔️ ランクマッチ参戦", "⚔️ Join a Ranked Match");
     document.getElementById("nameModalConfirm").innerText = nameModalConfirmLabel();
     document.getElementById("nameModal").classList.add("open");
     setTimeout(() => input.focus(), 80);
@@ -1368,14 +1483,14 @@ async function confirmRankmaName() {
     const pass = passInput.value;
     const msg = document.getElementById("nameModalMsg");
 
-    if (!name) { msg.className=""; msg.innerText = "名前を入力せよ。"; return; }
-    if (name === "名無し") { msg.className=""; msg.innerText = "その名は名乗れぬ。"; return; }
-    if (!pass) { msg.className=""; msg.innerText = "パスワードを入力せよ。"; return; }
-    if (pass.length < 4) { msg.className=""; msg.innerText = "パスワードは4文字以上にせよ。"; return; }
+    if (!name) { msg.className=""; msg.innerText = T("名前を入力せよ。", "Enter a nickname."); return; }
+    if (name === "名無し" || isBadName(name)) { msg.className=""; msg.innerText = T("その名は名乗れぬ。", "Please choose a different nickname."); return; }
+    if (!pass) { msg.className=""; msg.innerText = T("パスワードを入力せよ。", "Enter a password."); return; }
+    if (pass.length < 4) { msg.className=""; msg.innerText = T("パスワードは4文字以上にせよ。", "Password must be at least 4 characters."); return; }
 
     isConfirming = true;
     const btn = document.getElementById("nameModalConfirm");
-    btn.disabled = true; btn.innerText = "認証中...";
+    btn.disabled = true; btn.innerText = T("認証中...", "Checking...");
     nameInput.disabled = true; passInput.disabled = true;
     msg.className = ""; msg.innerText = "";
 
@@ -1391,26 +1506,26 @@ async function confirmRankmaName() {
         if (result.status === "new") {
             authed = true;
             msg.className = "info";
-            msg.innerText = `「${name}」で新規登録した。このパスワードを忘れるな。`;
+            msg.innerText = T(`「${name}」で新規登録した。このパスワードを忘れるな。`, `Account "${name}" created. Don't forget your password!`);
         } else if (result.status === "ok") {
             authed = true;
             msg.className = "info";
             msg.innerText = result.score > 0
-                ? `認証成功。現在のスコア: ${result.score}点 / 累計極上: ${result.perfect}回`
-                : "認証成功。いざ参戦せよ。";
+                ? T(`認証成功。現在のスコア: ${result.score}点 / 累計極上: ${result.perfect}回`, `Welcome back! Best this month: ${result.score} pts / Total PERFECTs: ${result.perfect}`)
+                : T("認証成功。いざ参戦せよ。", "Welcome! Let's go.");
         } else if (result.status === "wrong_pass") {
-            msg.className = ""; msg.innerText = "パスワードが違う。";
+            msg.className = ""; msg.innerText = T("パスワードが違う。", "Wrong password (or that nickname is already taken).");
             resetNameModalControls(); return;
         } else {
-            msg.className = ""; msg.innerText = "認証エラー。もう一度試せ。";
+            msg.className = ""; msg.innerText = T("認証エラー。もう一度試せ。", "Login error. Please try again.");
             resetNameModalControls(); return;
         }
     } catch(e) {
         if (nameModalPurpose !== "rankma") {
-            msg.className = ""; msg.innerText = "通信失敗。もう一度試せ。";
+            msg.className = ""; msg.innerText = T("通信失敗。もう一度試せ。", "Connection failed. Please try again.");
             resetNameModalControls(); return;
         }
-        msg.className = ""; msg.innerText = "通信失敗。そのまま参戦する。";
+        msg.className = ""; msg.innerText = T("通信失敗。そのまま参戦する。", "Connection failed. Starting anyway.");
     }
 
     // 認証できたら、この名前でマイページ（そば粉・キャラ）にもログインした状態にする
@@ -1430,7 +1545,7 @@ async function confirmRankmaName() {
     }
 
     rankmaName = name;
-    btn.innerText = "参戦準備中...";
+    btn.innerText = T("参戦準備中...", "Getting ready...");
 
     setTimeout(() => {
         closeNameModal();
@@ -1507,10 +1622,10 @@ function startWithCountdown(afterCallback) {
     gauge = buff.startGauge;
     const charTag = document.getElementById("charTag");
     if (ch) {
-        charTag.innerHTML = `${charVisual(ch, "tagImg")} ${ch.name}`;
+        charTag.innerHTML = `${charVisual(ch, "tagImg")} ${charName(ch)}`;
         charTag.style.display = "inline";
     } else if ((isRankmaMode || isDaily) && profile && profile.selected) {
-        charTag.textContent = isDaily ? "（デイリーは能力なし）" : "（ランクマは能力なし）";
+        charTag.textContent = isDaily ? T("（デイリーは能力なし）", "(no abilities in Daily)") : T("（ランクマは能力なし）", "(no abilities in Ranked)");
         charTag.style.display = "inline";
     } else {
         charTag.style.display = "none";
@@ -1681,9 +1796,9 @@ function hit(l){
 
 // ===== コンボフラッシュ =====
 const comboMilestones = [
-  { n: 50,  text: "50コンボ！",  sub: "そばの腕が上がってきたぞ！",  color: "#44ccff", bg: "rgba(0,150,255,0.18)" },
-  { n: 100, text: "100コンボ！！", sub: "越前職人の領域に入った！",   color: "#ffcc00", bg: "rgba(255,180,0,0.22)" },
-  { n: 200, text: "200コンボ！！！", sub: "これが…越前極の境地か…！", color: "#ff4400", bg: "rgba(255,60,0,0.25)" },
+  { n: 50,  text: T("50コンボ！", "50 COMBO!"),  sub: T("そばの腕が上がってきたぞ！", "Your soba skills are rising!"),  color: "#44ccff", bg: "rgba(0,150,255,0.18)" },
+  { n: 100, text: T("100コンボ！！", "100 COMBO!!"), sub: T("越前職人の領域に入った！", "You've entered master territory!"),   color: "#ffcc00", bg: "rgba(255,180,0,0.22)" },
+  { n: 200, text: T("200コンボ！！！", "200 COMBO!!!"), sub: T("これが…越前極の境地か…！", "Is this... the realm of Echizen Kiwami?!"), color: "#ff4400", bg: "rgba(255,60,0,0.25)" },
 ];
 let flashTimer = null;
 function checkComboMilestone(c) {
@@ -1730,7 +1845,17 @@ function missEffect(){
 }
 
 // ===== 無限モード：復活クイズ =====
-const sobaQuiz = [
+const sobaQuiz = LANG === "en" ? [
+  { q: "Around what year did Echizen oroshi soba begin?", choices: ["Around 1601", "Around 1868", "Around 1945", "Around 2007"], answer: 0 },
+  { q: "Why did the samurai lord Asakura Takakage have soba grown in Fukui?", choices: ["As a gift", "As emergency food for sieges", "To pay taxes", "As a tea snack"], answer: 1 },
+  { q: "Fukui soba became famous when travelers loved the soba sold at which station?", choices: ["Fukui Station", "Tsuruga Station", "Imajo Station", "Obama Station"], answer: 2 },
+  { q: "In 2007, Echizen oroshi soba was chosen as one of Japan's...?", choices: ["World Heritage Sites", "100 Best Local Dishes", "National Treasures", "Cultural Properties"], answer: 1 },
+  { q: "Which nutrient in soba is good for your blood vessels?", choices: ["Rutin", "Caffeine", "Taurine", "Catechin"], answer: 0 },
+  { q: "Which enzyme in grated daikon helps digest soba's protein?", choices: ["Diastase", "Citric acid", "Tannin", "Pectin"], answer: 0 },
+  { q: "What are Echizen soba noodles known for?", choices: ["Very thin", "Thick", "Half-dried", "Made from rice"], answer: 1 },
+  { q: "What contest has Fukui hosted since 1996?", choices: ["National Soba Cup", "All-Japan Amateur Soba Making Championship", "Echizen Soba Festival", "Soba Koshien"], answer: 1 },
+  { q: "Who asked for a second bowl of oroshi soba in Echizen City?", choices: ["Emperor Showa", "Tokugawa Ieyasu", "Oda Nobunaga", "Matsuo Basho"], answer: 0 },
+] : [
   { q: "越前おろしそばの起源は、西暦何年頃とされている？", choices: ["1601年頃", "1868年頃", "1945年頃", "2007年頃"], answer: 0 },
   { q: "越前そば文化の原点は、朝倉孝景が何のためにそばを栽培させたことに遡る？", choices: ["献上品", "籠城用の非常食", "年貢の代わり", "茶菓子"], answer: 1 },
   { q: "福井のそばが全国に名を広めたきっかけは、どこの駅そばが旅人に絶賛されたことか？", choices: ["福井駅", "敦賀駅", "今庄駅", "小浜駅"], answer: 2 },
@@ -1769,10 +1894,10 @@ function answerQuiz(correct){
 
     if (correct) {
         msg.style.color = "#4dff88";
-        msg.innerText = "正解！復活する…！";
+        msg.innerText = T("正解！復活する…！", "Correct! You're back in!");
     } else {
         msg.style.color = "#ff4444";
-        msg.innerText = "不正解…ここまでか…";
+        msg.innerText = T("不正解…ここまでか…", "Wrong... this is the end...");
     }
 
     setTimeout(() => {
@@ -1836,12 +1961,12 @@ function showJudge(res){
     const j = document.getElementById("judge");
     let cls, text, color;
     if (res === "KAMI") {
-        text = "虹極上"; cls = "kami kamiAnim"; color = "";
+        text = T("虹極上", "RAINBOW!"); cls = "kami kamiAnim"; color = "";
     } else if (res === "GUARD") {
-        text = "身代わり"; cls = "showJudge"; color = "#66ffee";
+        text = T("身代わり", "GUARD"); cls = "showJudge"; color = "#66ffee";
     } else {
         cls = "showJudge";
-        text = res==="PERFECT"?"極上":(res==="GREAT"?"良打":"茹で過ぎ");
+        text = res==="PERFECT"?T("極上","PERFECT"):(res==="GREAT"?T("良打","GOOD"):T("茹で過ぎ","MISS"));
         color = res==="PERFECT"?"gold":(res==="GREAT"?"#44aaff":"#ff4444");
     }
     // DOMの着脱ではなく、class解除→offsetWidth強制リフロー→再設定でアニメーションを再トリガー（軽量）
@@ -1855,7 +1980,7 @@ function showJudge(res){
 function endGame(){
     running=false; clearInterval(timerInterval);
     switchScreen("result");
-    document.getElementById("finalScore").innerText = `最終得点: ${score}点`;
+    document.getElementById("finalScore").innerText = T(`最終得点: ${score}点`, `Final score: ${score} pts`);
     let rank = "修行中";
     if(currentMode==="30" || currentMode==="60" || currentMode==="daily") {
         if(totalMissCount === 0 && combo > 0) rank = "越前極";
@@ -1875,15 +2000,21 @@ function endGame(){
         else if(score >= 30000)  rank = "見習い";
         else rank = "修行中";
     }
-    document.getElementById("rankDisplay").innerText = `称号: ${rank}`;
+    // 称号は日本語のまま残し、英語版では意味を添える
+    const TITLE_EN = { "越前極": "Echizen Kiwami (Grandmaster)", "神速": "Shinsoku (Godspeed)", "伝説級": "Legend", "達人級": "Master",
+        "一人前": "Pro", "見習い": "Apprentice", "修行中": "Trainee" };
+    rank = T(rank, TITLE_EN[rank] || rank);
+    document.getElementById("rankDisplay").innerText = T(`称号: ${rank}`, `Title: ${rank}`);
     // 精度表示
     const totalJudged = perfectCount + totalMissCount;
     const accuracy = totalJudged > 0 ? ((perfectCount / totalJudged) * 100).toFixed(2) : "0.00";
     const kamiRate = perfectCount > 0 ? ((kamiCount / perfectCount) * 100).toFixed(1) : "0.0";
     document.getElementById("accuracyDisplay").innerHTML =
-        `精度: <span style="color:gold;">${accuracy}%</span>　` +
-        `虹極上: <span style="color:#ff88ff;">${kamiCount}回</span> / 極上${perfectCount}回 (${kamiRate}%)`;
-    document.getElementById("triviaArea").innerText = "【豆知識】" + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
+        T(`精度: <span style="color:gold;">${accuracy}%</span>　` +
+          `虹極上: <span style="color:#ff88ff;">${kamiCount}回</span> / 極上${perfectCount}回 (${kamiRate}%)`,
+          `Accuracy: <span style="color:gold;">${accuracy}%</span>　` +
+          `RAINBOW: <span style="color:#ff88ff;">${kamiCount}</span> / PERFECT ${perfectCount} (${kamiRate}%)`);
+    document.getElementById("triviaArea").innerText = T("【豆知識】", "[Soba Fact] ") + sobaTrivia[Math.floor(Math.random()*sobaTrivia.length)];
 
     // 今日の一杯（結果カード）
     const cardChar = profile && profile.selected ? CHARACTERS[profile.selected] : null;
@@ -1897,9 +2028,9 @@ function endGame(){
 
     // 前回の保存で無効化されたボタンを戻す（ランクマ連戦時に2戦目以降が保存できなくなるのを防ぐ）
     const normalBtn = document.querySelector("#normalSaveArea button");
-    normalBtn.disabled = false; normalBtn.innerText = "歴代番付に刻む";
+    normalBtn.disabled = false; normalBtn.innerText = T("歴代番付に刻む", "Save to leaderboard");
     const rankmaBtn = document.querySelector("#rankmaSaveArea button");
-    rankmaBtn.disabled = false; rankmaBtn.innerText = "スコアを番付に刻む";
+    rankmaBtn.disabled = false; rankmaBtn.innerText = T("スコアを番付に刻む", "Save score");
 
     document.getElementById("dailyResultArea").style.display = isDaily ? "block" : "none";
     if (isDaily) {
@@ -1910,7 +2041,7 @@ function endGame(){
         document.getElementById("normalSaveArea").style.display = "none";
         document.getElementById("rankmaSaveArea").style.display = "block";
         document.getElementById("rankmaNameLabel").innerText = rankmaName;
-        document.getElementById("rankmaThisPlayPerfect").innerText = `今回の極上: ${perfectCount}回（虹極上: ${kamiCount}回）→ 累計に加算されます`;
+        document.getElementById("rankmaThisPlayPerfect").innerText = T(`今回の極上: ${perfectCount}回（虹極上: ${kamiCount}回）→ 累計に加算されます`, `PERFECTs this run: ${perfectCount} (RAINBOW: ${kamiCount}) - added to your total`);
     } else {
         document.getElementById("normalSaveArea").style.display = "block";
         document.getElementById("rankmaSaveArea").style.display = "none";
@@ -1930,7 +2061,7 @@ function endGame(){
 async function fetchRankPosition() {
     const el = document.getElementById("rankPositionDisplay");
     el.style.color = "#aaa";
-    el.innerText = "番付照合中...";
+    el.innerText = T("番付照合中...", "Checking the leaderboard...");
     try {
         // キャッシュ回避のためのタイムスタンプ
         const res = await fetch(`${GAS_URL}?mode=${currentMode}&t=${Date.now()}`);
@@ -1953,9 +2084,9 @@ async function fetchRankPosition() {
 
         let text = "";
         if (isRankmaMode) {
-            text = `${medal(monthRank)} 今月番付 <span style="color:gold;font-size:34px;">${monthRank}位</span> / ${monthTotal}人中${flame(monthRank)}`;
+            text = `${medal(monthRank)} ${T("今月番付", "This month")} <span style="color:gold;font-size:34px;">${rankLabel(monthRank)}</span> / ${monthTotal}${T("人中", " players")}${flame(monthRank)}`;
         } else {
-            text = `${medal(rekidaiRank)} 歴代番付 <span style="color:gold;font-size:34px;">${rekidaiRank}位</span> / ${rekidaiTotal}人中${flame(rekidaiRank)}`;
+            text = `${medal(rekidaiRank)} ${T("歴代番付", "All-time")} <span style="color:gold;font-size:34px;">${rankLabel(rekidaiRank)}</span> / ${rekidaiTotal}${T("人中", " players")}${flame(rekidaiRank)}`;
         }
         el.style.color = "white";
         el.innerHTML = text;
@@ -1967,37 +2098,37 @@ async function fetchRankPosition() {
 // ===== 通常番付保存 =====
 async function saveRank() {
     const name = document.getElementById("nameInput").value.trim();
-    if(!name || name==="名無し"){ alert("その名は名乗れぬ。唯一無二の名を刻め！"); return; }
+    if(!name || name==="名無し" || isBadName(name)){ alert(T("その名は名乗れぬ。唯一無二の名を刻め！", "Please choose a different nickname.")); return; }
     const btn = document.querySelector("#normalSaveArea button");
-    btn.disabled=true; btn.innerText="刻み中...";
+    btn.disabled=true; btn.innerText=T("刻み中...", "Saving...");
     try {
         await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name, score, mode:currentMode}) });
         showRanking();
     } catch(e){
         console.error(e);
-        alert("通信失敗。URLが正しいか確認してくれ。");
-        btn.disabled=false; btn.innerText="歴代番付に刻む";
+        alert(T("通信失敗。URLが正しいか確認してくれ。", "Connection failed. Please try again."));
+        btn.disabled=false; btn.innerText=T("歴代番付に刻む", "Save to leaderboard");
     }
 }
 
 // ===== ランクマスコア保存 =====
 async function saveRankmaScore() {
     const btn = document.querySelector("#rankmaSaveArea button");
-    btn.disabled=true; btn.innerText="刻み中...";
+    btn.disabled=true; btn.innerText=T("刻み中...", "Saving...");
     try {
         await fetch(GAS_URL, {
             method: "POST",
             body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true, perfectCount, uuid: PLAYER_UUID })
         });
         // サーバー側の反映を待つために少し待機
-        btn.innerText = "反映待ち...";
+        btn.innerText = T("反映待ち...", "Updating...");
         setTimeout(() => {
             showRanking();
         }, 1500);
     } catch(e){
         console.error(e);
-        alert("通信失敗。もう一度試してくれ。");
-        btn.disabled=false; btn.innerText="スコアを番付に刻む";
+        alert(T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again."));
+        btn.disabled=false; btn.innerText=T("スコアを番付に刻む", "Save score");
     }
 }
 
@@ -2017,16 +2148,16 @@ async function showRanking(){
     switchRankTab('score');
 
     const now = new Date();
-    const modeLabel = currentMode === "infinite" ? "終わりなき修行部門" : currentMode + "秒修行部門";
-    const rankmaLabel = isRankmaMode ? " ⚔️ ランクマ" : "";
+    const modeLabel = currentMode === "infinite" ? T("終わりなき修行部門", "Endless") : T(currentMode + "秒修行部門", currentMode + "-sec");
+    const rankmaLabel = isRankmaMode ? T(" ⚔️ ランクマ", " ⚔️ Ranked") : "";
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
-    document.getElementById("monthLabelHeader").innerText = `${now.getFullYear()}年${now.getMonth()+1}月 限定番付`;
-    document.getElementById("perfectMonthLabel").innerText = `累計極上番付（全部門合算）`;
+    document.getElementById("monthLabelHeader").innerText = T(`${now.getFullYear()}年${now.getMonth()+1}月 限定番付`, `${now.toLocaleString("en-US", { month: "long" })} ${now.getFullYear()}`);
+    document.getElementById("perfectMonthLabel").innerText = T(`累計極上番付（全部門合算）`, `Total PERFECTs (all modes)`);
 
     const mList = document.getElementById("monthRankList");
     const rList = document.getElementById("rekidaiRankList");
     const pList = document.getElementById("monthPerfectList");
-    mList.innerHTML = "取得中..."; rList.innerHTML = "取得中..."; if(pList) pList.innerHTML = "取得中...";
+    mList.innerHTML = rList.innerHTML = T("取得中...", "Loading..."); if(pList) pList.innerHTML = T("取得中...", "Loading...");
 
     try {
         // キャッシュ回避のためのタイムスタンプ
@@ -2035,7 +2166,7 @@ async function showRanking(){
 
         const renderList = (arr, el, unit, isPerfectTab = false) => {
             if (!arr || arr.length === 0) {
-                el.innerHTML = `<div style="color:#aaa;padding:10px;">まだ誰も刻んでおらぬ…</div>`;
+                el.innerHTML = `<div style="color:#aaa;padding:10px;">${T("まだ誰も刻んでおらぬ…", "No one yet...")}</div>`;
                 return;
             }
             const medals = ["🥇","🥈","🥉"];
@@ -2052,25 +2183,25 @@ async function showRanking(){
             let html = arr.slice(0, 10).map((d,i) => {
                 const isMe = (i === myRank);
                 const style = isMe ? 'background:rgba(255,215,0,0.2); border-radius:5px;' : '';
-                return `<div class="rank-item" style="${style}"><span>${medals[i]||i+1+"位"}: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
+                return `<div class="rank-item" style="${style}"><span>${medals[i]||rankLabel(i+1)}: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
             }).join("");
 
             // 10位以下に自分がいる場合、特別行として追加
             if (myRank >= 10) {
                 const d = arr[myRank];
                 html += `<div style="border-top:1px dashed #555; margin:5px 0;"></div>`;
-                html += `<div class="rank-item" style="background:rgba(255,215,0,0.2); border-radius:5px;"><span>${myRank+1}位: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
+                html += `<div class="rank-item" style="background:rgba(255,215,0,0.2); border-radius:5px;"><span>${rankLabel(myRank+1)}: ${escapeHtml(d.name)}</span><span class="score-val">${escapeHtml(d.score)}${unit}</span></div>`;
             }
 
             el.innerHTML = html;
         };
 
-        renderList(data.month || [], mList, "点");
-        renderList(data.rekidai || [], rList, "点");
-        if(pList) renderList(data.monthPerfect || [], pList, "回");
+        renderList(data.month || [], mList, T("点", " pts"));
+        renderList(data.rekidai || [], rList, T("点", " pts"));
+        if(pList) renderList(data.monthPerfect || [], pList, T("回", ""));
 
     } catch(e){
-        mList.innerHTML="取得失敗"; rList.innerHTML="取得失敗"; pList.innerHTML="取得失敗";
+        mList.innerHTML = rList.innerHTML = pList.innerHTML = T("取得失敗", "Couldn't load");
     }
 }
 
@@ -2080,16 +2211,16 @@ function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 // idとレア度はGAS側(gas/Code.gs)のGACHA_POOLと必ず一致させること。
 // img があれば画像（chars/フォルダ、背景透過・正方形推奨）、なければ絵文字で表示する。
 const CHARACTERS = {
-    minarai:       { name: "見習い小僧",   emoji: "👦",   img: "chars/minarai.webp", r: "N", desc: "得点+3%", buff: { scoreMul: 1.03 } },
-    oroshi_musume: { name: "おろし娘",     emoji: "👧", img: "chars/oroshi_musume.webp",   r: "N",   desc: "ゲージがたまりやすい(+15%)", buff: { gaugeMul: 1.15 } },
-    kamaban:       { name: "釜番の爺",     emoji: "👴", img: "chars/kamaban.webp",   r: "N",   desc: "得点+5%",                    buff: { scoreMul: 1.05 } },
-    shokunin:      { name: "蕎麦打ち職人", emoji: "👨‍🍳", img: "chars/shokunin.webp", r: "R",   desc: "得点+10%",                   buff: { scoreMul: 1.10 } },
-    ekiin:         { name: "今庄の駅員",   emoji: "🧑‍✈️", img: "chars/ekiin.webp", r: "R",   desc: "ゲージ40%から開始",           buff: { startGauge: 40 } },
-    ashigaru:      { name: "朝倉の足軽",   emoji: "💂", img: "chars/ashigaru.webp",   r: "R",   desc: "ミスを1回だけ帳消し",         buff: { shield: 1 } },
-    honda:         { name: "府中城主",     emoji: "🤴", img: "chars/honda.webp",   r: "SR",  desc: "得点+20%",                   buff: { scoreMul: 1.20 } },
-    kaneko:        { name: "金子権左衛門", emoji: "🧔", img: "chars/kaneko.webp",   r: "SR",  desc: "極上の判定が広い",            buff: { perfectWin: 78 } },
-    sennin:        { name: "越前そば仙人", emoji: "🧙", img: "chars/sennin.webp",   r: "SSR", desc: "得点+25%・フィーバー長持ち",   buff: { scoreMul: 1.25, feverDrain: 0.3 } },
-    oroshi_ryu:    { name: "おろし龍",     emoji: "🐉", img: "chars/oroshi_ryu.webp",   r: "SSR", desc: "虹極上の判定が広い・得点+15%", buff: { kamiWin: 40, scoreMul: 1.15 } },
+    minarai:       { name: "見習い小僧", nameEn: "Apprentice Boy", descEn: "Score +3%",   emoji: "👦",   img: "chars/minarai.webp", r: "N", desc: "得点+3%", buff: { scoreMul: 1.03 } },
+    oroshi_musume: { name: "おろし娘", nameEn: "Daikon Girl", descEn: "Gauge fills 15% faster",     emoji: "👧", img: "chars/oroshi_musume.webp",   r: "N",   desc: "ゲージがたまりやすい(+15%)", buff: { gaugeMul: 1.15 } },
+    kamaban:       { name: "釜番の爺", nameEn: "Old Pot Keeper", descEn: "Score +5%",     emoji: "👴", img: "chars/kamaban.webp",   r: "N",   desc: "得点+5%",                    buff: { scoreMul: 1.05 } },
+    shokunin:      { name: "蕎麦打ち職人", nameEn: "Soba Master", descEn: "Score +10%", emoji: "👨‍🍳", img: "chars/shokunin.webp", r: "R",   desc: "得点+10%",                   buff: { scoreMul: 1.10 } },
+    ekiin:         { name: "今庄の駅員", nameEn: "Imajo Stationmaster", descEn: "Start with 40% gauge",   emoji: "🧑‍✈️", img: "chars/ekiin.webp", r: "R",   desc: "ゲージ40%から開始",           buff: { startGauge: 40 } },
+    ashigaru:      { name: "朝倉の足軽", nameEn: "Asakura Foot Soldier", descEn: "Blocks one miss",   emoji: "💂", img: "chars/ashigaru.webp",   r: "R",   desc: "ミスを1回だけ帳消し",         buff: { shield: 1 } },
+    honda:         { name: "府中城主", nameEn: "Lord of Fuchu Castle", descEn: "Score +20%",     emoji: "🤴", img: "chars/honda.webp",   r: "SR",  desc: "得点+20%",                   buff: { scoreMul: 1.20 } },
+    kaneko:        { name: "金子権左衛門", nameEn: "Kaneko Gonzaemon", descEn: "Wider PERFECT window", emoji: "🧔", img: "chars/kaneko.webp",   r: "SR",  desc: "極上の判定が広い",            buff: { perfectWin: 78 } },
+    sennin:        { name: "越前そば仙人", nameEn: "Echizen Soba Sage", descEn: "Score +25%, longer FEVER", emoji: "🧙", img: "chars/sennin.webp",   r: "SSR", desc: "得点+25%・フィーバー長持ち",   buff: { scoreMul: 1.25, feverDrain: 0.3 } },
+    oroshi_ryu:    { name: "おろし龍", nameEn: "Oroshi Dragon", descEn: "Wider RAINBOW window, Score +15%",     emoji: "🐉", img: "chars/oroshi_ryu.webp",   r: "SSR", desc: "虹極上の判定が広い・得点+15%", buff: { kamiWin: 40, scoreMul: 1.15 } },
 };
 const RARITY_COLOR = { N: "#aaaaaa", R: "#44aaff", SR: "#cc66ff", SSR: "#ffcc00" };
 const RARITY_RANK = { SSR: 0, SR: 1, R: 2, N: 3 };
@@ -2151,29 +2282,32 @@ async function openMyPage() {
     if (!account) { openLoginModal("mypage"); return; }
     switchScreen("mypage");
     const status = document.getElementById("mpStatus");
-    status.textContent = "読込中...";
+    status.textContent = T("読込中...", "Loading...");
     renderMyPage();
     try {
         const res = await playerAction("profile");
         if (!res) {
-            status.textContent = "サーバーがまだマイページに対応していない（GASの更新待ち）。";
+            status.textContent = T("サーバーがまだマイページに対応していない（GASの更新待ち）。", "My Page isn't available on the server yet.");
             return;
         }
         if (res.status !== "ok") {
-            status.textContent = "ログインが切れた。タイトルからもう一度ログインしてくれ。";
+            status.textContent = T("ログインが切れた。タイトルからもう一度ログインしてくれ。", "You've been logged out. Please log in again from the title screen.");
             renderMyPage();
             return;
         }
         status.textContent = "";
         renderMyPage();
     } catch (e) {
-        status.textContent = "通信失敗。もう一度試してくれ。";
+        status.textContent = T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again.");
     }
 }
 
+const charName = (c) => T(c.name, c.nameEn || c.name);
+const charDesc = (c) => T(c.desc, c.descEn || c.desc);
+
 // キャラの見た目（画像があれば画像、なければ絵文字）
 function charVisual(c, cls) {
-    return c.img ? `<img class="${cls}" src="${c.img}" alt="${c.name}" draggable="false">` : c.emoji;
+    return c.img ? `<img class="${cls}" src="${c.img}" alt="${charName(c)}" draggable="false">` : c.emoji;
 }
 
 function charCardHtml(id, opts = {}) {
@@ -2181,7 +2315,7 @@ function charCardHtml(id, opts = {}) {
     if (!c) return "";
     const rc = RARITY_COLOR[c.r];
     if (!(opts.count > 0)) {
-        return `<div class="charCard locked" style="--rc:${rc}"><span class="cRar">${c.r}</span><div class="cEmoji">❔</div><div class="cName">？？？</div><div class="cDesc"></div></div>`;
+        return `<div class="charCard locked" style="--rc:${rc}"><span class="cRar">${c.r}</span><div class="cEmoji">❔</div><div class="cName">${T("？？？", "???")}</div><div class="cDesc"></div></div>`;
     }
     const cls = ["charCard", "r-" + c.r];
     if (opts.selected) cls.push("selected");
@@ -2189,16 +2323,16 @@ function charCardHtml(id, opts = {}) {
     const count = opts.count > 1 ? `<span class="cCount">×${opts.count}</span>` : "";
     const badge = opts.badge ? `<span class="cBadge">${opts.badge}</span>` : "";
     const style = `--rc:${rc};` + (opts.delay ? `animation-delay:${opts.delay}s;` : "");
-    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${c.name}</div><div class="cDesc">${c.desc}</div>${badge}</div>`;
+    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${charName(c)}</div><div class="cDesc">${charDesc(c)}</div>${badge}</div>`;
 }
 
 function renderMyPage() {
-    document.getElementById("mpName").innerHTML = account ? `職人 <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
+    document.getElementById("mpName").innerHTML = account ? `${T("職人", "Player")} <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
     const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
     const sel = CHARACTERS[p.selected];
     document.getElementById("mpSelectedEmoji").innerHTML = sel ? charVisual(sel, "mpSelImg") : "❔";
-    document.getElementById("mpSelectedName").textContent = sel ? sel.name : "まだいない";
-    document.getElementById("mpSelectedDesc").textContent = sel ? `能力：${sel.desc}` : "ガチャで仲間を集めよう";
+    document.getElementById("mpSelectedName").textContent = sel ? charName(sel) : T("まだいない", "None yet");
+    document.getElementById("mpSelectedDesc").textContent = sel ? T(`能力：${charDesc(sel)}`, `Ability: ${charDesc(sel)}`) : T("ガチャで仲間を集めよう", "Pull the gacha to find partners!");
     document.getElementById("mpUnselectBtn").style.display = sel ? "inline-block" : "none";
     document.getElementById("mpCoins").textContent = `🌾 ${p.coins}`;
     document.getElementById("gacha1Btn").disabled = !profile || p.coins < 100;
@@ -2207,28 +2341,28 @@ function renderMyPage() {
     const st = playerStats || { best: {}, perfect: 0 };
     const stat = (lbl, val) => `<div class="mp-stat"><div class="lbl">${lbl}</div><div class="val">${val}</div></div>`;
     document.getElementById("mpStats").innerHTML =
-        stat("30秒 最高", (st.best["30"] || 0) + "点") +
-        stat("60秒 最高", (st.best["60"] || 0) + "点") +
-        stat("無限 最高", (st.best["infinite"] || 0) + "点") +
-        stat("累計極上", (st.perfect || 0) + "回") +
-        stat("プレイ回数", (p.plays || 0) + "回");
+        stat(T("30秒 最高", "30-sec best"), (st.best["30"] || 0) + T("点", "")) +
+        stat(T("60秒 最高", "60-sec best"), (st.best["60"] || 0) + T("点", "")) +
+        stat(T("無限 最高", "Endless best"), (st.best["infinite"] || 0) + T("点", "")) +
+        stat(T("累計極上", "Total PERFECTs"), (st.perfect || 0) + T("回", "")) +
+        stat(T("プレイ回数", "Games played"), (p.plays || 0) + T("回", ""));
 
     const ids = Object.keys(CHARACTERS).sort((a, b) => RARITY_RANK[CHARACTERS[a].r] - RARITY_RANK[CHARACTERS[b].r]);
     const ownedNum = ids.filter(id => p.chars[id] > 0).length;
-    document.getElementById("mpCollectionTitle").textContent = `職人図鑑（${ownedNum} / ${ids.length}）　タップで連れて行く職人を選ぶ`;
+    document.getElementById("mpCollectionTitle").textContent = T(`職人図鑑（${ownedNum} / ${ids.length}）　タップで連れて行く職人を選ぶ`, `Collection (${ownedNum} / ${ids.length}) - tap to choose your partner`);
     document.getElementById("mpCollection").innerHTML = ids.map(id =>
-        charCardHtml(id, { count: p.chars[id] || 0, selected: p.selected === id, clickable: true, badge: p.selected === id ? "連れて行く" : "" })
+        charCardHtml(id, { count: p.chars[id] || 0, selected: p.selected === id, clickable: true, badge: p.selected === id ? T("連れて行く", "Partner") : "" })
     ).join("");
 }
 
 async function selectCharacter(id) {
     if (!profile || (id && !(profile.chars[id] > 0)) || id === profile.selected) return;
     const status = document.getElementById("mpStatus");
-    status.textContent = "変更中...";
+    status.textContent = T("変更中...", "Saving...");
     try {
         const res = await playerAction("select", { charId: id });
-        status.textContent = res && res.status === "ok" ? "" : "変更できなかった。";
-    } catch (e) { status.textContent = "通信失敗。もう一度試してくれ。"; }
+        status.textContent = res && res.status === "ok" ? "" : T("変更できなかった。", "Couldn't change.");
+    } catch (e) { status.textContent = T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again."); }
     renderMyPage();
 }
 
@@ -2239,15 +2373,15 @@ async function pullGacha(count) {
     document.getElementById("gacha1Btn").disabled = true;
     document.getElementById("gacha10Btn").disabled = true;
     const status = document.getElementById("mpStatus");
-    status.textContent = "ガチャを回している...";
+    status.textContent = T("ガチャを回している...", "Pulling...");
     try {
         const res = await playerAction("gacha", { count });
-        if (!res) status.textContent = "サーバーがまだガチャに対応していない。";
-        else if (res.status === "no_coins") status.textContent = "そば粉が足りない。修行で稼いでこい。";
-        else if (res.status !== "ok") status.textContent = "ガチャに失敗した。もう一度試してくれ。";
+        if (!res) status.textContent = T("サーバーがまだガチャに対応していない。", "Gacha isn't available on the server yet.");
+        else if (res.status === "no_coins") status.textContent = T("そば粉が足りない。修行で稼いでこい。", "Not enough soba flour. Play more to earn some!");
+        else if (res.status !== "ok") status.textContent = T("ガチャに失敗した。もう一度試してくれ。", "Gacha failed. Please try again.");
         else { status.textContent = ""; showGachaResult(res.results); }
     } catch (e) {
-        status.textContent = "通信失敗。マイページを開き直して、そば粉と図鑑を確認してくれ。";
+        status.textContent = T("通信失敗。マイページを開き直して、そば粉と図鑑を確認してくれ。", "Connection failed. Reopen My Page to check your flour and collection.");
     }
     isPulling = false;
     renderMyPage();
@@ -2255,9 +2389,9 @@ async function pullGacha(count) {
 
 function showGachaResult(results) {
     const best = results.reduce((m, r) => Math.min(m, RARITY_RANK[r.rarity]), 3);
-    document.getElementById("gachaTitle").textContent = best === 0 ? "✨ SSR降臨！ ✨" : best === 1 ? "SR獲得！" : "ガチャ結果";
+    document.getElementById("gachaTitle").textContent = best === 0 ? T("✨ SSR降臨！ ✨", "✨ SSR GET!! ✨") : best === 1 ? T("SR獲得！", "SR GET!") : T("ガチャ結果", "Results");
     document.getElementById("gachaResults").innerHTML = results.map((r, i) =>
-        charCardHtml(r.id, { count: 1, delay: i * 0.08, badge: r.dup ? `かぶり 🌾+${r.refund}` : "NEW!" })
+        charCardHtml(r.id, { count: 1, delay: i * 0.08, badge: r.dup ? T(`かぶり 🌾+${r.refund}`, `Dupe 🌾+${r.refund}`) : "NEW!" })
     ).join("");
     document.getElementById("gachaOverlay").classList.add("open");
 }
@@ -2265,16 +2399,16 @@ function showGachaResult(results) {
 async function earnCoins() {
     const el = document.getElementById("coinEarnDisplay");
     if (!account) {
-        el.innerHTML = `<span style="color:#aaa; font-size:14px;">マイページにログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる。</span>`;
+        el.innerHTML = `<span style="color:#aaa; font-size:14px;">${T("マイページにログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる。", "Log in on My Page to earn 🌾 soba flour and collect partners from the gacha!")}</span>`;
         return;
     }
-    el.textContent = "🌾 そば粉を計量中...";
+    el.textContent = T("🌾 そば粉を計量中...", "🌾 Weighing your soba flour...");
     try {
         const res = await playerAction("earn", { score, mode: currentMode });
         if (!res || res.status !== "ok") { el.textContent = ""; return; }
         el.innerHTML = res.earned > 0
-            ? `🌾 そば粉 <span style="color:gold;">+${res.earned}</span>（所持 ${res.profile.coins}）`
-            : `🌾 所持そば粉 ${res.profile.coins}`;
+            ? T(`🌾 そば粉 <span style="color:gold;">+${res.earned}</span>（所持 ${res.profile.coins}）`, `🌾 Soba flour <span style="color:gold;">+${res.earned}</span> (total ${res.profile.coins})`)
+            : T(`🌾 所持そば粉 ${res.profile.coins}`, `🌾 Soba flour: ${res.profile.coins}`);
     } catch (e) { el.textContent = ""; }
 }
 
@@ -2303,13 +2437,13 @@ async function openDaily() {
     const status = document.getElementById("dlStatus");
     const btn = document.getElementById("dlStartBtn");
     btn.disabled = true;
-    status.textContent = "読込中...";
-    document.getElementById("dlDate").textContent = `${shortDate()} の譜面`;
+    status.textContent = T("読込中...", "Loading...");
+    document.getElementById("dlDate").textContent = T(`${shortDate()} の譜面`, `Chart for ${shortDate()}`);
     document.getElementById("dlRanking").innerHTML = "";
     document.getElementById("dlMe").textContent = "";
     try {
         if (await ensureApi() < 6) {
-            status.textContent = "サーバーがまだデイリーに対応していない（GASの更新待ち）。";
+            status.textContent = T("サーバーがまだデイリーに対応していない（GASの更新待ち）。", "The Daily Challenge isn't available on the server yet.");
             return;
         }
         const res = await fetch(`${GAS_URL}?daily=1&name=${encodeURIComponent(account.name)}&t=${Date.now()}`);
@@ -2318,29 +2452,30 @@ async function openDaily() {
         renderDaily();
         btn.disabled = false;
     } catch (e) {
-        status.textContent = "通信失敗。もう一度試してくれ。";
+        status.textContent = T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again.");
     }
 }
 
 function renderDaily() {
     const d = dailyInfo || { ranking: [], total: 0, me: null };
-    document.getElementById("dlDate").textContent = `${shortDate(d.date)} の譜面`;
+    document.getElementById("dlDate").textContent = T(`${shortDate(d.date)} の譜面`, `Chart for ${shortDate(d.date)}`);
     const me = document.getElementById("dlMe");
     const btn = document.getElementById("dlStartBtn");
     if (d.me) {
-        me.innerHTML = `今日の記録：<span style="color:gold;">${d.me.score.toLocaleString()}点</span>（${d.me.rank}位 / ${d.total}人）<br><span style="font-size:13px; color:#aaa;">記録は1日1回目だけ。もう一度遊ぶと練習になる。</span>`;
-        btn.innerText = "練習する（記録なし）";
+        me.innerHTML = T(`今日の記録：<span style="color:gold;">${d.me.score.toLocaleString()}点</span>（${d.me.rank}位 / ${d.total}人）<br><span style="font-size:13px; color:#aaa;">記録は1日1回目だけ。もう一度遊ぶと練習になる。</span>`,
+            `Your score today: <span style="color:gold;">${d.me.score.toLocaleString()} pts</span> (#${d.me.rank} of ${d.total})<br><span style="font-size:13px; color:#aaa;">Only your first try counts. Playing again is practice.</span>`);
+        btn.innerText = T("練習する（記録なし）", "Practice (not recorded)");
     } else {
-        me.innerHTML = `<span style="color:#ffcc88;">今日はまだ挑戦していない。一発勝負だ！</span>`;
-        btn.innerText = "挑戦する";
+        me.innerHTML = `<span style="color:#ffcc88;">${T("今日はまだ挑戦していない。一発勝負だ！", "You haven't played today. One shot - make it count!")}</span>`;
+        btn.innerText = T("挑戦する", "Play");
     }
     const medals = ["🥇", "🥈", "🥉"];
     document.getElementById("dlRanking").innerHTML = d.ranking.length === 0
-        ? `<div style="color:#aaa; padding:10px;">今日はまだ誰も打っておらぬ…一番乗りを狙え。</div>`
+        ? `<div style="color:#aaa; padding:10px;">${T("今日はまだ誰も打っておらぬ…一番乗りを狙え。", "No one has played yet today. Be the first!")}</div>`
         : d.ranking.slice(0, 10).map((r, i) => {
             const mine = account && r.name === account.name;
-            return `<div class="rank-item" style="${mine ? "background:rgba(255,215,0,0.2); border-radius:5px;" : ""}"><span>${medals[i] || (i + 1) + "位"}: ${escapeHtml(r.name)}</span><span class="score-val">${escapeHtml(r.score)}点</span></div>`;
-        }).join("") + (d.total > 10 ? `<div style="color:#888; font-size:13px;">ほか ${d.total - 10}人</div>` : "");
+            return `<div class="rank-item" style="${mine ? "background:rgba(255,215,0,0.2); border-radius:5px;" : ""}"><span>${medals[i] || rankLabel(i + 1)}: ${escapeHtml(r.name)}</span><span class="score-val">${escapeHtml(r.score)}${T("点", " pts")}</span></div>`;
+        }).join("") + (d.total > 10 ? `<div style="color:#888; font-size:13px;">${T(`ほか ${d.total - 10}人`, `+${d.total - 10} more`)}</div>` : "");
 }
 
 function startDaily() {
@@ -2358,21 +2493,22 @@ function startDaily() {
 async function submitDailyResult() {
     const el = document.getElementById("dailyResultMsg");
     if (dailyPractice) {
-        el.innerHTML = `練習なので記録なし。今日の記録：<span style="color:gold;">${dailyInfo.me.score.toLocaleString()}点</span>（${dailyInfo.me.rank}位）`;
+        el.innerHTML = T(`練習なので記録なし。今日の記録：<span style="color:gold;">${dailyInfo.me.score.toLocaleString()}点</span>（${dailyInfo.me.rank}位）`,
+            `Practice run (not recorded). Today's score: <span style="color:gold;">${dailyInfo.me.score.toLocaleString()} pts</span> (#${dailyInfo.me.rank})`);
         return;
     }
-    el.textContent = "今日の番付に記録中...";
+    el.textContent = T("今日の番付に記録中...", "Saving to today's ranking...");
     try {
         const res = await playerAction("daily_submit", { score });
-        if (!res || res.status !== "ok") { el.textContent = "記録できなかった。通信状況を確認してくれ。"; return; }
-        const rankText = `${res.rank}位 / ${res.total}人`;
+        if (!res || res.status !== "ok") { el.textContent = T("記録できなかった。通信状況を確認してくれ。", "Couldn't save. Check your connection."); return; }
+        const rankText = T(`${res.rank}位 / ${res.total}人`, `#${res.rank} of ${res.total}`);
         if (lastResult) lastResult.dailyRank = rankText;
         el.innerHTML = res.recorded
-            ? `📅 今日の番付 <span style="color:gold; font-size:30px;">${res.rank}位</span> / ${res.total}人中`
-            : `今日はもう記録済み（${res.score.toLocaleString()}点・${rankText}）`;
+            ? T(`📅 今日の番付 <span style="color:gold; font-size:30px;">${res.rank}位</span> / ${res.total}人中`, `📅 Today's ranking: <span style="color:gold; font-size:30px;">#${res.rank}</span> of ${res.total}`)
+            : T(`今日はもう記録済み（${res.score.toLocaleString()}点・${rankText}）`, `Already recorded today (${res.score.toLocaleString()} pts, ${rankText})`);
         dailyInfo = { ...(dailyInfo || {}), me: { score: res.score, rank: res.rank }, total: res.total };
     } catch (e) {
-        el.textContent = "通信失敗。記録できたかは「今日のそば打ち」画面で確認してくれ。";
+        el.textContent = T("通信失敗。記録できたかは「今日のそば打ち」画面で確認してくれ。", "Connection failed. Check the Daily Challenge screen to see if it was saved.");
     }
 }
 
@@ -2392,11 +2528,11 @@ function mulberry32(seed) {
 
 // 精度と虹極上率から一杯の格付けを決める
 function sobaGrade(perfect, accuracy, kamiRate) {
-    if (perfect === 0) return { key: "yudesugi", label: "茹で過ぎそば", color: "#999" };
-    if (accuracy >= 95 && kamiRate >= 40) return { key: "matsu", label: "極上 越前おろしそば（松）", color: "#ffd700" };
-    if (accuracy >= 85) return { key: "take", label: "上 越前おろしそば（竹）", color: "#ff9a3c" };
-    if (accuracy >= 70) return { key: "ume", label: "越前おろしそば（梅）", color: "#ff7a9a" };
-    return { key: "nami", label: "おろしそば（並）", color: "#cccccc" };
+    if (perfect === 0) return { key: "yudesugi", label: T("茹で過ぎそば", "Overcooked Soba"), color: "#999" };
+    if (accuracy >= 95 && kamiRate >= 40) return { key: "matsu", label: T("極上 越前おろしそば（松）", "Supreme Echizen Oroshi Soba"), color: "#ffd700" };
+    if (accuracy >= 85) return { key: "take", label: T("上 越前おろしそば（竹）", "Fine Echizen Oroshi Soba"), color: "#ff9a3c" };
+    if (accuracy >= 70) return { key: "ume", label: T("越前おろしそば（梅）", "Echizen Oroshi Soba"), color: "#ff7a9a" };
+    return { key: "nami", label: T("おろしそば（並）", "Plain Oroshi Soba"), color: "#cccccc" };
 }
 
 function drawSobaBowl(ctx, cx, cy, grade, rand) {
@@ -2505,8 +2641,8 @@ function loadImage(src) {
 }
 
 function modeLabelOf(mode) {
-    if (mode === "daily") return `今日のそば打ち ${shortDate()}`;
-    return mode === "infinite" ? "終わりなき修行" : `${mode}秒修行`;
+    if (mode === "daily") return T(`今日のそば打ち ${shortDate()}`, `Daily Challenge ${shortDate()}`);
+    return mode === "infinite" ? T("終わりなき修行", "Endless") : T(`${mode}秒修行`, `${mode}-sec`);
 }
 
 async function renderResultCard(r) {
@@ -2540,32 +2676,33 @@ async function renderResultCard(r) {
     ctx.fillStyle = "#ffd700"; ctx.font = `700 46px ${serif}`;
     ctx.fillText("無限そば道", 620, 92);
     ctx.fillStyle = "#e8dcc0"; ctx.font = `700 28px ${serif}`;
-    ctx.fillText(modeLabelOf(r.mode) + (r.rankma ? "　⚔️ランクマッチ" : ""), 620, 140);
+    ctx.fillText(modeLabelOf(r.mode) + (r.rankma ? T("　⚔️ランクマッチ", "  ⚔️ Ranked") : ""), 620, 140);
     ctx.fillStyle = "#ffffff"; ctx.font = `700 84px ${serif}`;
-    ctx.fillText(`${r.score.toLocaleString()}点`, 612, 240);
+    ctx.fillText(T(`${r.score.toLocaleString()}点`, `${r.score.toLocaleString()} pts`), 612, 240, 570);
     ctx.fillStyle = "#ffd700"; ctx.font = `700 40px ${serif}`;
-    ctx.fillText(`称号：${r.title}`, 620, 305);
+    ctx.fillText(T(`称号：${r.title}`, `Title: ${r.title}`), 620, 305, 560);
     ctx.fillStyle = "#cccccc"; ctx.font = `700 26px ${serif}`;
-    ctx.fillText(`精度 ${r.accuracy}%　極上 ${r.perfect}回（うち虹極上 ${r.kami}回）`, 620, 350, 560);
+    ctx.fillText(T(`精度 ${r.accuracy}%　極上 ${r.perfect}回（うち虹極上 ${r.kami}回）`, `Accuracy ${r.accuracy}%   PERFECT ${r.perfect} (RAINBOW ${r.kami})`), 620, 350, 560);
 
     ctx.fillStyle = "#e8dcc0"; ctx.font = `700 26px ${serif}`;
-    ctx.fillText("今日の一杯", 620, 420);
+    ctx.fillText(T("今日の一杯", "Your bowl today"), 620, 420);
     ctx.fillStyle = r.grade.color; ctx.font = `700 40px ${serif}`;
     ctx.fillText(r.grade.label, 620, 470, 560);
 
     if (r.character) {
         ctx.fillStyle = "#99eedd"; ctx.font = `700 24px ${serif}`;
-        ctx.fillText(`相棒：${r.character.name}`, 620, 525);
+        ctx.fillText(T(`相棒：${charName(r.character)}`, `Partner: ${charName(r.character)}`), 620, 525, 560);
     }
     ctx.fillStyle = "#8a7a5a"; ctx.font = `700 22px ${serif}`;
-    ctx.fillText("#無限そば道　#越前おろしそば", 620, 585);
+    ctx.fillText(T("#無限そば道　#越前おろしそば", "#MugenSobaDo  #EchizenSoba  #Fukui"), 620, 585);
 }
 
 function shareText() {
     const r = lastResult;
     if (!r) return "";
-    const dailyRank = r.dailyRank ? `（今日の番付 ${r.dailyRank}）` : "";
-    return `無限そば道【${modeLabelOf(r.mode)}】で${r.score.toLocaleString()}点！${dailyRank}\n称号：${r.title}／今日の一杯：${r.grade.label}\n#無限そば道 #越前おろしそば`;
+    const dailyRank = r.dailyRank ? T(`（今日の番付 ${r.dailyRank}）`, ` (today: ${r.dailyRank})`) : "";
+    return T(`無限そば道【${modeLabelOf(r.mode)}】で${r.score.toLocaleString()}点！${dailyRank}\n称号：${r.title}／今日の一杯：${r.grade.label}\n#無限そば道 #越前おろしそば`,
+             `I scored ${r.score.toLocaleString()} pts in Mugen Soba-do [${modeLabelOf(r.mode)}]!${dailyRank}\nTitle: ${r.title} / My bowl: ${r.grade.label}\n#MugenSobaDo #EchizenSoba`);
 }
 
 function shareUrl() {
@@ -2593,12 +2730,12 @@ async function shareResultImage() {
         a.href = URL.createObjectURL(blob); a.download = "musoba-result.png";
         document.body.appendChild(a); a.click(); a.remove();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-        btn.innerText = "保存した！";
-        setTimeout(() => { btn.innerText = "📷 画像で共有"; }, 1500);
+        btn.innerText = T("保存した！", "Saved!");
+        setTimeout(() => { btn.innerText = T("📷 画像で共有", "📷 Share image"); }, 1500);
     } catch (e) {
         if (e && e.name === "AbortError") return; // 共有シートを閉じただけ
-        btn.innerText = "共有できなかった…";
-        setTimeout(() => { btn.innerText = "📷 画像で共有"; }, 1500);
+        btn.innerText = T("共有できなかった…", "Couldn't share...");
+        setTimeout(() => { btn.innerText = T("📷 画像で共有", "📷 Share image"); }, 1500);
     }
 }
 
