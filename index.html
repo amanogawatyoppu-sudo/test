@@ -1477,6 +1477,8 @@ function runCountdown(onComplete) {
             setTimeout(() => {
                 overlay.style.display = "none";
                 onComplete();
+                // カウントダウン中に別タブ・別アプリへ移っていた場合は、始まった直後に一時停止する
+                if (document.hidden) pauseGame();
             }, 650);
         }
     }
@@ -1807,6 +1809,12 @@ function pauseGame(){
     const btn = document.getElementById("pauseBtn");
     if (btn) btn.innerText = "▶";
 }
+
+// タブを切り替えたり別アプリに移ったりしたら自動で一時停止する。
+// （画面が隠れるとノーツの描画は止まるのに残り時間だけ減り続け、戻ると終わっていたため）
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pauseGame();
+});
 
 function resumeGame(){
     isResuming = true;
