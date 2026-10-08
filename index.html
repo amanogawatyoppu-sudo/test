@@ -1097,7 +1097,12 @@ function switchScreen(screenId) {
     }
 }
 
-const HIT_X = 65;
+// 判定位置：ノーツの「中心」が判定リングの中心（CSSの .hit { left:85px }）に重なった瞬間を0とする。
+// n.x はノーツ画像（120px角）の左端なので、左端の目標位置は 85 - 120/2 = 25。
+// 以前は左端を65で判定しており、見た目の中心がリングより約40px右にあるときに虹極上になっていた。
+const NOTE_SIZE = 120;
+const HIT_CENTER_X = 85;
+const HIT_X = HIT_CENTER_X - NOTE_SIZE / 2;
 const laneY = [63, 190, 316];
 const noteImages = ["note_bowl.png", "note_oroshi.png", "note_kanji.png"];
 const sobaTrivia = [
@@ -1606,7 +1611,7 @@ function loop(timestamp){
         const img = noteLoadedImages[n.lane];
         if (img && img.complete) {
             // translate & scale 相当の描画
-            ctx.drawImage(img, n.x, laneY[n.lane] - 60, 120, 120);
+            ctx.drawImage(img, n.x, laneY[n.lane] - NOTE_SIZE / 2, NOTE_SIZE, NOTE_SIZE);
         }
     }
 
