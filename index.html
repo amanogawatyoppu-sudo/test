@@ -1108,12 +1108,29 @@ function closeHowTo() {
 try { if (!localStorage.getItem("sobamichi_howto_seen")) openHowTo(); } catch (e) {}
 
 // ===== 名前のチェック（番付に出るので、不適切な名前は弾く） =====
-const NG_WORDS = ["fuck", "fuk", "shit", "bitch", "asshole", "dick", "cock", "pussy", "cunt", "nigg", "fag", "slut", "whore",
-    "rape", "nazi", "hitler", "porn", "penis", "vagina", "retard", "kys", "boob", "sex", "damn", "bastard", "kill",
-    "死ね", "ちんこ", "まんこ", "殺す"];
-function isBadName(name) {
-    const n = name.toLowerCase().replace(/[\s._\-]/g, "")
+// 判定前に「全角→半角」「カタカナ→ひらがな」「大文字→小文字」「空白・記号を除去」「数字の当て字を戻す」でそろえる。
+// そのため日本語はひらがなで登録しておけば、カタカナ・半角カナ（例：シネ / ｼﾈ）でも引っかかる。
+// 誤判定を減らすため、普通の名前に含まれやすい短い語（例：「しな」「ばか」）は入れていない。
+const NG_WORDS = [
+    // 英語
+    "fuck", "fuk", "shit", "bitch", "asshole", "dick", "pussy", "cunt", "nigg", "fag", "slut", "whore",
+    "rape", "nazi", "hitler", "porn", "penis", "vagina", "retard", "kys", "boob", "sex", "damn", "bastard",
+    // 日本語：暴言・脅し
+    "しね", "氏ね", "死ね", "ころす", "殺す", "ころせ", "殺せ", "きえろ", "消えろ", "くたばれ",
+    // 日本語：性的な語
+    "ちんこ", "ちんぽ", "ちんちん", "まんこ", "おまんこ", "せっくす", "えっち", "えろ", "おっぱい", "ぱいぱい",
+    "やりまん", "やりちん", "びっち", "れいぷ", "強姦", "痴漢", "ちかん", "ふぇら", "うんこ", "うんち", "くそ", "糞",
+    // 日本語：差別語・侮辱
+    "きちがい", "基地外", "気違い", "がいじ", "池沼", "ちしょう", "知障", "かたわ", "めくら", "つんぼ", "支那人", "しなじん", "部落", "ほも", "れず", "ぶす", "でぶ", "ごみくず", "ごみかす"
+];
+function normalizeName(name) {
+    return name.normalize("NFKC").toLowerCase()
+        .replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60)) // カタカナ→ひらがな
+        .replace(/[\s._\-・･\/|!！?？*＊~〜]/g, "")
         .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/@/g, "a").replace(/\$/g, "s");
+}
+function isBadName(name) {
+    const n = normalizeName(name);
     return NG_WORDS.some(w => n.includes(w));
 }
 
