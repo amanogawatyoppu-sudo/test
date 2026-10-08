@@ -41,14 +41,18 @@
  * 12) 不適切な名前（暴言・性的な語・差別語。英語と日本語）と長すぎる名前を、新規登録とスコア保存で弾く。
  *     ページ側でも同じチェックをしているが、直接サーバーに送られた場合に備えてこちらでも判定する。
  *     弾いたときは { status: "bad_name" } を返す。NGワードの一覧はファイル末尾（index.html と揃えること）。
+ *
+ * ▼v8での変更点（動作の軽量化）
+ * 13) 番付の読み込み（doGet）でスクリプトの鍵（LockService）をかけないようにした。
+ *     読み込みは何も書き換えないので鍵は不要。鍵をかけていたため、番付表示・ログイン・保存が
+ *     同時に来ると1件ずつ順番待ちになり、遅く感じる原因になっていた。書き込み（doPost）は従来どおり鍵をかける。
  */
 
 function doGet(e) {
   const mode = e.parameter.mode || "30";
-  const lock = LockService.getScriptLock();
 
   try {
-    lock.waitLock(5000);
+    // 読み込み専用なので鍵（LockService）はかけない（v8）
     const ss = SpreadsheetApp.getActiveSpreadsheet();
 
     // v6: 今日のそば打ち（デイリー）の番付
@@ -136,8 +140,6 @@ function doGet(e) {
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ error: err.message }))
       .setMimeType(ContentService.MimeType.JSON);
-  } finally {
-    lock.releaseLock();
   }
 }
 

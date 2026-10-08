@@ -1526,6 +1526,27 @@ async function confirmRankmaName() {
     nameInput.disabled = true; passInput.disabled = true;
     msg.className = ""; msg.innerText = "";
 
+    // マイページ：登録済みの人は「プロフィール取得」だけでログインと表示を済ませる（通信1回）。
+    // 未登録（no_user）のときだけ、下の新規登録へ進む。
+    if (nameModalPurpose === "mypage") {
+        try {
+            if (await ensureApi() >= 5) {
+                const r = await (await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "profile", name, pass }) })).json();
+                if (r.status === "ok") {
+                    setAccount(name, pass);
+                    profile = r.profile; playerStats = r.stats;
+                    closeNameModal(); resetNameModalControls();
+                    openMyPage(true);
+                    return;
+                }
+                if (r.status === "wrong_pass") {
+                    msg.className = ""; msg.innerText = T("パスワードが違う。", "Wrong password (or that nickname is already taken).");
+                    resetNameModalControls(); return;
+                }
+            }
+        } catch (e) { /* 通信失敗時は下の通常の流れで再挑戦 */ }
+    }
+
     let authed = false;
     try {
         // GASにパスワード認証リクエスト
@@ -1571,11 +1592,9 @@ async function confirmRankmaName() {
 
     if (nameModalPurpose !== "rankma") {
         const next = nameModalPurpose === "daily" ? openDaily : openMyPage;
-        setTimeout(() => {
-            closeNameModal();
-            resetNameModalControls();
-            next();
-        }, 700);
+        closeNameModal();
+        resetNameModalControls();
+        next();
         return;
     }
 
@@ -1595,7 +1614,7 @@ async function confirmRankmaName() {
         else startGame(parseInt(pendingRankmaMode));
 
         setTimeout(resetNameModalControls, 1000);
-    }, msg.innerText ? 1400 : 0);
+    }, msg.innerText ? 800 : 0); // 認証メッセージを一瞬読めるだけ待つ
 }
 
 // ===== 通常スタート =====
@@ -2285,11 +2304,8 @@ async function saveRankmaScore() {
             method: "POST",
             body: JSON.stringify({ name: rankmaName, score, mode: currentMode, rankma: true, perfectCount, uuid: PLAYER_UUID })
         });
-        // サーバー側の反映を待つために少し待機
-        btn.innerText = T("反映待ち...", "Updating...");
-        setTimeout(() => {
-            showRanking();
-        }, 1500);
+        // サーバーは書き込みが終わってから応答するので、待たずに番付へ
+        showRanking();
     } catch(e){
         console.error(e);
         alert(T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again."));
@@ -2422,9 +2438,15 @@ function activeCharacter() {
 // スコア保存の処理に流れて番付に空の行が書き込まれてしまうため、必ずこれを確認してから送る。
 async function ensureApi() {
     if (serverApi) return serverApi;
+    // 一度対応を確認できたら端末に覚えておき、次からは確認のための通信（番付全体の読み込み）を省く
+    try {
+        const cached = Number(localStorage.getItem("sobamichi_api")) || 0;
+        if (cached >= 6) { serverApi = cached; return serverApi; }
+    } catch (e) {}
     const res = await fetch(`${GAS_URL}?mode=30&t=${Date.now()}`);
     const data = await res.json();
     serverApi = Number(data.apiVersion) || 0;
+    try { if (serverApi >= 6) localStorage.setItem("sobamichi_api", String(serverApi)); } catch (e) {}
     return serverApi;
 }
 
@@ -2443,9 +2465,14 @@ async function playerAction(action, extra = {}) {
     return data;
 }
 
-async function openMyPage() {
+async function openMyPage(alreadyLoaded) {
     if (!account) { openLoginModal("mypage"); return; }
     switchScreen("mypage");
+    if (alreadyLoaded === true && profile) {
+        document.getElementById("mpStatus").textContent = "";
+        renderMyPage();
+        return;
+    }
     const status = document.getElementById("mpStatus");
     status.textContent = T("読込中...", "Loading...");
     renderMyPage();
