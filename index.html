@@ -278,7 +278,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .red{top:63px;} .blue{top:190px;} .green{top:316px;}
 #ui { position:absolute; left:20px; top:10px; z-index: 80; text-shadow: 2px 2px 4px black; }
 .info-text { font-size:24px; color:gold; font-family: 'Zen Old Mincho'; margin-right: 20px;}
-#judge { position:absolute; left:85px; top:50%; transform:translate(-50%, -50%); font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap; }
+#judge { position:absolute; left:250px; top:50%; transform:translate(-50%, -50%); font-size:60px; opacity:0; pointer-events: none; font-family: 'Zen Old Mincho'; z-index: 90; white-space: nowrap; }
 .showJudge { animation: judgeAnim 0.3s ease-out forwards; }
 
 /* ===== 虹極上（KAMI-PERFECT）演出 ===== */
@@ -303,17 +303,29 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 #gaugeWrapper { width: 100%; height: 30px; background: #222; border: 2px solid #aaa; border-radius: 15px; overflow: hidden; position: relative; }
 #gaugeFill { width: 0%; height: 100%; background: linear-gradient(to right, #ffcc00, #ff6600); }
 #gaugeText { position: absolute; width: 100%; text-align: center; top: 50%; transform: translateY(-50%); font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; }
-.fever { animation: feverGlow 0.3s infinite alternate; }
-@keyframes feverGlow { 0% { opacity: 1; } 100% { opacity: 0.7; } } /* box-shadowは重いためopacityに変更 */
-#workerArea { font-size: 110px; height: 160px; display: flex; align-items: center; justify-content: center; }
-.kone { animation: koneAnim 0.6s infinite ease-in-out; }
-.nobashi { animation: nobashiAnim 0.4s infinite linear; }
-.kiri { animation: kiriAnim 0.1s infinite alternate; }
-.goku { animation: gokuAnim 0.05s infinite; } /* モバイル負荷軽減のためfilter削除 */
-@keyframes koneAnim { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-@keyframes nobashiAnim { 0% { transform: translateX(-40px); } 100% { transform: translateX(40px); } }
-@keyframes kiriAnim { 0% { transform: translateY(-15px); } 100% { transform: translateY(15px); } }
-@keyframes gokuAnim { 0% { transform: scale(1.3) rotate(-3deg); } 100% { transform: scale(1.3) rotate(3deg); } }
+/* フィーバー中のゲージ：金色がきらめきながら流れる */
+#gaugeWrapper.fever { border-color: #ffd700; }
+#gaugeWrapper.fever #gaugeText { color: #3a2400; text-shadow: 0 0 4px rgba(255,255,255,0.8); }
+#gaugeWrapper.fever #gaugeFill { background: linear-gradient(90deg, #ffb300, #fff2a8, #ff8a00, #fff2a8, #ffb300); background-size: 200% 100%; animation: feverShine 0.9s linear infinite; }
+@keyframes feverShine { 0% { background-position: 0% 0; } 100% { background-position: -200% 0; } }
+/* フィーバー中のゲーム枠 */
+#gameInternal.feverOn { border-color: #ffd700; box-shadow: 0 0 28px rgba(255,200,0,0.55); }
+
+/* ゲージ下の職人（PCのみ）。連打の段階で動きが変わる：こね→のし→切り→極 */
+#workerArea { height: 160px; display: flex; align-items: center; justify-content: center; }
+#workerEmoji { position: relative; height: 150px; width: 150px; display: flex; align-items: center; justify-content: center; transform-origin: 50% 90%; }
+#workerImg { height: 150px; width: 150px; object-fit: contain; pointer-events: none; }
+#workerStage { position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%); font-family: 'Zen Old Mincho'; font-size: 18px; color: #fff; background: rgba(0,0,0,0.65); border: 1px solid #b8923a; border-radius: 10px; padding: 0 10px; white-space: nowrap; }
+.kone { animation: koneAnim 0.8s infinite ease-in-out; }
+.nobashi { animation: nobashiAnim 0.5s infinite ease-in-out alternate; }
+.kiri { animation: kiriAnim 0.14s infinite ease-in-out alternate; }
+.goku { animation: gokuAnim 0.35s infinite ease-in-out alternate; }
+.goku #workerImg { filter: drop-shadow(0 0 10px #ffd700) drop-shadow(0 0 20px rgba(255,160,0,0.8)); }
+.goku #workerStage { color: #1a1206; background: linear-gradient(#fff6c0, #ffc400); border-color: #fff; }
+@keyframes koneAnim { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.06, 0.94); } }
+@keyframes nobashiAnim { 0% { transform: translateX(-18px) rotate(-5deg); } 100% { transform: translateX(18px) rotate(5deg); } }
+@keyframes kiriAnim { 0% { transform: translateY(-8px) rotate(-2deg); } 100% { transform: translateY(6px) rotate(2deg); } }
+@keyframes gokuAnim { 0% { transform: scale(1.12) rotate(-4deg); } 100% { transform: scale(1.18) rotate(4deg); } }
 #result, #ranking { display:none; text-align:center; padding-top:20px; background: rgba(0,0,0,0.98); overflow-y: auto;}
 #rankDisplay { font-size: 52px; color: gold; margin: 10px 0; font-family: 'Zen Old Mincho'; text-shadow: 0 0 30px rgba(255,215,0,1); }
 #triviaArea { width: 80%; max-width: 600px; margin: 20px auto; padding: 20px; border: 2px solid gold; border-radius: 10px; background: rgba(255, 255, 255, 0.05); font-size: 18px; line-height: 1.6; color: #fff; text-align: left; }
@@ -663,7 +675,9 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   .hit { width: 110px; height: 110px; font-size: 32px; }
   #bottomArea { width: 100vw; justify-content:center; gap:2px; }
   #gaugeRow { width: 90%; }
-  #workerArea { font-size: 70px; height: 90px; }
+  #workerArea { height: 100px; }
+  #workerEmoji, #workerImg { height: 92px; width: 92px; }
+  #workerStage { font-size: 13px; }
   .info-text { font-size: 16px; margin-right: 10px; }
   #judge { font-size: 44px; }
   #rankDisplay { font-size: 36px; }
@@ -707,7 +721,8 @@ body.mobileLayout #bottomArea { gap: 4px; justify-content: flex-start; }
 body.mobileLayout #hitBtns { display: flex; }
 body.mobileLayout #gaugeRow, body.mobileLayout #hitBtns { width: 100%; }
 body.mobileLayout #gaugeWrapper { height: 16px; border-width: 1px; }
-body.mobileLayout #gaugeWrapper.fever { animation: none; }
+body.mobileLayout #gaugeWrapper.fever #gaugeFill { animation: none; }
+body.mobileLayout #gameInternal.feverOn { box-shadow: none; }
 body.mobileLayout #gaugeText { font-size: 11px; }
 body.mobileLayout #workerArea { display: none; }
 
@@ -904,7 +919,7 @@ body.mobileLayout #workerArea { display: none; }
 <div id="bottomArea">
     <div id="gaugeRow">
         <div id="gaugeWrapper"><div id="gaugeFill"></div><div data-en="Boil Gauge" id="gaugeText">茹で上がりゲージ</div></div>
-        <div id="workerArea"><div id="workerEmoji">🥣</div></div>
+        <div id="workerArea"><div id="workerEmoji" class="kone"><img id="workerImg" src="chars/minarai.webp" alt=""><div id="workerStage"></div></div></div>
     </div>
     <!-- A/S/Lボタン（ゲージの下）。スマホ・タブレットのときだけ表示（body.mobileLayout）。 -->
     <div id="hitBtns">
@@ -1631,11 +1646,14 @@ function startWithCountdown(afterCallback) {
     notePool.forEach(n => n.active = false);
     // 前回プレイの表示が残らないようにリセット（ランクマはリロードせずに連戦するため）
     document.getElementById("gaugeWrapper").classList.remove("fever");
+    document.getElementById("gameInternal").classList.remove("feverOn");
+    fxList.length = 0;
     document.getElementById("timeDisplay").style.display = "none";
     document.getElementById("pauseBtn").innerText = "⏸";
     switchScreen("game");
     document.getElementById("bottomArea").style.display="flex";
     // 連れて行くキャラの能力（修行モードのみ。ランクマは公平のため無効）
+    setupWorker();
     const ch = activeCharacter();
     buff = { ...BASE_BUFF, ...(ch ? ch.buff : {}) };
     shieldLeft = buff.shield;
@@ -1732,6 +1750,9 @@ function loop(timestamp){
         }
     }
 
+    const nowMs = performance.now();
+    drawFeverBackdrop(nowMs);
+
     // ノーツ移動 & 描画
     for (let ni = 0; ni < notePool.length; ni++) {
         const n = notePool[ni];
@@ -1740,6 +1761,7 @@ function loop(timestamp){
         
         if (n.x < -150) {
             n.active = false;
+            spawnHitEffect(n.lane, "MISS");
             missEffect();
             if (!running) { return; } // missEffect内で復活クイズ or 終了処理済み
             continue;
@@ -1752,6 +1774,7 @@ function loop(timestamp){
         }
     }
 
+    drawEffects(deltaTime || 1, nowMs);
     updateUI();
     requestAnimationFrame(loop);
 }
@@ -1760,23 +1783,135 @@ let _uiFrame = 0;
 function updateUI() {
     _uiFrame++;
     const worker = document.getElementById("workerEmoji");
-    let state="kone", emoji="🥣";
+    let state="kone";
     if(fever){
-        state="goku"; emoji=combo>50?"🍜💨":"🥢😋";
-        gauge-=buff.feverDrain; if(gauge<=0){ gauge=0; fever=false; document.getElementById("gaugeWrapper").classList.remove("fever"); }
+        state="goku";
+        gauge-=buff.feverDrain; if(gauge<=0){ gauge=0; endFever(); }
     } else {
-        if(combo>50) state="kiri", emoji="🔪"; else if(combo>20) state="nobashi", emoji="🥢";
+        if(combo>50) state="kiri"; else if(combo>20) state="nobashi";
         if(gauge>0) gauge-=0.1;
     }
     // モバイルでのDOM更新頻度をさらに下げる
     // UI更新（パフォーマンスを維持しつつPC版に近い頻度へ）
     if (_uiFrame % 2 === 0) {
-        if (worker.innerText !== emoji) worker.innerText = emoji;
-        if (worker.className !== state) worker.className = state;
+        if (worker.className !== state) {
+            worker.className = state;
+            document.getElementById("workerStage").textContent = WORKER_STAGE[state]();
+        }
         document.getElementById("gaugeFill").style.width = gauge+"%";
         document.getElementById("score").textContent = score;
         document.getElementById("combo").textContent = combo;
     }
+}
+
+// ===== 叩いたときのエフェクト・フィーバー演出 =====
+// どちらもゲーム画面のキャンバスに直接描く（DOMを増やさないので軽い）。スマホは粒の数を半分にする。
+const fxList = [];
+const FX_MAX = 260;
+const FX_COLORS = { PERFECT: "#ffd34d", GREAT: "#4db8ff", MISS: "#ff4d4d" };
+
+function fxScale() { return isMobile() ? 0.5 : 1; }
+
+// 判定リングの位置に、光の輪と粒を出す
+function spawnHitEffect(lane, res) {
+    const x = HIT_CENTER_X, y = laneY[lane];
+    const kami = res === "KAMI";
+    const miss = res === "MISS";
+    const baseColor = FX_COLORS[res];
+    // 光の輪（虹極上は二重）
+    fxList.push({ kind: "ring", x, y, r: 40, grow: miss ? 2.2 : 4.5, life: 1, decay: miss ? 0.08 : 0.06, color: baseColor, rainbow: kami, width: kami ? 8 : 5 });
+    if (kami) fxList.push({ kind: "ring", x, y, r: 20, grow: 6.5, life: 1, decay: 0.045, color: "#ffffff", rainbow: true, width: 4 });
+    // 粒
+    const n = Math.round((kami ? 26 : res === "PERFECT" ? 16 : res === "GREAT" ? 9 : 7) * fxScale());
+    for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = (miss ? 2 : 3.5) + Math.random() * (kami ? 6 : 4);
+        fxList.push({
+            kind: "spark", x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1,
+            decay: 0.03 + Math.random() * 0.025, size: kami ? 5 + Math.random() * 4 : 3 + Math.random() * 3,
+            color: baseColor, hue: Math.random() * 360, rainbow: kami
+        });
+    }
+    if (fxList.length > FX_MAX) fxList.splice(0, fxList.length - FX_MAX);
+}
+
+// フィーバー中：金の粒がレーンの下から立ちのぼる
+function spawnFeverSpark() {
+    fxList.push({
+        kind: "rise", x: 140 + Math.random() * 940, y: 380 + 10, vx: (Math.random() - 0.5) * 0.6, vy: -(2 + Math.random() * 2.5),
+        life: 1, decay: 0.012 + Math.random() * 0.01, size: 2 + Math.random() * 3, color: "#ffe27a"
+    });
+}
+
+// レーンの上（ノーツより下）に描く：フィーバーの金色の脈動
+function drawFeverBackdrop(now) {
+    if (!fever) return;
+    const pulse = 0.10 + 0.07 * Math.sin(now / 110);
+    ctx.fillStyle = `rgba(255, 196, 40, ${pulse})`;
+    ctx.fillRect(0, 0, 1100, 380);
+    // 判定ライン付近を少し明るく
+    const g = ctx.createLinearGradient(0, 0, 260, 0);
+    g.addColorStop(0, "rgba(255,230,120,0.28)");
+    g.addColorStop(1, "rgba(255,230,120,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 260, 380);
+}
+
+// ノーツの上に描く：輪・粒
+function drawEffects(dt, now) {
+    if (fever && Math.random() < 0.5 * fxScale() * dt) spawnFeverSpark();
+    if (fxList.length === 0) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = fxList.length - 1; i >= 0; i--) {
+        const f = fxList[i];
+        f.life -= f.decay * dt;
+        if (f.life <= 0) { fxList.splice(i, 1); continue; }
+        ctx.globalAlpha = Math.max(0, f.life);
+        if (f.kind === "ring") {
+            f.r += f.grow * dt;
+            ctx.lineWidth = f.width * f.life + 1;
+            ctx.strokeStyle = f.rainbow ? `hsl(${(now / 3 + f.r * 2) % 360}, 100%, 65%)` : f.color;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.stroke();
+        } else {
+            f.x += f.vx * dt; f.y += f.vy * dt;
+            if (f.kind === "spark") { f.vx *= 0.96; f.vy *= 0.96; }
+            ctx.fillStyle = f.rainbow ? `hsl(${(f.hue + now / 4) % 360}, 100%, 65%)` : f.color;
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.size * (0.5 + f.life * 0.5), 0, Math.PI * 2); ctx.fill();
+        }
+    }
+    ctx.restore();
+}
+
+// フィーバー開始・終了
+function startFever() {
+    fever = true;
+    document.getElementById("gaugeWrapper").classList.add("fever");
+    document.getElementById("gameInternal").classList.add("feverOn");
+    showFlash(T("フィーバー！", "FEVER!"), T("得点2倍", "Score x2"), "#ffd700", "rgba(255,200,0,0.25)");
+}
+function endFever() {
+    fever = false;
+    document.getElementById("gaugeWrapper").classList.remove("fever");
+    document.getElementById("gameInternal").classList.remove("feverOn");
+}
+
+// ===== ゲージ下の職人（PCのみ表示） =====
+// 連れて行く職人のイラストを出し、連打に応じて「こね→のし→切り→極（フィーバー）」と動きが変わる
+const WORKER_STAGE = {
+    kone: () => T("こね", "Kneading"),
+    nobashi: () => T("のし", "Rolling"),
+    kiri: () => T("切り", "Cutting"),
+    goku: () => T("極", "KIWAMI!"),
+};
+function setupWorker() {
+    const sel = profile && profile.selected && CHARACTERS[profile.selected];
+    const c = sel && sel.img ? sel : CHARACTERS.minarai; // 連れて行く職人がいなければ見習い小僧
+    const img = document.getElementById("workerImg");
+    if (img.getAttribute("src") !== c.img) img.src = c.img;
+    img.alt = charName(c);
+    // 段階を未設定に戻し、最初のフレームで「こね」の表示に切り替わるようにする
+    document.getElementById("workerEmoji").className = "";
 }
 
 function hit(l){
@@ -1789,6 +1924,7 @@ function hit(l){
     
     // 【空打ちペナルティ】ノーツがないのに叩いた場合、ミス扱いにする
     if(!t) {
+        spawnHitEffect(l, "MISS");
         missEffect(); // 判定表示もmissEffect内で行う
         return;
     }
@@ -1800,16 +1936,17 @@ function hit(l){
         res="KAMI"; playSE('kami');
         kamiCount++; perfectCount++;
         score += Math.round((700 + combo*15) * (fever?2:1) * buff.scoreMul);
-        if(!fever){ gauge+=15*buff.gaugeMul; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+        if(!fever){ gauge+=15*buff.gaugeMul; if(gauge>=100){ startFever(); } }
     } else if(diff < buff.perfectWin){
         res="PERFECT"; playSE('perfect');
         perfectCount++;
         score += Math.round((500 + combo*10) * (fever?2:1) * buff.scoreMul);
-        if(!fever){ gauge+=10*buff.gaugeMul; if(gauge>=100){ fever=true; document.getElementById("gaugeWrapper").classList.add("fever"); } }
+        if(!fever){ gauge+=10*buff.gaugeMul; if(gauge>=100){ startFever(); } }
     } else {
         res="GREAT"; playSE('great'); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
-    showJudge(res); 
+    showJudge(res);
+    spawnHitEffect(l, res);
     t.active = false; // プールに戻す
 }
 
@@ -1823,22 +1960,24 @@ const comboMilestones = [
 let flashTimer = null;
 function checkComboMilestone(c) {
   const m = comboMilestones.find(m => m.n === c);
-  if (!m) return;
+  if (m) showFlash(m.text, m.sub, m.color, m.bg);
+}
+function showFlash(text, subText, color, bgColor) {
   const el = document.getElementById("comboFlash");
   const bg = document.getElementById("comboFlashBg");
   const txt = document.getElementById("comboFlashText");
   const sub = document.getElementById("comboFlashSub");
   if (flashTimer) clearTimeout(flashTimer);
   el.style.display = "flex";
-  bg.style.background = m.bg;
+  bg.style.background = bgColor;
   bg.style.animation = "none"; void bg.offsetWidth;
   bg.style.animation = "flashBg 1.0s ease-out forwards";
-  txt.style.color = m.color;
+  txt.style.color = color;
   txt.style.animation = "none"; void txt.offsetWidth;
   txt.style.animation = "flashText 1.0s ease-out forwards";
-  txt.innerText = m.text;
-  sub.style.color = m.color;
-  sub.innerText = m.sub;
+  txt.innerText = text;
+  sub.style.color = color;
+  sub.innerText = subText;
   flashTimer = setTimeout(() => { el.style.display = "none"; }, 1000);
 }
 
