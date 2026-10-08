@@ -36,6 +36,11 @@
  *     doGet に ?daily=1 を付けると今日の番付を返す（&name= を付けると自分の記録も返す）。
  * 11) action = daily_submit で今日の記録を保存。1人1日1回目だけが残る。
  *     日付はサーバー側の日本時間で決める（端末の時計をずらしても別の日にはできない）。
+ *
+ * ▼v7での追加点（名前のチェック）
+ * 12) 不適切な名前（暴言・性的な語・差別語。英語と日本語）と長すぎる名前を、新規登録とスコア保存で弾く。
+ *     ページ側でも同じチェックをしているが、直接サーバーに送られた場合に備えてこちらでも判定する。
+ *     弾いたときは { status: "bad_name" } を返す。NGワードの一覧はファイル末尾（index.html と揃えること）。
  */
 
 function doGet(e) {
@@ -157,6 +162,11 @@ function doPost(e) {
     // --- 未知のaction：スコア保存に流さない（名前・スコアの無い行が番付に書き込まれるのを防ぐ）---
     if (postData.action) {
       return jsonOut({ status: "error", message: "unknown action: " + postData.action });
+    }
+
+    // --- v7: 不適切な名前・長すぎる名前ではスコアを保存しない ---
+    if (!isAllowedName(String(postData.name || "").trim())) {
+      return jsonOut({ status: "bad_name" });
     }
 
     // --- スコア保存 ---
@@ -327,6 +337,11 @@ function handleAuth(postData, ss) {
       return ContentService.createTextOutput(JSON.stringify({ status: "ok", score, perfect }))
         .setMimeType(ContentService.MimeType.JSON);
     }
+  }
+
+  // v7: 不適切な名前・長すぎる名前では新規登録させない
+  if (!isAllowedName(name)) {
+    return jsonOut({ status: "bad_name" });
   }
 
   // 新規登録：ヘッダーの並び順に合わせて正しい列に値を入れる
@@ -771,4 +786,37 @@ function submitDaily(ss, name, score) {
   }
   const rank = all.filter(d => d.score > myScore).length + 1;
   return { status: "ok", recorded: recorded, date: date, score: myScore, rank: rank, total: all.length };
+}
+
+// =====================================================================
+// v7: 名前のチェック（index.html の isBadName と同じ判定）
+// =====================================================================
+
+const NAME_MAX_LENGTH = 12; // 画面の入力欄は8文字まで。直接送られた長すぎる名前を弾く
+
+// 判定前に「全角→半角」「カタカナ→ひらがな」「大文字→小文字」「空白・記号を除去」「数字の当て字を戻す」でそろえる
+const NG_WORDS = [
+    // 英語
+    "fuck", "fuk", "shit", "bitch", "asshole", "dick", "pussy", "cunt", "nigg", "fag", "slut", "whore",
+    "rape", "nazi", "hitler", "porn", "penis", "vagina", "retard", "kys", "boob", "sex", "damn", "bastard",
+    // 日本語：暴言・脅し
+    "しね", "氏ね", "死ね", "ころす", "殺す", "ころせ", "殺せ", "きえろ", "消えろ", "くたばれ",
+    // 日本語：性的な語
+    "ちんこ", "ちんぽ", "ちんちん", "まんこ", "おまんこ", "せっくす", "えっち", "えろ", "おっぱい", "ぱいぱい",
+    "やりまん", "やりちん", "びっち", "れいぷ", "強姦", "痴漢", "ちかん", "ふぇら", "うんこ", "うんち", "くそ", "糞",
+    // 日本語：差別語・侮辱
+    "きちがい", "基地外", "気違い", "がいじ", "池沼", "ちしょう", "知障", "かたわ", "めくら", "つんぼ", "支那人", "しなじん", "部落", "ほも", "れず", "ぶす", "でぶ", "ごみくず", "ごみかす"
+];
+
+function normalizeName(name) {
+  return String(name).normalize("NFKC").toLowerCase()
+    .replace(/[\u30a1-\u30f6]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0x60))
+    .replace(/[\s._\-・･\/|!！?？*＊~〜]/g, "")
+    .replace(/0/g, "o").replace(/1/g, "i").replace(/3/g, "e").replace(/4/g, "a").replace(/5/g, "s").replace(/@/g, "a").replace(/\$/g, "s");
+}
+
+function isAllowedName(name) {
+  if (!name || name === "名無し" || name.length > NAME_MAX_LENGTH) return false;
+  const n = normalizeName(name);
+  return !NG_WORDS.some(w => n.indexOf(w) >= 0);
 }

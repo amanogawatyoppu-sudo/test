@@ -1530,6 +1530,9 @@ async function confirmRankmaName() {
             msg.innerText = result.score > 0
                 ? T(`認証成功。現在のスコア: ${result.score}点 / 累計極上: ${result.perfect}回`, `Welcome back! Best this month: ${result.score} pts / Total PERFECTs: ${result.perfect}`)
                 : T("認証成功。いざ参戦せよ。", "Welcome! Let's go.");
+        } else if (result.status === "bad_name") {
+            msg.className = ""; msg.innerText = T("その名は名乗れぬ。", "Please choose a different nickname.");
+            resetNameModalControls(); return;
         } else if (result.status === "wrong_pass") {
             msg.className = ""; msg.innerText = T("パスワードが違う。", "Wrong password (or that nickname is already taken).");
             resetNameModalControls(); return;
@@ -2119,7 +2122,13 @@ async function saveRank() {
     const btn = document.querySelector("#normalSaveArea button");
     btn.disabled=true; btn.innerText=T("刻み中...", "Saving...");
     try {
-        await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name, score, mode:currentMode}) });
+        const res = await fetch(GAS_URL, { method:"POST", body:JSON.stringify({name, score, mode:currentMode}) });
+        const result = await res.json().catch(() => ({}));
+        if (result.status === "bad_name") {
+            alert(T("その名は名乗れぬ。唯一無二の名を刻め！", "Please choose a different nickname."));
+            btn.disabled=false; btn.innerText=T("歴代番付に刻む", "Save to leaderboard");
+            return;
+        }
         showRanking();
     } catch(e){
         console.error(e);
