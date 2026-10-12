@@ -24,7 +24,7 @@ html {
 body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; overscroll-behavior:none; }
 
 /* ===== タイトル画面 ===== */
-#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage, #daily { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
+#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
 #titleScreen { display:flex; flex-direction:column; justify-content:flex-start; align-items:center; z-index: 100; background: rgba(0,0,0,0.8); overflow-y: auto; padding: 10px 0; box-sizing: border-box; }
 /* 画面に収まらないときにボタンが押しつぶされないよう縮ませず、はみ出た分はスクロールさせる。
    余裕があるときは上下のautoマージンで中央に寄せる（justify-content:centerだと上側がスクロールで見えなくなる） */
@@ -36,7 +36,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .modeRow .menuBtn { flex: 1 1 0; min-width: 0; max-width: 240px; width: auto !important; margin: 0 !important; }
 #titleScreen > :first-child { margin-top: auto; }
 #titleScreen > :last-child { margin-bottom: auto; }
-#rankmaLobby, #game, #result, #ranking, #mypage, #daily { display: none; z-index: 100; }
+#rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm { display: none; z-index: 100; }
 #title{ font-size:52px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); margin: 0 0 2px; }
 .menuBtn{ width:240px;padding:10px;margin:5px; font-size:20px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
 
@@ -590,6 +590,24 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .mobileHitBtn.active .btnKey { color: #1a1206; text-shadow: none; }
 
 /* ===== マイページ・キャラ・ガチャ ===== */
+/* リズムモード：難易度カード */
+.rhCards { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:12px auto; max-width:900px; }
+.rhCard { background:#1a1408; border:2px solid #8a6d2a; border-radius:12px; padding:12px 14px; width:min(400px, 92vw); box-sizing:border-box; text-align:left; }
+.rhCard.locked { opacity:0.55; border-color:#444; }
+.rhName { font-family:'Zen Old Mincho'; font-size:24px; color:#ffe9a8; }
+.rhStars { font-size:16px; color:gold; letter-spacing:2px; margin-left:6px; }
+.rhBest { font-size:14px; color:#ddd; margin:6px 0 4px; min-height:20px; }
+.rhMedals { min-height:24px; margin-bottom:6px; }
+.rhMedal { display:inline-block; font-size:12px; font-weight:bold; padding:2px 8px; border-radius:10px; margin-right:6px; }
+.rhMedal.fc { background:#2a6cff; color:white; }
+.rhMedal.ap { background:linear-gradient(90deg,#ff5f6d,#ffc371,#7cff7c,#5fc3ff,#c77dff); color:#111; }
+.rhCard .menuBtn { width:auto; padding:8px 22px; font-size:16px; margin:0 6px 0 0; }
+.rhCard .menuBtn:disabled { opacity:0.5; cursor:not-allowed; }
+.rhGrade { font-family:'Zen Old Mincho'; font-size:18px; }
+.rhGrade.gS { color:#ffd34d; } .rhGrade.gA { color:#ff88ff; } .rhGrade.gB { color:#4db8ff; } .rhGrade.gC { color:#aaa; }
+#rhythmResult { margin:4px 0 6px; }
+#rhythmResult .bigGrade { font-family:'Zen Old Mincho'; font-size:64px; line-height:1; font-weight:bold; }
+#rhythm { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
 #mypage, #daily { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
 #mypage h1 { font-family: 'Zen Old Mincho'; color: gold; margin: 4px 0; font-size: 32px; }
 #mpName { color: #ddd; font-size: 18px; margin-bottom: 4px; }
@@ -871,7 +889,9 @@ body.mobileLayout #workerArea { display: none; }
  <div data-en="Endless Soba Way ~ The Road to Echizen Kiwami ~" style="color:white; margin-bottom:8px; font-size:14px;">～ 絶・越前極への道 ～</div>
 
  <!-- 通常修行 -->
- <div data-en="── Practice ──" style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 修行モード ──</div>
+ <button data-en="🎵 Rhythm Mode (with music)" class="menuBtn wideBtn" style="background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 リズムモード（BGMあり）</button>
+ <div data-en="A full song · 4 difficulty levels · grades &amp; medals" style="color:#ffb84d; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:6px; letter-spacing:1px;">1曲まるごと・4段階の難易度・評価と勲章</div>
+ <div data-en="── Reflex Mode (no music) ──" style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 反射モード（BGMなし）──</div>
  <div class="modeRow">
    <button data-en="30 sec" class="menuBtn" onclick="startNormal(30)">30秒修行</button>
    <button data-en="60 sec" class="menuBtn" onclick="startNormal(60)">60秒修行</button>
@@ -938,6 +958,7 @@ body.mobileLayout #workerArea { display: none; }
  <div id="finalScore" style="font-size:24px;"></div>
  <div id="accuracyDisplay" style="font-size:20px; color:#cccccc; margin:4px 0; font-family:'Zen Old Mincho';"></div>
  <div id="rankDisplay"></div>
+ <div id="rhythmResult" style="display:none;"></div>
  <div id="rankPositionDisplay"></div>
  <!-- 今日の一杯（結果カード）。そのまま画像としてシェアできる -->
  <canvas id="resultCard" width="1200" height="630" style="width:min(92vw, 600px); height:auto; border-radius:10px; display:block; margin:6px auto 8px;"></canvas>
@@ -964,8 +985,21 @@ body.mobileLayout #workerArea { display: none; }
     </div>
  </div>
  <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
+ <button data-en="🎵 Choose difficulty" class="menuBtn" id="rhythmBackBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 難易度選択へ</button>
  <button data-en="Title" class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
  <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+</div>
+
+<!-- ===== リズムモード（難易度選択） ===== -->
+<div id="rhythm">
+ <div class="mp-wrap">
+  <h1 data-en="🎵 Rhythm Mode">🎵 リズムモード</h1>
+  <div id="rhythmSong" style="color:#ddd; font-size:15px;"></div>
+  <div data-en="Play one whole song. The chart is the same every time, so you can learn it and improve. Character abilities are off." class="mp-note" style="margin-bottom:6px;">1曲まるごと叩き切る。譜面は毎回同じなので、覚えるほど上手くなる。職人の能力はなし。</div>
+  <div id="rhythmStatus" style="color:#ff8844; min-height:20px; font-size:14px;"></div>
+  <div id="rhythmCards" class="rhCards"></div>
+  <button data-en="Title" class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button>
+ </div>
 </div>
 
 <!-- ===== 今日のそば打ち（デイリー） ===== -->
@@ -1060,7 +1094,7 @@ body.mobileLayout #workerArea { display: none; }
    </div>
  </div>
  <br>
- <button data-en="Back" class="menuBtn" onclick="isRankmaMode ? openRankmaLobby() : location.reload()">戻る</button>
+ <button data-en="Back" class="menuBtn" onclick="isRankmaMode ? openRankmaLobby() : String(currentMode).startsWith('rhythm_') ? openRhythm() : location.reload()">戻る</button>
 </div>
 
 <script>
@@ -1175,9 +1209,166 @@ function escapeHtml(v) {
     return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+// ===== リズムモード（BGMあり・1曲まるごと・決まった譜面） =====
+// 曲（TRACK）に合わせた固定譜面を難易度ごとに作る。毎回同じ譜面なので、覚えて上達できる。
+// 譜面は曲の盛り上がり（小節ごとの音量）を反映し、静かな所は少なく、サビは多くなる。
+// 評価 S/A/B/C、勲章（フルコンボ・全虹）、難易度ごとの自己ベストを端末に記録。「極」は上級でA以上を取ると解放。
+const RHYTHM_DIFFS = {
+    easy:   { key: "easy",   name: () => T("初級", "Easy"),   stars: 1, speed: 9,  pOn: 0.60, pOff: 0.00, chord: 0.00, quiet: 0.55, seed: 101 },
+    normal: { key: "normal", name: () => T("中級", "Normal"), stars: 2, speed: 11, pOn: 0.85, pOff: 0.25, chord: 0.03, quiet: 0.60, seed: 202 },
+    hard:   { key: "hard",   name: () => T("上級", "Hard"),   stars: 3, speed: 13, pOn: 0.95, pOff: 0.55, chord: 0.07, quiet: 0.70, seed: 303 },
+    kiwami: { key: "kiwami", name: () => T("極", "Kiwami"),   stars: 4, speed: 15, pOn: 1.00, pOff: 0.92, chord: 0.20, quiet: 0.85, seed: 404 },
+};
+const GRADE_ORDER = ["C", "B", "A", "S"];
+let isRhythm = false;
+let rhythmDiff = null;
+let rhythmEndT = 0;
+let rhythmTotal = 0;
+let greatCount = 0;     // 良打の数
+let pureMiss = 0;       // 見逃し・空振りなど本当のミスの数（フルコンボ判定用）
+let reflexSilent = false; // 反射モード（BGMなし）：曲を流さず効果音だけ
+let barEnergy = null;
+
+// 小節ごとの音量（0〜1、曲の中での順位）を求める
+function computeBarEnergy() {
+    if (!trackBuf) return null;
+    const d = trackBuf.getChannelData(0), sr = trackBuf.sampleRate;
+    const barLen = 60 / TRACK.bpm * 4;
+    const bars = Math.floor((trackBuf.duration - TRACK.offset) / barLen);
+    const rms = [];
+    for (let b = 0; b < bars; b++) {
+        const s = Math.floor((TRACK.offset + b * barLen) * sr), e = Math.min(d.length, Math.floor((TRACK.offset + (b + 1) * barLen) * sr));
+        let sum = 0, n = 0;
+        for (let i = s; i < e; i += 64) { sum += d[i] * d[i]; n++; }
+        rms.push(Math.sqrt(sum / Math.max(1, n)));
+    }
+    const sorted = rms.slice().sort((a, b) => a - b);
+    return rms.map(v => sorted.indexOf(v) / Math.max(1, sorted.length - 1));
+}
+
+function buildRhythmChart(diff) {
+    if (!barEnergy) barEnergy = computeBarEnergy();
+    const r = mulberry32(diff.seed);
+    const bars = barEnergy.length;
+    const notes = [];
+    let deg = 4;
+    for (let bar = 1; bar < bars - 1; bar++) {          // 最初の1小節は前奏、最後の1小節は余韻
+        const t0 = TRACK.offset + bar * BAR;
+        const scale = diff.quiet + (1 - diff.quiet) * barEnergy[bar]; // 静かな小節はノーツ少なめ
+        for (let k = 0; k < 8; k++) {
+            const onBeat = k % 2 === 0;
+            if (r() >= (onBeat ? diff.pOn : diff.pOff) * scale) continue;
+            const step = 1 + Math.floor(r() * 3);
+            deg += r() < 0.5 ? -step : step;
+            if (deg < 0) deg = step;
+            if (deg > 9) deg = 9 - step;
+            const lane = deg >= 7 ? 0 : deg >= 4 ? 1 : 2;
+            const t = t0 + k * EIGHTH;
+            notes.push({ t, lane });
+            // 同時押し：拍の頭でたまに2レーン同時
+            if (k % 4 === 0 && r() < diff.chord * scale) notes.push({ t, lane: (lane + 1 + Math.floor(r() * 2)) % 3 });
+        }
+    }
+    return notes;
+}
+
+function loadRhythmRecords() {
+    try { return JSON.parse(localStorage.getItem("sobamichi_rhythm") || "{}"); } catch (e) { return {}; }
+}
+function saveRhythmRecord(key, score, grade, fc, ap) {
+    const all = loadRhythmRecords();
+    const old = all[key] || { score: 0, grade: "", fc: false, ap: false };
+    const isNewBest = score > old.score;
+    all[key] = {
+        score: Math.max(old.score, score),
+        grade: GRADE_ORDER.indexOf(grade) > GRADE_ORDER.indexOf(old.grade) ? grade : old.grade,
+        fc: old.fc || fc,
+        ap: old.ap || ap,
+    };
+    try { localStorage.setItem("sobamichi_rhythm", JSON.stringify(all)); } catch (e) {}
+    return isNewBest;
+}
+function kiwamiUnlocked() {
+    const h = loadRhythmRecords().hard;
+    return !!h && (h.grade === "A" || h.grade === "S");
+}
+
+function openRhythm() {
+    switchScreen("rhythm");
+    if (!trackBuf) loadTrack(); // 前回の読み込みに失敗していたらもう一度
+    renderRhythmSelect();
+}
+function renderRhythmSelect() {
+    const box = document.getElementById("rhythmCards");
+    if (!box) return;
+    const rec = loadRhythmRecords();
+    document.getElementById("rhythmSong").textContent = `🎵 ${TRACK.title} / ${TRACK.composer}（${TRACK.site}）`;
+    const status = document.getElementById("rhythmStatus");
+    status.textContent = trackBuf ? "" : T("曲を読み込み中…（数秒かかることがあります）", "Loading the song... (may take a few seconds)");
+    box.innerHTML = Object.values(RHYTHM_DIFFS).map(d => {
+        const r = rec[d.key];
+        const locked = d.key === "kiwami" && !kiwamiUnlocked();
+        const stars = "★".repeat(d.stars) + "☆".repeat(4 - d.stars);
+        const best = r ? `${T("自己ベスト", "Best")} <b style="color:gold;">${r.score.toLocaleString()}</b>　${T("評価", "Grade")} <b class="rhGrade g${r.grade}">${r.grade || "-"}</b>` : T("まだ遊んでいない", "Not played yet");
+        const medals = r ? `${r.fc ? `<span class="rhMedal fc">${T("フルコンボ", "FULL COMBO")}</span>` : ""}${r.ap ? `<span class="rhMedal ap">${T("全虹", "ALL RAINBOW")}</span>` : ""}` : "";
+        return `<div class="rhCard${locked ? " locked" : ""}">
+            <div class="rhName">${d.name()} <span class="rhStars">${stars}</span></div>
+            <div class="rhBest">${locked ? T("🔒 上級で評価A以上を取ると解放", "🔒 Get grade A or better on Hard to unlock") : best}</div>
+            <div class="rhMedals">${locked ? "" : medals}</div>
+            <button class="menuBtn rhPlay" ${locked || !trackBuf ? "disabled" : ""} onclick="startRhythm('${d.key}')">${T("プレイ", "Play")}</button>
+            <button class="lobby-back-btn" onclick="openRankingMode('rhythm_${d.key}')">${T("番付", "Leaderboard")}</button>
+        </div>`;
+    }).join("");
+}
+
+function startRhythm(key) {
+    const d = RHYTHM_DIFFS[key];
+    if (!d || !trackBuf) return;
+    if (key === "kiwami" && !kiwamiUnlocked()) return;
+    isRankmaMode = false; isDaily = false; reflexSilent = false;
+    isRhythm = true; rhythmDiff = d;
+    isInfinite = false;
+    currentMode = "rhythm_" + key;
+    startWithCountdown(() => {
+        document.getElementById("timeDisplay").style.display = "inline";
+    });
+}
+
+// 結果：評価と勲章
+function rhythmResult() {
+    const total = Math.max(1, rhythmTotal);
+    const normalPerfect = perfectCount - kamiCount;
+    const rate = (kamiCount + normalPerfect * 0.8 + greatCount * 0.4) / total;
+    const grade = rate >= 0.95 ? "S" : rate >= 0.85 ? "A" : rate >= 0.70 ? "B" : "C";
+    const fc = pureMiss === 0 && (perfectCount + greatCount) >= rhythmTotal;
+    const ap = kamiCount >= rhythmTotal;
+    return { grade, fc, ap, rate };
+}
+
+function modeLabelOfRhythm(mode) {
+    const d = RHYTHM_DIFFS[mode.replace("rhythm_", "")];
+    return T(`リズム・${d ? d.name() : ""}`, `Rhythm ${d ? d.name() : ""}`);
+}
+
+// 結果画面：評価・勲章・自己ベスト
+function renderRhythmResult(rr) {
+    const box = document.getElementById("rhythmResult");
+    document.getElementById("rhythmBackBtn").style.display = rr ? "inline-block" : "none";
+    if (!rr) { box.style.display = "none"; box.innerHTML = ""; return; }
+    const isNew = saveRhythmRecord(rhythmDiff.key, score, rr.grade, rr.fc, rr.ap);
+    const medals = `${rr.fc ? `<span class="rhMedal fc">${T("フルコンボ", "FULL COMBO")}</span>` : ""}${rr.ap ? `<span class="rhMedal ap">${T("全虹", "ALL RAINBOW")}</span>` : ""}`;
+    const unlockMsg = rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
+        ? `<div style="color:#ff88ff; margin-top:4px;">${T("「極」が解放されている！", "Kiwami is unlocked!")}</div>` : "";
+    box.innerHTML = `<div style="color:#ffe9a8; font-size:16px;">${T("リズムモード", "Rhythm Mode")}・${rhythmDiff.name()}</div>
+        <div class="bigGrade rhGrade g${rr.grade}">${rr.grade}</div>
+        <div style="font-size:13px; color:#bbb;">${T("達成率", "Rate")} ${(rr.rate * 100).toFixed(1)}%　${T("ノーツ", "Notes")} ${rhythmTotal}　${T("良打", "GREAT")} ${greatCount}　${T("見逃し", "MISS")} ${pureMiss}</div>
+        <div style="margin-top:4px;">${medals}${isNew ? `<span style="color:gold; font-weight:bold;">★ ${T("自己ベスト更新！", "NEW BEST!")}</span>` : ""}</div>${unlockMsg}`;
+    box.style.display = "block";
+}
+
 // ===== 画面遷移管理 =====
 function switchScreen(screenId) {
-    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage", "daily"];
+    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage", "daily", "rhythm"];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -1614,6 +1805,7 @@ async function confirmRankmaName() {
 
         isRankmaMode = true;
         isDaily = false;
+        isRhythm = false; reflexSilent = false;
         if (pendingRankmaMode === "infinite") startInfinite();
         else startGame(parseInt(pendingRankmaMode));
 
@@ -1622,8 +1814,9 @@ async function confirmRankmaName() {
 }
 
 // ===== 通常スタート =====
-function startNormal(sec) { isRankmaMode = false; isDaily = false; startGame(sec); }
-function startNormalInfinite() { isRankmaMode = false; isDaily = false; startInfinite(); }
+// 反射モード（BGMなし）：曲は流さず、叩いた音だけ
+function startNormal(sec) { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startGame(sec); }
+function startNormalInfinite() { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startInfinite(); }
 
 // ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
@@ -1664,7 +1857,7 @@ function startWithCountdown(afterCallback) {
     isStarting = true;
 
     // まずゲームエリアを表示（ノーツはまだ動かさない）
-    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0;
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0; greatCount=0; pureMiss=0;
     quizUsedThisRun = false; isPaused = false; quizActive = false;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
@@ -1686,8 +1879,9 @@ function startWithCountdown(afterCallback) {
     if (ch) {
         charTag.innerHTML = `${charVisual(ch, "tagImg")} ${charName(ch)}`;
         charTag.style.display = "inline";
-    } else if ((isRankmaMode || isDaily) && profile && profile.selected) {
-        charTag.textContent = isDaily ? T("（デイリーは能力なし）", "(no abilities in Daily)") : T("（ランクマは能力なし）", "(no abilities in Ranked)");
+    } else if ((isRankmaMode || isDaily || isRhythm) && profile && profile.selected) {
+        charTag.textContent = isRhythm ? T("（リズムモードは能力なし）", "(no abilities in Rhythm)")
+            : isDaily ? T("（デイリーは能力なし）", "(no abilities in Daily)") : T("（ランクマは能力なし）", "(no abilities in Ranked)");
         charTag.style.display = "inline";
     } else {
         charTag.style.display = "none";
@@ -1778,13 +1972,16 @@ async function loadTrack() {
         trackBuf = buf;
         if (!localStorage.getItem("sobamichi_bgm_style")) bgmStyle = "track";
         updateBgmButtons();
+        if (document.getElementById("rhythm").style.display === "block") renderRhythmSelect();
     } catch (e) { trackBuf = null; }
 }
 const usingTrack = () => !!trackBuf && bgmStyle === "track";
+// 今のプレイで曲ファイルを流すか（リズムモードは必ず曲、反射モードは流さない）
+const songUsesTrack = () => !!trackBuf && !reflexSilent && (isRhythm || bgmStyle === "track");
 // 曲の時刻 songT の位置から曲ファイルを鳴らす（ループ区間を考慮）
 function playTrackFrom(songT) {
     stopTrack();
-    if (!usingTrack() || !audioReady()) return;
+    if (!songUsesTrack() || !audioReady()) return;
     let pos = songT;
     if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
     if (pos < 0) pos = 0;
@@ -1855,7 +2052,13 @@ function startSong() {
     nextBar = 0; melodyDeg = 4;
     // デイリーはその日の乱数で、全員同じ曲・同じ譜面にする
     chartRand = isDaily && dailyRand ? dailyRand : mulberry32((Math.random() * 1e9) | 0);
-    setTempo(usingTrack() ? TRACK.bpm : 150);
+    setTempo(songUsesTrack() || isRhythm ? TRACK.bpm : 150);
+    if (isRhythm) {
+        // リズムモード：決まった譜面を最初から全部並べておく
+        chartQueue.push(...buildRhythmChart(rhythmDiff));
+        rhythmTotal = chartQueue.length;
+        rhythmEndT = (chartQueue.length ? chartQueue[chartQueue.length - 1].t : 0) + 1.8;
+    }
     songStartPerf = performance.now(); songPausedTotal = 0; songPaused = false; songActive = true;
     pxPerSec = targetPxPerSec();
     syncAudioClock();
@@ -1886,12 +2089,13 @@ function stopSong() {
 }
 
 function targetPxPerSec() {
+    if (isRhythm && rhythmDiff) return rhythmDiff.speed * 60;
     return (isInfinite ? 6 + Math.min(10, combo * 0.08) : 12) * 60;
 }
 
 // 1小節ぶんの曲と譜面を作る
 function composeBar(bar) {
-    const track = usingTrack();
+    const track = songUsesTrack() || isRhythm;
     const t0 = (track ? TRACK.offset : 0) + bar * BAR;
     const r = chartRand;
     if (track) {
@@ -1917,8 +2121,8 @@ function composeBar(bar) {
     soundQueue.push({ t: t0, kind: "bass", hz: styleOf().root / 2 * (bar % 4 === 3 ? Math.pow(2, 7 / 12) : 1) });
     }
 
-    // 最初の1小節は前奏（ノーツなし）
-    if (bar === 0) return;
+    // 最初の1小節は前奏（ノーツなし）。リズムモードの譜面は startSong で並べ済み
+    if (bar === 0 || isRhythm) return;
 
     // メロディ（＝ノーツ）。難しさ：修行・デイリーは一定、無限は連打が増えるほど細かくなる
     const pOn = isInfinite ? Math.min(1, 0.8 + combo * 0.003) : 0.9;
@@ -1957,6 +2161,7 @@ function pumpSong(songT) {
     while (soundQueue.length && soundQueue[0].t < songT + 0.15) {
         const s = soundQueue.shift();
         if (s.t < songT - 0.05) continue;
+        if (reflexSilent) continue; // 反射モードは叩いた音だけ
         if (audioReady()) playInstrument(s, Math.max(audioContext.currentTime, s.t + audioOffset));
     }
 }
@@ -2144,6 +2349,7 @@ function loop(timestamp){
     // 曲を進め、出番のノーツを流す
     const songT = songNow();
     pumpSong(songT);
+    if (isRhythm && songT > rhythmEndT) { endGame(); return; }
 
     // ノーツ移動 & 描画（位置は「判定の瞬間までの残り時間 × 速さ」で決まるので、曲とずれない）
     for (let ni = 0; ni < notePool.length; ni++) {
@@ -2193,6 +2399,7 @@ function updateUI() {
         document.getElementById("gaugeFill").style.width = gauge+"%";
         document.getElementById("score").textContent = score;
         document.getElementById("combo").textContent = combo;
+        if (isRhythm) document.getElementById("timeLeft").textContent = Math.max(0, Math.ceil(rhythmEndT - songNow()));
     }
 }
 
@@ -2320,6 +2527,7 @@ function hit(l){
     
     // 【空打ちペナルティ】ノーツがないのに叩いた場合、ミス扱いにする
     if(!t) {
+        if (isRhythm) return; // リズムモードは空振りしてもミスにしない（曲に合わせて自由に叩ける）
         spawnHitEffect(l, "MISS");
         missEffect(); // 判定表示もmissEffect内で行う
         return;
@@ -2339,7 +2547,7 @@ function hit(l){
         score += Math.round((500 + combo*10) * (fever?2:1) * buff.scoreMul);
         if(!fever){ gauge+=10*buff.gaugeMul; if(gauge>=100){ startFever(); } }
     } else {
-        res="GREAT"; playSE('great'); totalMissCount++; score+=50; gauge=Math.max(0, gauge-15);
+        res="GREAT"; playSE('great'); totalMissCount++; greatCount++; score+=50; gauge=Math.max(0, gauge-15);
     }
     showJudge(res);
     spawnHitEffect(l, res);
@@ -2384,7 +2592,7 @@ function missEffect(){
         showJudge("GUARD");
         return;
     }
-    combo=0; gauge=0; totalMissCount++; 
+    combo=0; gauge=0; totalMissCount++; pureMiss++;
     document.getElementById("combo").innerText=0; 
     showJudge("MISS"); 
     playSE('miss'); 
@@ -2510,7 +2718,7 @@ function resumeGame(){
         isPaused = false;
         isResuming = false;
         loop();
-        if (!isInfinite) startTimerInterval();
+        if (!isInfinite && !isRhythm) startTimerInterval(); // リズムモードは曲の終わりで終了（秒数タイマーなし）
     });
 }
 
@@ -2561,10 +2769,18 @@ function endGame(){
     // 称号は日本語のまま残し、英語版では意味を添える
     const TITLE_EN = { "越前極": "Echizen Kiwami (Grandmaster)", "神速": "Shinsoku (Godspeed)", "伝説級": "Legend", "達人級": "Master",
         "一人前": "Pro", "見習い": "Apprentice", "修行中": "Trainee" };
+    let rr = null;
+    if (isRhythm) {
+        // リズムモード：称号は評価から
+        rr = rhythmResult();
+        rank = rr.ap ? "越前極" : { S: "神速", A: "達人級", B: "一人前", C: "見習い" }[rr.grade];
+    }
     rank = T(rank, TITLE_EN[rank] || rank);
     document.getElementById("rankDisplay").innerText = T(`称号: ${rank}`, `Title: ${rank}`);
+    renderRhythmResult(rr);
     // 精度表示
-    const totalJudged = perfectCount + totalMissCount;
+    // リズムモードは見逃したノーツも含め、譜面の全ノーツに対する割合
+    const totalJudged = isRhythm ? Math.max(1, rhythmTotal) : perfectCount + totalMissCount;
     const accuracy = totalJudged > 0 ? ((perfectCount / totalJudged) * 100).toFixed(2) : "0.00";
     const kamiRate = perfectCount > 0 ? ((kamiCount / perfectCount) * 100).toFixed(1) : "0.0";
     document.getElementById("accuracyDisplay").innerHTML =
@@ -2709,7 +2925,8 @@ async function showRanking(){
     switchRankTab('score');
 
     const now = new Date();
-    const modeLabel = currentMode === "infinite" ? T("終わりなき修行部門", "Endless") : T(currentMode + "秒修行部門", currentMode + "-sec");
+    const modeLabel = currentMode.startsWith("rhythm_") ? modeLabelOfRhythm(currentMode)
+        : currentMode === "infinite" ? T("終わりなき修行部門", "Endless") : T(currentMode + "秒修行部門", currentMode + "-sec");
     const rankmaLabel = isRankmaMode ? T(" ⚔️ ランクマ", " ⚔️ Ranked") : "";
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
     document.getElementById("monthLabelHeader").innerText = T(`${now.getFullYear()}年${now.getMonth()+1}月 限定番付`, `${now.toLocaleString("en-US", { month: "long" })} ${now.getFullYear()}`);
@@ -2810,7 +3027,7 @@ function logout() {
 }
 
 function activeCharacter() {
-    if (isRankmaMode || isDaily || !profile || !profile.selected) return null;
+    if (isRankmaMode || isDaily || isRhythm || !profile || !profile.selected) return null;
     return CHARACTERS[profile.selected] || null;
 }
 
@@ -3054,6 +3271,7 @@ function startDaily() {
     if (!dailyInfo) return;
     isRankmaMode = false;
     isDaily = true;
+    isRhythm = false; reflexSilent = false;
     dailyPractice = !!dailyInfo.me;
     const seed = Number((dailyInfo.date || todayJST()).replace(/-/g, ""));
     dailyRand = mulberry32(seed);
@@ -3214,6 +3432,7 @@ function loadImage(src) {
 
 function modeLabelOf(mode) {
     if (mode === "daily") return T(`今日のそば打ち ${shortDate()}`, `Daily Challenge ${shortDate()}`);
+    if (String(mode).startsWith("rhythm_")) return modeLabelOfRhythm(mode);
     return mode === "infinite" ? T("終わりなき修行", "Endless") : T(`${mode}秒修行`, `${mode}-sec`);
 }
 
