@@ -46,6 +46,9 @@
  * 13) 番付の読み込み（doGet）でスクリプトの鍵（LockService）をかけないようにした。
  *     読み込みは何も書き換えないので鍵は不要。鍵をかけていたため、番付表示・ログイン・保存が
  *     同時に来ると1件ずつ順番待ちになり、遅く感じる原因になっていた。書き込み（doPost）は従来どおり鍵をかける。
+ *
+ * ▼v9での追加点（キャラ追加）
+ * 14) ガチャの排出表（GACHA_POOL）に6体を追加して16体にした（N4 / R5 / SR4 / SSR3）。
  */
 
 function doGet(e) {
@@ -548,7 +551,14 @@ const GACHA_POOL = [
   { id: "honda",         r: "SR" },
   { id: "kaneko",        r: "SR" },
   { id: "sennin",        r: "SSR" },
-  { id: "oroshi_ryu",    r: "SSR" }
+  { id: "oroshi_ryu",    r: "SSR" },
+  // v9: 6体追加
+  { id: "soba_hatake",   r: "N" },
+  { id: "tabi_shonin",   r: "R" },
+  { id: "megane",        r: "R" },
+  { id: "kyoryu",        r: "SR" },
+  { id: "kasumi",        r: "SR" },
+  { id: "kuzuryu_hime",  r: "SSR" }
 ];
 const RARITY_WEIGHT = { N: 60, R: 30, SR: 8, SSR: 2 };    // 排出率(%)
 const DUPLICATE_REFUND = { N: 10, R: 30, SR: 80, SSR: 200 }; // かぶり時に返すそば粉

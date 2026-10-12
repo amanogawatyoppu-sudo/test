@@ -1857,7 +1857,7 @@ function startWithCountdown(afterCallback) {
     isStarting = true;
 
     // まずゲームエリアを表示（ノーツはまだ動かさない）
-    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0; greatCount=0; pureMiss=0;
+    score=0; combo=0; gauge=0; fever=false; totalMissCount=0; kamiCount=0; perfectCount=0; greatCount=0; pureMiss=0; rushUntil=0;
     quizUsedThisRun = false; isPaused = false; quizActive = false;
     activeKeys.clear(); laneLocked=[false,false,false];
     notePool.forEach(n => n.active = false);
@@ -2536,18 +2536,25 @@ function hit(l){
     let diff = Math.abs(t.x - HIT_X), res;
     combo++;
     checkComboMilestone(combo);
+    if (buff.rushEvery && combo % buff.rushEvery === 0) {
+        rushUntil = songNow() + buff.rushSec;
+        showFlash(T("化石発掘！", "Fossil found!"), T(`${buff.rushSec}秒間 得点${buff.rushMul}倍`, `Score x${buff.rushMul} for ${buff.rushSec} sec`), "#ff9944", "rgba(255,140,40,0.2)");
+    }
     if(diff < buff.kamiWin){
         res="KAMI"; playSE('kami');
         kamiCount++; perfectCount++;
-        score += Math.round((700 + combo*15) * (fever?2:1) * buff.scoreMul);
-        if(!fever){ gauge+=15*buff.gaugeMul; if(gauge>=100){ startFever(); } }
+        score += Math.round((700 + combo*15) * scoreFactor());
+        if(!fever){ gauge+=15*buff.gaugeMul + buff.perfectGauge; if(gauge>=100){ startFever(); } }
     } else if(diff < buff.perfectWin){
         res="PERFECT"; playSE('perfect');
         perfectCount++;
-        score += Math.round((500 + combo*10) * (fever?2:1) * buff.scoreMul);
-        if(!fever){ gauge+=10*buff.gaugeMul; if(gauge>=100){ startFever(); } }
+        score += Math.round((500 + combo*10) * scoreFactor());
+        if(!fever){ gauge+=10*buff.gaugeMul + buff.perfectGauge; if(gauge>=100){ startFever(); } }
     } else {
-        res="GREAT"; playSE('great'); totalMissCount++; greatCount++; score+=50; gauge=Math.max(0, gauge-15);
+        res="GREAT"; playSE('great'); totalMissCount++; greatCount++;
+        // 眼鏡職人：良でもゲージが減らず、得点も多め
+        if (buff.goodSafe) score += Math.round(200 * scoreFactor());
+        else { score+=50; gauge=Math.max(0, gauge-15); }
     }
     showJudge(res);
     spawnHitEffect(l, res);
@@ -2592,7 +2599,7 @@ function missEffect(){
         showJudge("GUARD");
         return;
     }
-    combo=0; gauge=0; totalMissCount++; pureMiss++;
+    combo=0; gauge=gauge*buff.missKeep; totalMissCount++; pureMiss++; // 忍：ゲージが半分残る
     document.getElementById("combo").innerText=0; 
     showJudge("MISS"); 
     playSE('miss'); 
@@ -2998,11 +3005,26 @@ const CHARACTERS = {
     honda:         { name: "府中城主", nameEn: "Lord of Fuchu Castle", descEn: "Score +20%",     emoji: "🤴", img: "chars/honda.webp",   r: "SR",  desc: "得点+20%",                   buff: { scoreMul: 1.20 } },
     kaneko:        { name: "金子権左衛門", nameEn: "Kaneko Gonzaemon", descEn: "Wider PERFECT window", emoji: "🧔", img: "chars/kaneko.webp",   r: "SR",  desc: "極上の判定が広い",            buff: { perfectWin: 78 } },
     sennin:        { name: "越前そば仙人", nameEn: "Echizen Soba Sage", descEn: "Score +25%, longer FEVER", emoji: "🧙", img: "chars/sennin.webp",   r: "SSR", desc: "得点+25%・フィーバー長持ち",   buff: { scoreMul: 1.25, feverDrain: 0.3 } },
+    soba_hatake:   { name: "そば畑の少女", nameEn: "Buckwheat Field Girl", descEn: "PERFECTs refill extra gauge", emoji: "👒", img: "chars/soba_hatake.webp", r: "N", desc: "極上を出すとゲージが少し多く回復", buff: { perfectGauge: 3 } },
+    tabi_shonin:   { name: "越前の旅商人", nameEn: "Echizen Peddler", descEn: "Score rises with your combo (up to +15%)", emoji: "🎒", img: "chars/tabi_shonin.webp", r: "R", desc: "連打が続くほど得点アップ(最大+15%)", buff: { comboBonus: 0.15 } },
+    megane:        { name: "鯖江の眼鏡職人", nameEn: "Sabae Glasses Maker", descEn: "GOODs don't drain the gauge and score more", emoji: "👓", img: "chars/megane.webp", r: "R", desc: "良でもゲージが減らず、得点も多め", buff: { goodSafe: true } },
+    kyoryu:        { name: "恐竜博士", nameEn: "Dinosaur Professor", descEn: "Every 30 combo: Score x1.5 for 5 sec", emoji: "🦖", img: "chars/kyoryu.webp", r: "SR", desc: "30連打ごとに5秒間 得点1.5倍", buff: { rushEvery: 30, rushMul: 1.5, rushSec: 5 } },
+    kasumi:        { name: "越前忍・カスミ", nameEn: "Kasumi, Echizen Ninja", descEn: "Keep half your gauge after a miss", emoji: "🥷", img: "chars/kasumi.webp", r: "SR", desc: "ミスしてもゲージが半分残る", buff: { missKeep: 0.5 } },
     oroshi_ryu:    { name: "おろし龍", nameEn: "Oroshi Dragon", descEn: "Wider RAINBOW window, Score +15%",     emoji: "🐉", img: "chars/oroshi_ryu.webp",   r: "SSR", desc: "虹極上の判定が広い・得点+15%", buff: { kamiWin: 40, scoreMul: 1.15 } },
+    kuzuryu_hime:  { name: "九頭竜の姫", nameEn: "Kuzuryu Princess", descEn: "FEVER score x2.5, wider PERFECT window", emoji: "🌊", img: null /* 画像ファイル待ち：chars/kuzuryu_hime.webp */, r: "SSR", desc: "フィーバー中の得点2.5倍・極上の判定が少し広い", buff: { feverMul: 2.5, perfectWin: 72 } },
 };
 const RARITY_COLOR = { N: "#aaaaaa", R: "#44aaff", SR: "#cc66ff", SSR: "#ffcc00" };
 const RARITY_RANK = { SSR: 0, SR: 1, R: 2, N: 3 };
-const BASE_BUFF = { scoreMul: 1, gaugeMul: 1, startGauge: 0, shield: 0, perfectWin: 65, kamiWin: 30, feverDrain: 0.5 };
+const BASE_BUFF = { scoreMul: 1, gaugeMul: 1, startGauge: 0, shield: 0, perfectWin: 65, kamiWin: 30, feverDrain: 0.5,
+    feverMul: 2, perfectGauge: 0, comboBonus: 0, goodSafe: false, rushEvery: 0, rushMul: 1, rushSec: 0, missKeep: 0 };
+let rushUntil = 0; // 恐竜博士：得点アップが続く曲の時刻
+// 叩いたときの得点倍率（フィーバー・職人の能力）
+function scoreFactor() {
+    let f = (fever ? buff.feverMul : 1) * buff.scoreMul;
+    if (buff.comboBonus) f *= 1 + Math.min(buff.comboBonus, combo * 0.001);
+    if (rushUntil && songNow() < rushUntil) f *= buff.rushMul;
+    return f;
+}
 let buff = { ...BASE_BUFF };
 let shieldLeft = 0;
 
