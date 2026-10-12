@@ -795,7 +795,8 @@ body.mobileLayout #workerArea { display: none; }
 <div id="pauseOverlay">
   <div id="pauseOverlayBox">
     <h2 data-en="⏸ Paused">⏸ 一時停止中</h2>
-    <button data-en="Resume" class="menuBtn" onclick="togglePause()">再開する</button>
+    <button data-en="Resume" class="menuBtn" onclick="togglePause()">再開する</button><br>
+    <button class="lobby-back-btn bgmToggle" style="margin-top:10px;" onclick="toggleBgm()">🔊 BGM</button>
   </div>
 </div>
 
@@ -894,6 +895,7 @@ body.mobileLayout #workerArea { display: none; }
  <div style="margin-top:10px;">
    <button class="lobby-back-btn" data-en="❓ How to play" onclick="openHowTo()">❓ 遊び方</button>
    <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
+   <button class="lobby-back-btn bgmToggle" onclick="toggleBgm()">🔊 BGM</button>
  </div>
 </div>
 
@@ -1639,6 +1641,7 @@ function runCountdown(onComplete) {
         num.style.animation = "none";
         void num.offsetWidth;
         num.style.animation = isGo ? "countGo 0.75s ease-out forwards" : "countPop 0.85s ease-out forwards";
+        countdownDrum(isGo);
         i++;
         if (i < steps.length) {
             setTimeout(step, 850);
@@ -1699,7 +1702,8 @@ function startWithCountdown(afterCallback) {
     runCountdown(() => {
         // ここでゲーム本体をスタート
         lastTime = performance.now(); // カウントダウン後にリセットし、初回フレームの飛びを防ぐ
-        running = true; loop(); spawn();
+        startSong(); // 曲と譜面をスタート
+        running = true; loop();
         showMobileBtnsIfNeeded();
         afterCallback();
         isStarting = false; // 完全に開始してからフラグ解除
@@ -1728,21 +1732,221 @@ function startCommon(){
 let _currentScale = 1;
 function currentMobileScale() { return _currentScale; }
 
-function spawn(){
-    if(!running) return;
-    
-    // プールから未使用のノーツを探す
-    let n = notePool.find(p => !p.active);
-    if (n) {
-        n.active = true;
-        // デイリーはその日の乱数で、全員同じレーンの並びにする
-        n.lane = Math.floor((isDaily && dailyRand ? dailyRand() : Math.random()) * 3);
-        n.x = 1200;
-    }
+// ===== BGM と譜面（音楽に合わせてノーツを流す） =====
+// 曲ファイルは使わず、Web Audio で和風の曲（太鼓・締め太鼓・琴風メロディ、明るい「ヨナ抜き」系の音階）をその場で作る。
+// ノーツはメロディの音が鳴る瞬間に判定リングへ届くように流す（高い音ほど上のレーン）。
+// ゲームの時計は performance.now() を使うので、音が出せない環境（iPhoneのマナーモード等）でもゲームは止まらない。
+const BPM = 150;
+const BEAT = 60 / BPM;          // 1拍 0.4秒
+const EIGHTH = BEAT / 2;        // 8分音符 0.2秒
+const BAR = BEAT * 4;           // 1小節 1.6秒
+// 明るい五音音階（ド・レ・ミ・ソ・ラ）を2オクターブ分。D4基準。
+const SCALE_SEMI = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
+const ROOT_HZ = 293.66;
+const hzOf = (deg) => ROOT_HZ * Math.pow(2, SCALE_SEMI[deg] / 12);
 
-    const interval = isInfinite ? Math.max(160, 450 - combo * 1.5) : 320;
-    setTimeout(spawn, interval);
+let bgmOn = true;
+try { bgmOn = localStorage.getItem("sobamichi_bgm") !== "off"; } catch (e) {}
+let musicGain = null;
+let noiseBuf = null;
+
+// 曲の時計（一時停止中は進まない）
+let songStartPerf = 0, songPausedAt = 0, songPausedTotal = 0, songPaused = false, songActive = false;
+let audioOffset = 0;            // 曲の時刻 → AudioContextの時刻 への差
+let chartRand = Math.random;
+let nextBar = 0;                // 次に作る小節
+let melodyDeg = 4;              // メロディの現在の音（音階の何番目か）
+const chartQueue = [];          // これから流すノーツ { t, lane }
+const soundQueue = [];          // これから鳴らす音 { t, kind, ... }
+let pxPerSec = 720;             // ノーツの速さ（px/秒）
+
+function songNow() {
+    if (!songActive) return 0;
+    const now = songPaused ? songPausedAt : performance.now();
+    return (now - songStartPerf - songPausedTotal) / 1000;
 }
+
+function audioReady() {
+    return bgmOn && audioContext && audioContext.state === "running";
+}
+function ensureMusicNodes() {
+    if (musicGain || !audioContext) return;
+    musicGain = audioContext.createGain();
+    musicGain.gain.value = 0.55;
+    musicGain.connect(audioContext.destination);
+    noiseBuf = audioContext.createBuffer(1, audioContext.sampleRate * 0.5, audioContext.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+}
+function syncAudioClock() {
+    if (!audioContext) return;
+    if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+    audioOffset = audioContext.currentTime - songNow();
+}
+
+function startSong() {
+    ensureMusicNodes();
+    chartQueue.length = 0; soundQueue.length = 0;
+    nextBar = 0; melodyDeg = 4;
+    // デイリーはその日の乱数で、全員同じ曲・同じ譜面にする
+    chartRand = isDaily && dailyRand ? dailyRand : mulberry32((Math.random() * 1e9) | 0);
+    songStartPerf = performance.now(); songPausedTotal = 0; songPaused = false; songActive = true;
+    pxPerSec = targetPxPerSec();
+    syncAudioClock();
+}
+function pauseSong() {
+    if (!songActive || songPaused) return;
+    songPaused = true; songPausedAt = performance.now();
+}
+function resumeSong() {
+    if (!songActive || !songPaused) return;
+    songPausedTotal += performance.now() - songPausedAt;
+    songPaused = false;
+    syncAudioClock();
+}
+// 復活クイズの後：判定ラインの近くに迫っていたノーツは消して、余裕を持って再開させる
+function reviveSong() {
+    const t = songNow();
+    for (let i = chartQueue.length - 1; i >= 0; i--) if (chartQueue[i].t < t + 1.2) chartQueue.splice(i, 1);
+    resumeSong();
+}
+function stopSong() {
+    songActive = false;
+    chartQueue.length = 0; soundQueue.length = 0;
+}
+
+function targetPxPerSec() {
+    return (isInfinite ? 6 + Math.min(10, combo * 0.08) : 12) * 60;
+}
+
+// 1小節ぶんの曲と譜面を作る
+function composeBar(bar) {
+    const t0 = bar * BAR;
+    const r = chartRand;
+    // 太鼓：1・3拍目にドン、4拍目の裏にもう一発
+    soundQueue.push({ t: t0, kind: "taiko", strong: true });
+    soundQueue.push({ t: t0 + BEAT * 2, kind: "taiko", strong: false });
+    soundQueue.push({ t: t0 + BEAT * 3 + EIGHTH, kind: "taiko", strong: false });
+    // 締め太鼓：2・4拍目
+    soundQueue.push({ t: t0 + BEAT, kind: "shime" });
+    soundQueue.push({ t: t0 + BEAT * 3, kind: "shime" });
+    // フィーバー中だけ鳴る刻み（8分）
+    for (let k = 0; k < 8; k++) soundQueue.push({ t: t0 + k * EIGHTH, kind: "shaker" });
+    // ベース（三味線風の低音）：小節頭
+    soundQueue.push({ t: t0, kind: "bass", hz: ROOT_HZ / 2 * (bar % 4 === 3 ? Math.pow(2, 7 / 12) : 1) });
+
+    // 最初の1小節は前奏（ノーツなし）
+    if (bar === 0) return;
+
+    // メロディ（＝ノーツ）。難しさ：修行・デイリーは一定、無限は連打が増えるほど細かくなる
+    const pOn = isInfinite ? Math.min(1, 0.8 + combo * 0.003) : 0.9;
+    const pOff = isInfinite ? Math.min(0.85, 0.25 + combo * 0.006) : 0.45;
+    for (let k = 0; k < 8; k++) {
+        const onBeat = k % 2 === 0;
+        if (r() >= (onBeat ? pOn : pOff)) continue;
+        // 音は1〜3段ずつ上下に動かす（同じレーンばかりにならないように）
+        const step = 1 + Math.floor(r() * 3);
+        melodyDeg += r() < 0.5 ? -step : step;
+        if (melodyDeg < 0) melodyDeg = step;
+        if (melodyDeg > 9) melodyDeg = 9 - step;
+        const t = t0 + k * EIGHTH;
+        const lane = melodyDeg >= 7 ? 0 : melodyDeg >= 4 ? 1 : 2; // 高い音ほど上のレーン
+        chartQueue.push({ t, lane });
+        soundQueue.push({ t, kind: "koto", hz: hzOf(melodyDeg) });
+    }
+}
+
+// 毎フレーム：先の小節を作り、出番のノーツを流し、もうすぐ鳴る音を予約する
+function pumpSong(songT) {
+    while (nextBar * BAR < songT + 4.5) composeBar(nextBar++);
+    // ノーツの速さは少しずつ目標に近づける（急に変わってノーツが跳ばないように）
+    pxPerSec += (targetPxPerSec() - pxPerSec) * 0.05;
+    const lead = (1200 - HIT_X) / pxPerSec;
+    chartQueue.sort((a, b) => a.t - b.t);
+    while (chartQueue.length && chartQueue[0].t - songT <= lead) {
+        const c = chartQueue.shift();
+        if (c.t < songT - 0.1) continue; // 処理落ち等で出し損ねた古いノーツは捨てる
+        const n = notePool.find(p => !p.active);
+        if (!n) break;
+        n.active = true; n.lane = c.lane; n.t = c.t;
+    }
+    // 音は0.15秒先まで予約（一時停止したらすぐ止まるよう、先まで入れすぎない）
+    soundQueue.sort((a, b) => a.t - b.t);
+    while (soundQueue.length && soundQueue[0].t < songT + 0.15) {
+        const s = soundQueue.shift();
+        if (s.t < songT - 0.05) continue;
+        if (audioReady()) playInstrument(s, Math.max(audioContext.currentTime, s.t + audioOffset));
+    }
+}
+
+function playInstrument(s, at) {
+    const ac = audioContext;
+    if (s.kind === "taiko") {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(s.strong ? 150 : 120, at);
+        o.frequency.exponentialRampToValueAtTime(48, at + 0.25);
+        g.gain.setValueAtTime(s.strong ? 1.0 : 0.7, at);
+        g.gain.exponentialRampToValueAtTime(0.001, at + 0.4);
+        o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.42);
+        noiseHit(at, 500, "lowpass", s.strong ? 0.35 : 0.25, 0.06);
+    } else if (s.kind === "shime") {
+        noiseHit(at, 2800, "bandpass", 0.35, 0.05);
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "triangle"; o.frequency.setValueAtTime(420, at);
+        g.gain.setValueAtTime(0.25, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.08);
+        o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.1);
+    } else if (s.kind === "shaker") {
+        if (fever) noiseHit(at, 7000, "highpass", 0.12, 0.04);
+    } else if (s.kind === "bass") {
+        pluck(at, s.hz, 0.35, 0.5, 900);
+    } else if (s.kind === "koto") {
+        pluck(at, s.hz, 0.28, 0.7, 3200);
+        if (fever) pluck(at, s.hz * 2, 0.12, 0.4, 5000); // フィーバー中は1オクターブ上を重ねて華やかに
+    }
+}
+function noiseHit(at, freq, type, vol, dur) {
+    const src = audioContext.createBufferSource(), f = audioContext.createBiquadFilter(), g = audioContext.createGain();
+    src.buffer = noiseBuf; f.type = type; f.frequency.value = freq; f.Q.value = type === "bandpass" ? 4 : 0.7;
+    g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.001, at + dur);
+    src.connect(f); f.connect(g); g.connect(musicGain); src.start(at); src.stop(at + dur + 0.02);
+}
+// 琴・三味線風の「はじく」音
+function pluck(at, hz, vol, dur, cutoff) {
+    const ac = audioContext;
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+    o1.type = "triangle"; o2.type = "sawtooth";
+    o1.frequency.setValueAtTime(hz, at); o2.frequency.setValueAtTime(hz * 1.003, at);
+    f.type = "lowpass"; f.frequency.setValueAtTime(cutoff, at); f.frequency.exponentialRampToValueAtTime(400, at + dur);
+    g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.005); g.gain.exponentialRampToValueAtTime(0.001, at + dur);
+    const g2 = ac.createGain(); g2.gain.value = 0.35;
+    o1.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(musicGain);
+    o1.start(at); o2.start(at); o1.stop(at + dur + 0.02); o2.stop(at + dur + 0.02);
+}
+
+// カウントダウンの「3・2・1」に合わせて太鼓を鳴らす
+function countdownDrum(isGo) {
+    if (!bgmOn || !audioContext) return;
+    if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+    ensureMusicNodes();
+    if (audioContext.state !== "running") return;
+    const at = audioContext.currentTime + 0.01;
+    playInstrument({ kind: "taiko", strong: isGo }, at);
+    if (isGo) playInstrument({ kind: "shime" }, at + 0.1);
+}
+
+function toggleBgm() {
+    bgmOn = !bgmOn;
+    try { localStorage.setItem("sobamichi_bgm", bgmOn ? "on" : "off"); } catch (e) {}
+    updateBgmButtons();
+    if (bgmOn) syncAudioClock();
+}
+function updateBgmButtons() {
+    document.querySelectorAll(".bgmToggle").forEach(b => {
+        b.textContent = bgmOn ? T("🔊 BGM オン", "🔊 Music ON") : T("🔇 BGM オフ", "🔇 Music OFF");
+    });
+}
+updateBgmButtons();
 
 function loop(timestamp){
     if(!running) return;
@@ -1753,8 +1957,6 @@ function loop(timestamp){
     const deltaTime = Math.min(rawDelta, 3);
     lastTime = timestamp;
 
-    const baseSpeed = isInfinite ? 6 + Math.min(10, combo*0.08) : 12;
-    const speed = baseSpeed * (deltaTime || 1);
 
     // Canvasクリア
     ctx.fillStyle = "#000";
@@ -1772,11 +1974,15 @@ function loop(timestamp){
     const nowMs = performance.now();
     drawFeverBackdrop(nowMs);
 
-    // ノーツ移動 & 描画
+    // 曲を進め、出番のノーツを流す
+    const songT = songNow();
+    pumpSong(songT);
+
+    // ノーツ移動 & 描画（位置は「判定の瞬間までの残り時間 × 速さ」で決まるので、曲とずれない）
     for (let ni = 0; ni < notePool.length; ni++) {
         const n = notePool[ni];
         if (!n.active) continue;
-        n.x -= speed;
+        n.x = HIT_X + (n.t - songT) * pxPerSec;
         
         if (n.x < -150) {
             n.active = false;
@@ -2048,6 +2254,7 @@ const sobaQuiz = LANG === "en" ? [
 function triggerRevivalQuiz(){
     quizActive = true;
     running = false;
+    pauseSong();
     if (!isInfinite) clearInterval(timerInterval);
 
     const q = sobaQuiz[Math.floor(Math.random() * sobaQuiz.length)];
@@ -2085,9 +2292,9 @@ function answerQuiz(correct){
             notePool.forEach(n => n.active = false);
             runCountdown(() => {
                 lastTime = performance.now();
+                reviveSong();
                 running = true;
                 loop();
-                spawn();
             });
         } else {
             endGame();
@@ -2107,6 +2314,7 @@ function pauseGame(){
     if (!running) return;
     isPaused = true;
     running = false;
+    pauseSong();
     clearInterval(timerInterval);
     document.getElementById("pauseOverlay").classList.add("open");
     const btn = document.getElementById("pauseBtn");
@@ -2126,11 +2334,11 @@ function resumeGame(){
     if (btn) btn.innerText = "⏸";
     runCountdown(() => {
         lastTime = performance.now();
+        resumeSong();
         running = true;
         isPaused = false;
         isResuming = false;
         loop();
-        spawn();
         if (!isInfinite) startTimerInterval();
     });
 }
@@ -2157,6 +2365,7 @@ function showJudge(res){
 
 function endGame(){
     running=false; clearInterval(timerInterval);
+    stopSong();
     switchScreen("result");
     document.getElementById("finalScore").innerText = T(`最終得点: ${score}点`, `Final score: ${score} pts`);
     let rank = "修行中";
