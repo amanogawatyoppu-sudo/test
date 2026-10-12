@@ -1748,11 +1748,15 @@ function setTempo(bpm) { BEAT = 60 / bpm; EIGHTH = BEAT / 2; BAR = BEAT * 4; }
 // bgm/ フォルダに曲ファイルを置き、bpm（テンポ）と offset（最初の小節の頭が何秒目か）を設定すると、
 // その曲が流れ、ノーツが曲の拍に合わせて流れる。bpm が 0 のあいだ、または読み込めない環境では自動生成の曲になる。
 // 曲は小節単位でループする（loopBars 小節ぶん。0なら曲の長さに収まるだけ）。
+// 低音衝動：元ファイル（320kbps・6.3MB）を 128kbps・2.5MB に軽量化して使用。
+// テンポと拍の位置は曲全体の解析で求めた（141.00 BPM、拍のずれは曲の最初から最後まで±数ミリ秒）。
+// ファイルはちょうど92小節（156.6秒）で、頭から終わりまでがそのままループする作り。
 const TRACK = {
     src: "bgm/main.mp3",
-    bpm: 0,            // 曲ファイルを入れたら設定する
-    offset: 0,         // 最初の小節の頭（秒）
-    loopBars: 0,
+    bpm: 141,
+    offset: 0.055,     // 最初の拍（秒）
+    loopStart: 0,      // ループ区間の始まり（秒）
+    loopBars: 92,
     title: "低音衝動",
     composer: "伊藤ケイスケ",
     site: "DOVA-SYNDROME",
@@ -1769,8 +1773,8 @@ async function loadTrack() {
         const barLen = 60 / TRACK.bpm * 4;
         const bars = TRACK.loopBars || Math.floor((buf.duration - TRACK.offset) / barLen);
         if (bars < 1) return;
-        trackLoopStart = TRACK.offset;
-        trackLoopLen = bars * barLen;
+        trackLoopStart = TRACK.loopStart != null ? TRACK.loopStart : TRACK.offset;
+        trackLoopLen = Math.min(bars * barLen, buf.duration - trackLoopStart);
         trackBuf = buf;
         if (!localStorage.getItem("sobamichi_bgm_style")) bgmStyle = "track";
         updateBgmButtons();
