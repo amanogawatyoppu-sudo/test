@@ -897,6 +897,7 @@ body.mobileLayout #workerArea { display: none; }
    <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
    <button class="lobby-back-btn bgmToggle" onclick="toggleBgm()">🔊 BGM</button>
    <button class="lobby-back-btn bgmStyleToggle" onclick="toggleBgmStyle()">👻 曲</button>
+   <div id="bgmCredit" style="color:#777; font-size:11px; margin-top:6px;"></div>
  </div>
 </div>
 
@@ -1737,19 +1738,72 @@ function currentMobileScale() { return _currentScale; }
 // 曲ファイルは使わず、Web Audio で和風の曲（太鼓・締め太鼓・琴風メロディ、明るい「ヨナ抜き」系の音階）をその場で作る。
 // ノーツはメロディの音が鳴る瞬間に判定リングへ届くように流す（高い音ほど上のレーン）。
 // ゲームの時計は performance.now() を使うので、音が出せない環境（iPhoneのマナーモード等）でもゲームは止まらない。
-const BPM = 150;
-const BEAT = 60 / BPM;          // 1拍 0.4秒
-const EIGHTH = BEAT / 2;        // 8分音符 0.2秒
-const BAR = BEAT * 4;           // 1小節 1.6秒
+// テンポ。曲ファイル（TRACK）を使うときはその曲のBPMに切り替わる
+let BEAT = 60 / 150;            // 1拍 0.4秒
+let EIGHTH = BEAT / 2;          // 8分音符 0.2秒
+let BAR = BEAT * 4;             // 1小節 1.6秒
+function setTempo(bpm) { BEAT = 60 / bpm; EIGHTH = BEAT / 2; BAR = BEAT * 4; }
+
+// ===== 曲ファイルのBGM =====
+// bgm/ フォルダに曲ファイルを置き、bpm（テンポ）と offset（最初の小節の頭が何秒目か）を設定すると、
+// その曲が流れ、ノーツが曲の拍に合わせて流れる。bpm が 0 のあいだ、または読み込めない環境では自動生成の曲になる。
+// 曲は小節単位でループする（loopBars 小節ぶん。0なら曲の長さに収まるだけ）。
+const TRACK = {
+    src: "bgm/main.mp3",
+    bpm: 0,            // 曲ファイルを入れたら設定する
+    offset: 0,         // 最初の小節の頭（秒）
+    loopBars: 0,
+    title: "低音衝動",
+    composer: "伊藤ケイスケ",
+    site: "DOVA-SYNDROME",
+};
+let trackBuf = null;
+let trackSrc = null;
+let trackLoopStart = 0, trackLoopLen = 0;
+async function loadTrack() {
+    if (!TRACK.bpm || !audioContext) return;
+    try {
+        const res = await fetch(TRACK.src);
+        if (!res.ok) return;
+        const buf = await audioContext.decodeAudioData(await res.arrayBuffer());
+        const barLen = 60 / TRACK.bpm * 4;
+        const bars = TRACK.loopBars || Math.floor((buf.duration - TRACK.offset) / barLen);
+        if (bars < 1) return;
+        trackLoopStart = TRACK.offset;
+        trackLoopLen = bars * barLen;
+        trackBuf = buf;
+        if (!localStorage.getItem("sobamichi_bgm_style")) bgmStyle = "track";
+        updateBgmButtons();
+    } catch (e) { trackBuf = null; }
+}
+const usingTrack = () => !!trackBuf && bgmStyle === "track";
+// 曲の時刻 songT の位置から曲ファイルを鳴らす（ループ区間を考慮）
+function playTrackFrom(songT) {
+    stopTrack();
+    if (!usingTrack() || !audioReady()) return;
+    let pos = songT;
+    if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
+    if (pos < 0) pos = 0;
+    const src = audioContext.createBufferSource();
+    src.buffer = trackBuf;
+    src.loop = true; src.loopStart = trackLoopStart; src.loopEnd = trackLoopStart + trackLoopLen;
+    src.connect(musicGain);
+    src.start(audioContext.currentTime, pos);
+    trackSrc = src;
+}
+function stopTrack() {
+    if (trackSrc) { try { trackSrc.stop(); } catch (e) {} trackSrc = null; }
+}
 // 明るい五音音階（ド・レ・ミ・ソ・ラ）を2オクターブ分。D4基準。
 // 曲調：「妖怪」＝都節音階（ミ・ファ・ラ・シ・ド。怪談や妖怪ものの不気味な響き）／「祭り」＝明るい五音音階
+// 曲：track（曲ファイル）/ yokai / matsuri
 let bgmStyle = "yokai";
 try { bgmStyle = localStorage.getItem("sobamichi_bgm_style") || "yokai"; } catch (e) {}
 const STYLES = {
     yokai:   { semi: [0, 1, 5, 7, 8, 12, 13, 17, 19, 20], root: 329.63 },  // E4基準
     matsuri: { semi: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21], root: 293.66 },  // D4基準
 };
-const styleOf = () => STYLES[bgmStyle] || STYLES.yokai;
+const styleOf = () => STYLES[bgmStyle] || STYLES.matsuri;
 const hzOf = (deg) => styleOf().root * Math.pow(2, styleOf().semi[deg] / 12);
 
 let bgmOn = true;
@@ -1797,19 +1851,23 @@ function startSong() {
     nextBar = 0; melodyDeg = 4;
     // デイリーはその日の乱数で、全員同じ曲・同じ譜面にする
     chartRand = isDaily && dailyRand ? dailyRand : mulberry32((Math.random() * 1e9) | 0);
+    setTempo(usingTrack() ? TRACK.bpm : 150);
     songStartPerf = performance.now(); songPausedTotal = 0; songPaused = false; songActive = true;
     pxPerSec = targetPxPerSec();
     syncAudioClock();
+    playTrackFrom(0);
 }
 function pauseSong() {
     if (!songActive || songPaused) return;
     songPaused = true; songPausedAt = performance.now();
+    stopTrack();
 }
 function resumeSong() {
     if (!songActive || !songPaused) return;
     songPausedTotal += performance.now() - songPausedAt;
     songPaused = false;
     syncAudioClock();
+    playTrackFrom(songNow());
 }
 // 復活クイズの後：判定ラインの近くに迫っていたノーツは消して、余裕を持って再開させる
 function reviveSong() {
@@ -1819,6 +1877,7 @@ function reviveSong() {
 }
 function stopSong() {
     songActive = false;
+    stopTrack();
     chartQueue.length = 0; soundQueue.length = 0;
 }
 
@@ -1828,8 +1887,12 @@ function targetPxPerSec() {
 
 // 1小節ぶんの曲と譜面を作る
 function composeBar(bar) {
-    const t0 = bar * BAR;
+    const track = usingTrack();
+    const t0 = (track ? TRACK.offset : 0) + bar * BAR;
     const r = chartRand;
+    if (track) {
+        for (let k = 0; k < 8; k++) soundQueue.push({ t: t0 + k * EIGHTH, kind: "shaker" }); // フィーバー中だけ鳴る
+    } else {
     // 太鼓：1・3拍目にドン、4拍目の裏にもう一発
     soundQueue.push({ t: t0, kind: "taiko", strong: true });
     soundQueue.push({ t: t0 + BEAT * 2, kind: "taiko", strong: false });
@@ -1848,6 +1911,7 @@ function composeBar(bar) {
     for (let k = 0; k < 8; k++) soundQueue.push({ t: t0 + k * EIGHTH, kind: "shaker" });
     // ベース（三味線風の低音）：小節頭
     soundQueue.push({ t: t0, kind: "bass", hz: styleOf().root / 2 * (bar % 4 === 3 ? Math.pow(2, 7 / 12) : 1) });
+    }
 
     // 最初の1小節は前奏（ノーツなし）
     if (bar === 0) return;
@@ -1866,7 +1930,7 @@ function composeBar(bar) {
         const t = t0 + k * EIGHTH;
         const lane = melodyDeg >= 7 ? 0 : melodyDeg >= 4 ? 1 : 2; // 高い音ほど上のレーン
         chartQueue.push({ t, lane });
-        soundQueue.push({ t, kind: bgmStyle === "yokai" ? "shaku" : "koto", hz: hzOf(melodyDeg) });
+        if (!track) soundQueue.push({ t, kind: bgmStyle === "yokai" ? "shaku" : "koto", hz: hzOf(melodyDeg) });
     }
 }
 
@@ -2012,10 +2076,12 @@ function toggleBgm() {
     bgmOn = !bgmOn;
     try { localStorage.setItem("sobamichi_bgm", bgmOn ? "on" : "off"); } catch (e) {}
     updateBgmButtons();
-    if (bgmOn) syncAudioClock();
+    if (bgmOn) { syncAudioClock(); if (running) playTrackFrom(songNow()); }
+    else stopTrack();
 }
 function toggleBgmStyle() {
-    bgmStyle = bgmStyle === "yokai" ? "matsuri" : "yokai";
+    const order = trackBuf ? ["track", "yokai", "matsuri"] : ["yokai", "matsuri"];
+    bgmStyle = order[(order.indexOf(bgmStyle) + 1) % order.length];
     try { localStorage.setItem("sobamichi_bgm_style", bgmStyle); } catch (e) {}
     updateBgmButtons();
     // 試し聴き：切り替えた曲調の音を一つ鳴らす
@@ -2024,20 +2090,26 @@ function toggleBgmStyle() {
         ensureMusicNodes();
         if (audioContext.state === "running") {
             const at = audioContext.currentTime + 0.02;
-            if (bgmStyle === "yokai") playInstrument({ kind: "hyudoro" }, at);
+            if (bgmStyle === "track") { /* 曲ファイルはプレイ中に流れる */ }
+            else if (bgmStyle === "yokai") playInstrument({ kind: "hyudoro" }, at);
             else { playInstrument({ kind: "taiko", strong: true }, at); playInstrument({ kind: "koto", hz: hzOf(4) }, at + 0.2); playInstrument({ kind: "koto", hz: hzOf(7) }, at + 0.4); }
         }
     }
 }
 function updateBgmButtons() {
     document.querySelectorAll(".bgmStyleToggle").forEach(b => {
-        b.textContent = bgmStyle === "yokai" ? T("👻 曲：妖怪", "👻 Song: Yokai") : T("🏮 曲：祭り", "🏮 Song: Festival");
+        b.textContent = usingTrack() ? `🎵 ${T("曲", "Song")}: ${TRACK.title}`
+            : bgmStyle === "yokai" ? T("👻 曲：妖怪", "👻 Song: Yokai") : T("🏮 曲：祭り", "🏮 Song: Festival");
     });
+    // 曲ファイルを使うときは作曲者を表記する
+    const credit = document.getElementById("bgmCredit");
+    if (credit) credit.textContent = trackBuf ? `BGM: ${TRACK.title} / ${TRACK.composer} (${TRACK.site})` : "";
     document.querySelectorAll(".bgmToggle").forEach(b => {
         b.textContent = bgmOn ? T("🔊 BGM オン", "🔊 Music ON") : T("🔇 BGM オフ", "🔇 Music OFF");
     });
 }
 updateBgmButtons();
+loadTrack();
 
 function loop(timestamp){
     if(!running) return;
@@ -2236,7 +2308,11 @@ function hit(l){
     document.getElementById(`mBtn-${l}`).classList.add("active");
     
     // notePoolから判定対象を探す
-    let t = notePool.find(n => n.active && n.lane === l && Math.abs(n.x - HIT_X) < 120);
+    // 同じレーンに近いノーツが並んでいるときは、判定ラインに一番近いものを叩く
+    let t = null;
+    for (const n of notePool) {
+        if (n.active && n.lane === l && Math.abs(n.x - HIT_X) < 120 && (!t || Math.abs(n.x - HIT_X) < Math.abs(t.x - HIT_X))) t = n;
+    }
     
     // 【空打ちペナルティ】ノーツがないのに叩いた場合、ミス扱いにする
     if(!t) {
