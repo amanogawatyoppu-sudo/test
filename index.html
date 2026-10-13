@@ -701,6 +701,13 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .rhGrade { font-family:'Zen Old Mincho'; font-size:18px; }
 .rhGrade.gS { color:#ffd34d; } .rhGrade.gA { color:#ff88ff; } .rhGrade.gB { color:#4db8ff; } .rhGrade.gC { color:#aaa; }
 #rhythmResult { margin:4px 0 6px; }
+.rhSongs { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px auto 10px; max-width:900px; }
+.rhSongBtn { display:flex; flex-direction:column; align-items:center; gap:2px; min-width:150px; padding:8px 14px; border-radius:12px; border:2px solid #555; background:#15120a; color:#ddd; cursor:pointer; font-family:'Noto Serif JP'; }
+.rhSongBtn.active { border-color:gold; background:#2a2008; color:#fff; box-shadow:0 0 12px rgba(255,215,0,0.35); }
+.rhSongIcon { font-size:24px; line-height:1; }
+.rhSongTitle { font-family:'Zen Old Mincho'; font-size:17px; font-weight:bold; }
+.rhSongMeta { font-size:11px; color:#aaa; }
+@media (max-width:560px) { .rhSongBtn { min-width:0; flex:1 1 30%; padding:6px 4px; } .rhSongTitle { font-size:14px; } }
 #rhythmResult .bigGrade { font-family:'Zen Old Mincho'; font-size:64px; line-height:1; font-weight:bold; }
 #rhythm { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
 #mypage, #daily { text-align:center; padding: 16px 12px 40px; box-sizing: border-box; background: rgba(0,0,0,0.98); overflow-y: auto; }
@@ -1117,6 +1124,7 @@ body.mobileLayout #workerArea { display: none; }
 <div id="rhythm">
  <div class="mp-wrap">
   <h1 data-en="🎵 Rhythm Mode">🎵 リズムモード</h1>
+  <div id="rhythmSongs" class="rhSongs"></div>
   <div id="rhythmSong" style="color:#ddd; font-size:15px;"></div>
   <div data-en="Play one whole song. The chart is the same every time, so you can learn it and improve. Character abilities are off." class="mp-note" style="margin-bottom:6px;">1曲まるごと叩き切る。譜面は毎回同じなので、覚えるほど上手くなる。職人の能力はなし。</div>
   <div id="rhythmStatus" style="color:#ff8844; min-height:20px; font-size:14px;"></div>
@@ -1343,6 +1351,139 @@ const RHYTHM_DIFFS = {
     kiwami: { key: "kiwami", name: () => T("極", "Kiwami"),   stars: 4, speed: 15, pOn: 1.00, pOff: 0.92, chord: 0.20, quiet: 0.85, seed: 404 },
 };
 const GRADE_ORDER = ["C", "B", "A", "S"];
+
+// リズムモードの曲。track＝曲ファイル（低音衝動）、gen＝ゲームの中で作るオリジナル曲（ファイル不要）
+const RHYTHM_SONGS = {
+    hyakki:  { key: "hyakki",  type: "gen", style: "yokai",   bpm: 112, seed: 8002, icon: "👻",
+               title: () => T("百鬼夜行", "Night Parade"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ゆっくり・妖しい", "Slow & spooky"),
+               form: [["I", 2, 0.2], ["A", 8, 0.45], ["B", 8, 0.65], ["C", 8, 0.95], ["D", 8, 0.4], ["A", 8, 0.55], ["C", 8, 1.0], ["O", 2, 0]] },
+    teion:   { key: "teion",   type: "track", bpm: 141, icon: "🎸",
+               title: () => TRACK.title, credit: () => `${TRACK.composer}（${TRACK.site}）`, mood: () => T("かっこいい・ノリノリ", "Cool & groovy") },
+    matsuri: { key: "matsuri", type: "gen", style: "matsuri", bpm: 168, seed: 7001, icon: "🏮",
+               title: () => T("越前祭り囃子", "Echizen Festival"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("速い・にぎやか", "Fast & festive"),
+               form: [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 1.0], ["D", 8, 0.45], ["A", 8, 0.6], ["B", 8, 0.75], ["C", 8, 1.0], ["C", 8, 1.0], ["O", 2, 0]] },
+};
+let rhythmSongKey = "teion";
+try { if (RHYTHM_SONGS[localStorage.getItem("sobamichi_rhythm_song")]) rhythmSongKey = localStorage.getItem("sobamichi_rhythm_song"); } catch (e) {}
+const rhythmSong = () => RHYTHM_SONGS[rhythmSongKey];
+// 記録・番付の名前（低音衝動は前からの名前のまま）
+const rhythmRecKey = (song, diff) => song === "teion" ? diff : `${song}_${diff}`;
+const rhythmModeOf = (song, diff) => "rhythm_" + rhythmRecKey(song, diff);
+
+// オリジナル曲を作る：前奏→A→B→サビ…の構成で、2小節のフレーズを繰り返す（覚えやすく、曲らしく）。
+// 返り値：鳴らす音（sounds）、メロディ（notes＝譜面の元）、曲の終わりの時刻
+function composeGenSong(song) {
+    const r = mulberry32(song.seed);
+    const sounds = [], notes = [], drums = [];
+    const yokai = song.style === "yokai";
+    const lead = yokai ? "shaku" : "koto";
+    const prog = yokai ? [0, 1, 5, 0] : [0, 5, 7, 0]; // ベースの動き（半音）
+    const motifs = {};
+    const startDeg = { A: 4, B: 5, C: 7, D: 2 };
+    function makeMotif(energy, deg0) {
+        const out = []; let deg = deg0;
+        for (let k = 0; k < 16; k++) {
+            const on = k % 2 === 0;
+            const pr = k === 0 ? 1 : on ? 0.5 + 0.45 * energy : 0.08 + 0.55 * energy;
+            if (r() >= pr) continue;
+            if (k) { const step = 1 + Math.floor(r() * 2); deg += r() < 0.5 ? -step : step; }
+            if (deg < 0) deg = 1; if (deg > 9) deg = 8;
+            out.push({ k, deg });
+        }
+        return out;
+    }
+    let bar = 0;
+    song.form.forEach(([sec, len, e], si) => {
+        const sec0 = sec[0];
+        if (!motifs[sec0] && startDeg[sec0] != null) motifs[sec0] = makeMotif(e, startDeg[sec0]);
+        for (let b = 0; b < len; b++, bar++) {
+            const t0 = TRACK_LEAD + bar * BAR;
+            // --- 打楽器 ---
+            if (sec === "O") {
+                if (b === 0) { sounds.push({ t: t0, kind: "taiko", strong: true }, { t: t0, kind: "rin" }, { t: t0, kind: "bass", hz: styleOf().root / 2 }); }
+                continue;
+            }
+            sounds.push({ t: t0, kind: "taiko", strong: true });
+            sounds.push({ t: t0 + BEAT * 2, kind: "taiko", strong: false });
+            if (e >= 0.65) sounds.push({ t: t0 + BEAT * 3 + EIGHTH, kind: "taiko", strong: false });
+            if (sec !== "I") {
+                // 太鼓の音も上級・極の譜面に使う
+                drums.push({ t: t0 + BEAT * 2, e, kind: "taiko" });
+                if (e >= 0.65) drums.push({ t: t0 + BEAT * 3 + EIGHTH, e, kind: "taiko" });
+                if (e >= 0.95 && !yokai) for (let k = 1; k < 8; k += 2) drums.push({ t: t0 + k * EIGHTH, e, kind: "shime" });
+                if (yokai || e < 0.95) [1, 3].forEach(q => drums.push({ t: t0 + BEAT * q, e, kind: "shime" })); // 2・4拍目（拍子木・締め太鼓）
+            }
+            const back = yokai ? "hyoshigi" : "shime";
+            sounds.push({ t: t0 + BEAT, kind: back }, { t: t0 + BEAT * 3, kind: back });
+            if (e >= 0.95 && !yokai) for (let k = 1; k < 8; k += 2) sounds.push({ t: t0 + k * EIGHTH, kind: "shime" }); // サビは締め太鼓を細かく
+            for (let k = 0; k < 8; k++) sounds.push({ t: t0 + k * EIGHTH, kind: "shaker" });
+            sounds.push({ t: t0, kind: "bass", hz: styleOf().root / 2 * Math.pow(2, prog[bar % 4] / 12) });
+            if (e >= 0.6) sounds.push({ t: t0 + BEAT * 2, kind: "bass", hz: styleOf().root / 2 * Math.pow(2, prog[bar % 4] / 12) });
+            if (yokai) {
+                if (e <= 0.7) sounds.push({ t: t0, kind: "drone" });
+                if (bar % 2 === 0) sounds.push({ t: t0, kind: "rin" });
+                if (b === 0 && sec !== "I") sounds.push({ t: t0 - BEAT, kind: "hyudoro" });
+            }
+            if (sec === "I") continue;
+            // --- メロディ（＝譜面の元） ---
+            const motif = motifs[sec0];
+            const rep = Math.floor(b / 2), half = b % 2;
+            let phrase = motif.filter(m => (m.k >= 8) === (half === 1));
+            if (rep === 3 && half === 1) {
+                // フレーズの終わり：主音に落ち着かせる
+                phrase = [{ k: 8, deg: sec0 === "C" ? 7 : 4 }, { k: 12, deg: sec0 === "C" ? 5 : 2 }];
+            } else if (rep === 2 && half === 1) {
+                // 3回目は少し変える
+                phrase = phrase.map(m => ({ k: m.k, deg: Math.max(0, Math.min(9, m.deg + (sec0 === "C" ? -2 : 2))) }));
+            }
+            phrase.forEach(m => {
+                const k = m.k % 8, t = t0 + k * EIGHTH;
+                notes.push({ t, deg: m.deg, k, e });
+                sounds.push({ t, kind: lead, hz: hzOf(m.deg) });
+                if (!yokai && e >= 0.95) sounds.push({ t, kind: "shaku", hz: hzOf(m.deg) * 2 }); // 祭りのサビは笛を重ねる
+            });
+        }
+    });
+    return { sounds, notes, drums, endT: TRACK_LEAD + bar * BAR + 0.5 };
+}
+const TRACK_LEAD = 0.1; // オリジナル曲の1拍目（少しだけ間を置く）
+
+// 難易度ごとに、メロディから叩く音を選ぶ（叩く音は必ず聞こえる音）
+function genChart(g, diff, song) {
+    const r = mulberry32(song.seed + diff.seed);
+    // 曲の音の高さの分布で3等分して、レーンが偏らないようにする（高い音ほど上のレーン）
+    const sorted = g.notes.map(n => n.deg).sort((a, b) => a - b);
+    const q1 = sorted[Math.floor(sorted.length / 3)], q2 = sorted[Math.floor(sorted.length * 2 / 3)];
+    const laneOf = (deg) => deg > q2 ? 0 : deg > q1 ? 1 : deg === q1 && q1 === q2 ? 1 : deg > q1 - 1 && r() < 0.35 ? 1 : 2;
+    const out = [];
+    let lastT = -9;
+    g.notes.forEach(n => {
+        const on = n.k % 2 === 0;
+        let keep;
+        if (diff.key === "easy") keep = n.k % 4 === 0 || (on && n.e >= 0.6);
+        else if (diff.key === "normal") keep = on || (n.e >= 0.65 && r() < 0.5);
+        else keep = true;
+        if (diff.key === "easy" && n.t - lastT < BEAT * 0.99) keep = false; // 初級は1拍に1つまで
+        if (!keep) return;
+        lastT = n.t;
+        out.push({ t: n.t, lane: laneOf(n.deg) });
+        // 極：サビの拍の頭はたまに2つ同時
+        if (diff.key === "kiwami" && n.k % 4 === 0 && n.e >= 0.9 && r() < 0.35) out.push({ t: n.t, lane: (laneOf(n.deg) + 1 + Math.floor(r() * 2)) % 3 });
+        if (diff.key === "hard" && n.k === 0 && n.e >= 0.95 && r() < 0.2) out.push({ t: n.t, lane: (laneOf(n.deg) + 1) % 3 });
+    });
+    // 上級・極：太鼓の音にもノーツ（メロディと重ならない所だけ）
+    if (diff.key === "hard" || diff.key === "kiwami") {
+        const used = new Set(out.map(o => o.t.toFixed(3)));
+        g.drums.forEach(d => {
+            if (diff.key === "hard" && (d.kind !== "taiko" || r() >= 0.5)) return;
+            if (used.has(d.t.toFixed(3))) return;
+            used.add(d.t.toFixed(3));
+            out.push({ t: d.t, lane: d.kind === "taiko" ? 2 : 0 });
+        });
+        out.sort((a, b) => a.t - b.t);
+    }
+    return out;
+}
 let isRhythm = false;
 let rhythmDiff = null;
 let rhythmEndT = 0;
@@ -1411,8 +1552,8 @@ function saveRhythmRecord(key, score, grade, fc, ap) {
     try { localStorage.setItem("sobamichi_rhythm", JSON.stringify(all)); } catch (e) {}
     return isNewBest;
 }
-function kiwamiUnlocked() {
-    const h = loadRhythmRecords().hard;
+function kiwamiUnlocked(songKey = rhythmSongKey) {
+    const h = loadRhythmRecords()[rhythmRecKey(songKey, "hard")];
     return !!h && (h.grade === "A" || h.grade === "S");
 }
 
@@ -1421,15 +1562,28 @@ function openRhythm() {
     if (!trackBuf) loadTrack(); // 前回の読み込みに失敗していたらもう一度
     renderRhythmSelect();
 }
+function selectRhythmSong(key) {
+    if (!RHYTHM_SONGS[key]) return;
+    rhythmSongKey = key;
+    try { localStorage.setItem("sobamichi_rhythm_song", key); } catch (e) {}
+    renderRhythmSelect();
+}
 function renderRhythmSelect() {
     const box = document.getElementById("rhythmCards");
     if (!box) return;
     const rec = loadRhythmRecords();
-    document.getElementById("rhythmSong").textContent = `🎵 ${TRACK.title} / ${TRACK.composer}（${TRACK.site}）`;
+    const song = rhythmSong();
+    const needLoad = song.type === "track" && !trackBuf;
+    // 曲を選ぶタブ
+    document.getElementById("rhythmSongs").innerHTML = Object.values(RHYTHM_SONGS).map(sg =>
+        `<button class="rhSongBtn${sg.key === song.key ? " active" : ""}" onclick="selectRhythmSong('${sg.key}')">
+            <span class="rhSongIcon">${sg.icon}</span><span class="rhSongTitle">${sg.title()}</span>
+            <span class="rhSongMeta">${sg.mood()}・BPM ${sg.bpm}</span></button>`).join("");
+    document.getElementById("rhythmSong").textContent = `${song.icon} ${song.title()} / ${song.credit()}`;
     const status = document.getElementById("rhythmStatus");
-    status.textContent = trackBuf ? "" : T("曲を読み込み中…（数秒かかることがあります）", "Loading the song... (may take a few seconds)");
+    status.textContent = needLoad ? T("曲を読み込み中…（数秒かかることがあります）", "Loading the song... (may take a few seconds)") : "";
     box.innerHTML = Object.values(RHYTHM_DIFFS).map(d => {
-        const r = rec[d.key];
+        const r = rec[rhythmRecKey(song.key, d.key)];
         const locked = d.key === "kiwami" && !kiwamiUnlocked();
         const stars = "★".repeat(d.stars) + "☆".repeat(4 - d.stars);
         const best = r ? `${T("自己ベスト", "Best")} <b style="color:gold;">${r.score.toLocaleString()}</b>　${T("評価", "Grade")} <b class="rhGrade g${r.grade}">${r.grade || "-"}</b>` : T("まだ遊んでいない", "Not played yet");
@@ -1438,20 +1592,20 @@ function renderRhythmSelect() {
             <div class="rhName">${d.name()} <span class="rhStars">${stars}</span></div>
             <div class="rhBest">${locked ? T("🔒 上級で評価A以上を取ると解放", "🔒 Get grade A or better on Hard to unlock") : best}</div>
             <div class="rhMedals">${locked ? "" : medals}</div>
-            <button class="menuBtn rhPlay" ${locked || !trackBuf ? "disabled" : ""} onclick="startRhythm('${d.key}')">${T("プレイ", "Play")}</button>
-            <button class="lobby-back-btn" onclick="openRankingMode('rhythm_${d.key}')">${T("番付", "Leaderboard")}</button>
+            <button class="menuBtn rhPlay" ${locked || needLoad ? "disabled" : ""} onclick="startRhythm('${d.key}')">${T("プレイ", "Play")}</button>
+            <button class="lobby-back-btn" onclick="openRankingMode('${rhythmModeOf(song.key, d.key)}')">${T("番付", "Leaderboard")}</button>
         </div>`;
     }).join("");
 }
 
 function startRhythm(key) {
     const d = RHYTHM_DIFFS[key];
-    if (!d || !trackBuf) return;
+    if (!d || (rhythmSong().type === "track" && !trackBuf)) return;
     if (key === "kiwami" && !kiwamiUnlocked()) return;
     isRankmaMode = false; isDaily = false; reflexSilent = false;
     isRhythm = true; rhythmDiff = d;
     isInfinite = false;
-    currentMode = "rhythm_" + key;
+    currentMode = rhythmModeOf(rhythmSongKey, key);
     startWithCountdown(() => {
         document.getElementById("timeDisplay").style.display = "inline";
     });
@@ -1469,8 +1623,10 @@ function rhythmResult() {
 }
 
 function modeLabelOfRhythm(mode) {
-    const d = RHYTHM_DIFFS[mode.replace("rhythm_", "")];
-    return T(`リズム・${d ? d.name() : ""}`, `Rhythm ${d ? d.name() : ""}`);
+    const parts = mode.replace("rhythm_", "").split("_");
+    const song = RHYTHM_SONGS[parts.length > 1 ? parts[0] : "teion"];
+    const d = RHYTHM_DIFFS[parts[parts.length - 1]];
+    return T(`リズム・${song ? song.title() : ""}・${d ? d.name() : ""}`, `Rhythm: ${song ? song.title() : ""} ${d ? d.name() : ""}`);
 }
 
 // 結果画面：評価・勲章・自己ベスト
@@ -1478,11 +1634,11 @@ function renderRhythmResult(rr) {
     const box = document.getElementById("rhythmResult");
     document.getElementById("rhythmBackBtn").style.display = rr ? "inline-block" : "none";
     if (!rr) { box.style.display = "none"; box.innerHTML = ""; return; }
-    const isNew = saveRhythmRecord(rhythmDiff.key, score, rr.grade, rr.fc, rr.ap);
+    const isNew = saveRhythmRecord(rhythmRecKey(rhythmSongKey, rhythmDiff.key), score, rr.grade, rr.fc, rr.ap);
     const medals = `${rr.fc ? `<span class="rhMedal fc">${T("フルコンボ", "FULL COMBO")}</span>` : ""}${rr.ap ? `<span class="rhMedal ap">${T("全虹", "ALL RAINBOW")}</span>` : ""}`;
     const unlockMsg = rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
         ? `<div style="color:#ff88ff; margin-top:4px;">${T("「極」が解放されている！", "Kiwami is unlocked!")}</div>` : "";
-    box.innerHTML = `<div style="color:#ffe9a8; font-size:16px;">${T("リズムモード", "Rhythm Mode")}・${rhythmDiff.name()}</div>
+    box.innerHTML = `<div style="color:#ffe9a8; font-size:16px;">${rhythmSong().icon} ${rhythmSong().title()}・${rhythmDiff.name()}</div>
         <div class="bigGrade rhGrade g${rr.grade}">${rr.grade}</div>
         <div style="font-size:13px; color:#bbb;">${T("達成率", "Rate")} ${(rr.rate * 100).toFixed(1)}%　${T("ノーツ", "Notes")} ${rhythmTotal}　${T("良打", "GREAT")} ${greatCount}　${T("見逃し", "MISS")} ${pureMiss}</div>
         <div style="margin-top:4px;">${medals}${isNew ? `<span style="color:gold; font-weight:bold;">★ ${T("自己ベスト更新！", "NEW BEST!")}</span>` : ""}</div>${unlockMsg}`;
@@ -2101,7 +2257,7 @@ async function loadTrack() {
 }
 const usingTrack = () => !!trackBuf && bgmStyle === "track";
 // 今のプレイで曲ファイルを流すか（リズムモードは必ず曲、反射モードは流さない）
-const songUsesTrack = () => !!trackBuf && !reflexSilent && (isRhythm || bgmStyle === "track");
+const songUsesTrack = () => !!trackBuf && !reflexSilent && (isRhythm ? rhythmSong().type === "track" : bgmStyle === "track");
 // 曲の時刻 songT の位置から曲ファイルを鳴らす（ループ区間を考慮）
 function playTrackFrom(songT) {
     stopTrack();
@@ -2128,7 +2284,8 @@ const STYLES = {
     yokai:   { semi: [0, 1, 5, 7, 8, 12, 13, 17, 19, 20], root: 329.63 },  // E4基準
     matsuri: { semi: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21], root: 293.66 },  // D4基準
 };
-const styleOf = () => STYLES[bgmStyle] || STYLES.matsuri;
+let songStyle = null; // リズムモードのオリジナル曲を流している間の曲調
+const styleOf = () => STYLES[songStyle || bgmStyle] || STYLES.matsuri;
 const hzOf = (deg) => styleOf().root * Math.pow(2, styleOf().semi[deg] / 12);
 
 let bgmOn = true;
@@ -2176,12 +2333,22 @@ function startSong() {
     nextBar = 0; melodyDeg = 4;
     // デイリーはその日の乱数で、全員同じ曲・同じ譜面にする
     chartRand = isDaily && dailyRand ? dailyRand : mulberry32((Math.random() * 1e9) | 0);
-    setTempo(songUsesTrack() || isRhythm ? TRACK.bpm : 150);
+    const rs = isRhythm ? rhythmSong() : null;
+    songStyle = rs && rs.type === "gen" ? rs.style : null;
+    setTempo(rs ? rs.bpm : songUsesTrack() ? TRACK.bpm : 150);
     if (isRhythm) {
-        // リズムモード：決まった譜面を最初から全部並べておく
-        chartQueue.push(...buildRhythmChart(rhythmDiff));
+        // リズムモード：決まった譜面（オリジナル曲なら曲の音も）を最初から全部並べておく
+        let endT = 0;
+        if (rs.type === "gen") {
+            const g = composeGenSong(rs);
+            soundQueue.push(...g.sounds);
+            chartQueue.push(...genChart(g, rhythmDiff, rs));
+            endT = g.endT;
+        } else {
+            chartQueue.push(...buildRhythmChart(rhythmDiff));
+        }
         rhythmTotal = chartQueue.length;
-        rhythmEndT = (chartQueue.length ? chartQueue[chartQueue.length - 1].t : 0) + 1.8;
+        rhythmEndT = Math.max(endT, (chartQueue.length ? chartQueue[chartQueue.length - 1].t : 0) + 1.8);
     }
     songStartPerf = performance.now(); songPausedTotal = 0; songPaused = false; songActive = true;
     pxPerSec = targetPxPerSec();
@@ -2208,6 +2375,7 @@ function reviveSong() {
 }
 function stopSong() {
     songActive = false;
+    songStyle = null;
     stopTrack();
     chartQueue.length = 0; soundQueue.length = 0;
 }
@@ -2219,6 +2387,7 @@ function targetPxPerSec() {
 
 // 1小節ぶんの曲と譜面を作る
 function composeBar(bar) {
+    if (isRhythm && rhythmSong().type === "gen") return; // オリジナル曲は startSong で全部作ってある
     const track = songUsesTrack() || isRhythm;
     const t0 = (track ? TRACK.offset : 0) + bar * BAR;
     const r = chartRand;
