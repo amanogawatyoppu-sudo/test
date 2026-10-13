@@ -32,7 +32,6 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 /* 修行モードの3ボタンは横一列 */
 .modeRow { display: flex; justify-content: center; gap: 10px; width: min(96vw, 760px); margin: 4px 0; }
 .wideBtn { width: auto !important; min-width: 200px; padding-left: 22px !important; padding-right: 22px !important; white-space: nowrap; }
-#rankmaEntryBtn { width: auto !important; min-width: 240px; padding-left: 22px !important; padding-right: 22px !important; }
 .modeRow .menuBtn { flex: 1 1 0; min-width: 0; max-width: 240px; width: auto !important; margin: 0 !important; }
 #titleScreen > :first-child { margin-top: auto; }
 #titleScreen > :last-child { margin-bottom: auto; }
@@ -71,6 +70,102 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
   50%, 100% { left: 120%; }
 }
 
+
+/* ===== タイトル画面（和風の背景・キャラ・モードカード） ===== */
+#titleScreen {
+  background-color: #0b0d1a;
+  background-image:
+    radial-gradient(ellipse at 50% 18%, rgba(255,190,80,0.20), transparent 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(60,90,160,0.35), transparent 60%),
+    radial-gradient(circle at 50% 100%, transparent 38%, rgba(212,175,55,0.07) 39%, rgba(212,175,55,0.07) 42%, transparent 43%, transparent 58%, rgba(212,175,55,0.06) 59%, rgba(212,175,55,0.06) 62%, transparent 63%, transparent 78%, rgba(212,175,55,0.05) 79%, rgba(212,175,55,0.05) 82%, transparent 83%),
+    radial-gradient(circle at 50% 100%, transparent 38%, rgba(212,175,55,0.07) 39%, rgba(212,175,55,0.07) 42%, transparent 43%, transparent 58%, rgba(212,175,55,0.06) 59%, rgba(212,175,55,0.06) 62%, transparent 63%, transparent 78%, rgba(212,175,55,0.05) 79%, rgba(212,175,55,0.05) 82%, transparent 83%);
+  background-size: auto, auto, 64px 32px, 64px 32px;
+  background-position: 0 0, 0 0, 0 0, 32px 16px;
+}
+#titleScreen > .tsWrap { margin: auto 0; position: relative; z-index: 1; width: min(96vw, 780px); display: flex; flex-direction: column; align-items: center; }
+/* 舞い落ちるそばの花 */
+#tsPetals { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.tsPetal { position: absolute; top: -30px; color: #fff; text-shadow: 0 0 6px rgba(255,220,240,0.6); animation: tsFall linear infinite; will-change: transform; }
+@keyframes tsFall {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 0.85; }
+  50%  { transform: translate(40px, 55vh) rotate(180deg); }
+  90%  { opacity: 0.7; }
+  100% { transform: translate(-20px, 110vh) rotate(360deg); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { #tsPetals { display: none; } }
+
+/* ロゴとキャラ */
+.tsHero { display: flex; align-items: flex-end; justify-content: center; gap: 8px; width: 100%; }
+.tsLogo #title { white-space: nowrap; }
+.tsLogo { text-align: center; padding-bottom: 14px; min-width: 0; }
+.tsSub { color: #f3e6c4; font-size: 14px; font-family: 'Zen Old Mincho'; letter-spacing: 2px; }
+.tsChar { position: relative; width: 150px; height: 150px; flex: 0 0 auto; }
+.tsChar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7)); transition: opacity 0.6s ease, transform 0.6s ease; }
+.tsChar img.out { opacity: 0; transform: translateY(8px) scale(0.96); }
+.tsChar.right img { transform: scaleX(-1); }
+.tsChar.right img.out { transform: scaleX(-1) translateY(8px) scale(0.96); }
+.tsCharTag { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); white-space: nowrap; font-size: 11px; padding: 1px 8px; border-radius: 10px; background: rgba(0,0,0,0.7); border: 1px solid var(--rc, #888); color: #fff; }
+
+/* 自分の情報 */
+#tsInfo { margin: 6px 0 10px; font-size: 13px; color: #ccc; background: rgba(0,0,0,0.45); border: 1px solid rgba(255,215,0,0.25); border-radius: 18px; padding: 5px 14px; display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; align-items: center; }
+#tsInfo b { color: gold; font-weight: normal; }
+.tsLink { background: none; border: 1px solid #c9a227; color: gold; border-radius: 12px; padding: 2px 12px; font-size: 13px; cursor: pointer; font-family: inherit; }
+
+/* モードカード */
+.tsModes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.tsCard { position: relative; display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 14px; border-radius: 14px; cursor: pointer; color: #222; border: none; font-family: 'Noto Serif JP'; box-shadow: 0 4px 14px rgba(0,0,0,0.45); transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.tsCard:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.55); }
+.tsCard:active { transform: translateY(1px); }
+.tsCardIcon { font-size: 34px; line-height: 1; flex: 0 0 auto; }
+.tsCardName { display: block; font-family: 'Zen Old Mincho'; font-size: 21px; font-weight: bold; line-height: 1.2; }
+.tsCardSub { display: block; font-size: 12px; opacity: 0.8; margin-top: 2px; }
+.tsCardBadge { display: inline-block; font-size: 11px; font-weight: bold; padding: 1px 7px; border-radius: 8px; margin-left: 6px; vertical-align: middle; background: rgba(0,0,0,0.75); color: #ffd34d; font-family: 'Noto Serif JP'; }
+.tsCard.rhythm { background: linear-gradient(135deg, #fff3d6, #ffb84d); }
+.tsCard.reflex { background: linear-gradient(135deg, #fff8d8, #ffd84a); cursor: default; flex-direction: column; align-items: stretch; gap: 8px; }
+.tsCard.reflex:hover { transform: none; }
+.tsCard.reflex .tsCardHead { display: flex; align-items: center; gap: 12px; }
+.tsCal { display: inline-flex; flex-direction: column; width: 40px; border-radius: 6px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); text-align: center; }
+.tsCalTop { background: #d33; color: #fff; font-size: 9px; font-weight: bold; padding: 1px 0; }
+.tsCalDay { font-size: 15px; font-weight: bold; color: #222; padding: 3px 0 2px; font-family: 'Noto Serif JP'; }
+.tsCard.daily { background: linear-gradient(135deg, #effee6, #8fdc7a); }
+.tsCard.reflex .modeRow { width: 100%; gap: 6px; margin: 0; }
+.tsCard.reflex .modeRow .menuBtn { white-space: nowrap; font-size: 15px !important; padding: 8px 4px !important; background: rgba(255,255,255,0.75); border: 1px solid rgba(0,0,0,0.15); border-radius: 8px; }
+.tsCard.reflex .modeRow .menuBtn:hover { background: #fff; }
+.tsModes #rankmaEntryBtn { width: auto; max-width: none; margin: 0; padding: 12px 14px; font-size: inherit; text-align: left; display: flex; align-items: center; gap: 12px; white-space: normal; color: white; animation: none; }
+.tsModes #rankmaEntryBtn .tsCardSub { opacity: 0.9; }
+/* 下段：マイページ・番付・設定 */
+.tsSecondary { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.tsSecondary .menuBtn { width: auto; margin: 0; padding: 10px 18px; font-size: 16px; }
+#tsRankRow { display: none; gap: 6px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
+#tsRankRow.open { display: flex; }
+#tsRankRow .menuBtn { width: auto; margin: 0; padding: 7px 14px; font-size: 14px; }
+#tsRankRow .tsRankNote { width: 100%; text-align: center; font-size: 11px; color: #999; }
+.tsFooter { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.tsFooter .lobby-back-btn { padding: 6px 12px; font-size: 13px; background: rgba(0,0,0,0.35); }
+#bgmCredit { width: 100%; text-align: center; }
+
+@media (max-width: 1200px) {
+  .tsChar { width: 120px; height: 120px; }
+}
+@media (max-width: 1200px) and (orientation: portrait) {
+  #titleScreen { padding: 16px 12px 32px; }
+  .tsCard .menuBtn, .tsSecondary .menuBtn, #tsRankRow .menuBtn { width: auto; max-width: none; }
+}
+@media (max-width: 560px) {
+  .tsModes { grid-template-columns: 1fr; }
+  .tsHero .tsChar { width: 72px; height: 72px; }
+  .tsHero { gap: 2px; }
+  .tsLogo #title { font-size: 34px; white-space: nowrap; }
+  .tsCard.reflex .modeRow .menuBtn { font-size: 13px !important; }
+  .tsSub { font-size: 12px; letter-spacing: 1px; }
+  .tsCardName { font-size: 19px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .tsChar { width: 80px; height: 80px; }
+  .tsCard { padding: 8px 12px; }
+  .tsCardIcon { font-size: 26px; }
+}
 
 /* ===== カウントダウン ===== */
 #countdown {
@@ -684,12 +779,8 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 /* ===== スマホ共通 ===== */
 @media (max-width: 1200px) {
   #title { font-size: 36px; }
-  #titleScreen > div:nth-child(2) { font-size: 13px; margin-bottom: 10px; }
   .menuBtn { width: 200px; padding: 12px; font-size: 17px; margin: 6px; }
   #rankmaEntryBtn { width: 240px; font-size: 18px; padding: 14px; }
-  #titleScreen div[style*="margin-top:10px"] button {
-    width: 100px !important; font-size: 12px !important; padding: 8px !important; margin: 4px !important;
-  }
   .hit { width: 110px; height: 110px; font-size: 32px; }
   #bottomArea { width: 100vw; justify-content:center; gap:2px; }
   #gaugeRow { width: 90%; }
@@ -885,39 +976,71 @@ body.mobileLayout #workerArea { display: none; }
 
 <!-- タイトル画面 -->
 <div id="titleScreen">
- <div id="title">無限そば道</div>
- <div data-en="Endless Soba Way ~ The Road to Echizen Kiwami ~" style="color:white; margin-bottom:8px; font-size:14px;">～ 絶・越前極への道 ～</div>
+ <div id="tsPetals" aria-hidden="true"></div>
+ <div class="tsWrap">
+  <!-- ロゴと職人たち（左は連れて行く職人、右は順番に入れ替わる） -->
+  <div class="tsHero">
+    <div class="tsChar left"><img id="tsCharL" alt="" draggable="false"><span class="tsCharTag" id="tsCharLTag" style="display:none;"></span></div>
+    <div class="tsLogo">
+      <div id="title">無限そば道</div>
+      <div class="tsSub" data-en="Endless Soba Way ~ The Road to Echizen Kiwami ~">～ 絶・越前極への道 ～</div>
+    </div>
+    <div class="tsChar right"><img id="tsCharR" alt="" draggable="false"></div>
+  </div>
 
- <!-- 通常修行 -->
- <button data-en="🎵 Rhythm Mode (with music)" class="menuBtn wideBtn" style="background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 リズムモード（BGMあり）</button>
- <div data-en="A full song · 4 difficulty levels · grades &amp; medals" style="color:#ffb84d; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:6px; letter-spacing:1px;">1曲まるごと・4段階の難易度・評価と勲章</div>
- <div data-en="── Reflex Mode (no music) ──" style="color:#aaa; font-size:12px; margin-bottom:4px; font-family:'Zen Old Mincho'; letter-spacing:2px;">── 反射モード（BGMなし）──</div>
- <div class="modeRow">
-   <button data-en="30 sec" class="menuBtn" onclick="startNormal(30)">30秒修行</button>
-   <button data-en="60 sec" class="menuBtn" onclick="startNormal(60)">60秒修行</button>
-   <button data-en="Endless" class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
- </div>
- <button data-en="📅 Daily Challenge" class="menuBtn wideBtn" style="background:linear-gradient(#eaffe0,#8fdc7a);" onclick="openDaily()">📅 今日のそば打ち</button>
- <div data-en="Same chart for everyone · one shot per day" style="color:#8fdc7a; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">毎日全員同じ譜面・1日1回の一発勝負</div>
+  <!-- 自分の情報（ログイン中なら名前・そば粉・今日のそば打ち） -->
+  <div id="tsInfo"></div>
 
- <!-- ランクマッチ挑戦ボタン -->
- <button data-en="⚔️ Ranked Match" id="rankmaEntryBtn" onclick="openRankmaLobby()">⚔️ ランクマッチに挑戦する</button>
- <div data-en="Battle for this month&#x27;s top soba master" style="color:#ff8844; font-size:12px; font-family:'Zen Old Mincho'; margin-bottom:4px; letter-spacing:1px;">月間最強職人を決める真剣勝負</div>
+  <!-- 遊び方を選ぶ -->
+  <div class="tsModes">
+    <button class="tsCard rhythm" onclick="openRhythm()">
+      <span class="tsCardIcon">🎵</span>
+      <span><span class="tsCardName"><span data-en="Rhythm Mode">リズムモード</span><span class="tsCardBadge" data-en="MUSIC">BGMあり</span></span>
+      <span class="tsCardSub" data-en="A full song · 4 difficulty levels · grades &amp; medals">1曲まるごと・4段階の難易度・評価と勲章</span></span>
+    </button>
+    <div class="tsCard reflex">
+      <div class="tsCardHead">
+        <span class="tsCardIcon">⚡</span>
+        <span><span class="tsCardName"><span data-en="Reflex Mode">反射モード</span><span class="tsCardBadge" data-en="NO MUSIC">BGMなし</span></span>
+        <span class="tsCardSub" data-en="Random notes · only your hits make sound">毎回ちがう譜面・叩いた音だけ</span></span>
+      </div>
+      <div class="modeRow">
+        <button data-en="30 sec" class="menuBtn" onclick="startNormal(30)">30秒修行</button>
+        <button data-en="60 sec" class="menuBtn" onclick="startNormal(60)">60秒修行</button>
+        <button data-en="Endless" class="menuBtn" onclick="startNormalInfinite()">終わりなき修行</button>
+      </div>
+    </div>
+    <button class="tsCard daily" onclick="openDaily()">
+      <span class="tsCardIcon tsCal"><span class="tsCalTop" data-en="TODAY">今日</span><span class="tsCalDay" id="tsDailyDate"></span></span>
+      <span><span class="tsCardName" data-en="Daily Challenge">今日のそば打ち</span>
+      <span class="tsCardSub" data-en="Same chart for everyone · one shot per day">毎日全員同じ譜面・1日1回の一発勝負</span></span>
+    </button>
+    <button id="rankmaEntryBtn" class="tsCard ranked" onclick="openRankmaLobby()">
+      <span class="tsCardIcon">⚔️</span>
+      <span><span class="tsCardName" data-en="Ranked Match">ランクマッチ</span>
+      <span class="tsCardSub" data-en="Battle for this month&#x27;s top soba master">月間最強職人を決める真剣勝負</span></span>
+    </button>
+  </div>
 
- <!-- 番付閲覧 -->
- <div style="margin-top:4px; border-top:1px solid #333; padding-top:8px;">
-   <button data-en="🏠 My Page · Gacha" class="menuBtn wideBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
-   <div data-en="Leaderboards" style="color:#888; font-size:12px; margin:8px 0 4px; letter-spacing:1px;">番付を見る</div>
-   <button data-en="30 sec" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('30')">30秒番付</button>
-   <button data-en="60 sec" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('60')">60秒番付</button>
-   <button data-en="Endless" class="menuBtn" style="width:80px; font-size:14px; padding:8px;" onclick="openRankingMode('infinite')">無限番付</button>
- </div>
- <div style="margin-top:10px;">
-   <button class="lobby-back-btn" data-en="❓ How to play" onclick="openHowTo()">❓ 遊び方</button>
-   <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
-   <button class="lobby-back-btn bgmToggle" onclick="toggleBgm()">🔊 BGM</button>
-   <button class="lobby-back-btn bgmStyleToggle" onclick="toggleBgmStyle()">👻 曲</button>
-   <div id="bgmCredit" style="color:#777; font-size:11px; margin-top:6px;"></div>
+  <!-- マイページ・番付 -->
+  <div class="tsSecondary">
+    <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+    <button data-en="🏆 Leaderboards" class="menuBtn" onclick="document.getElementById('tsRankRow').classList.toggle('open')">🏆 番付を見る</button>
+  </div>
+  <div id="tsRankRow">
+    <button data-en="30 sec" class="menuBtn" onclick="openRankingMode('30')">30秒番付</button>
+    <button data-en="60 sec" class="menuBtn" onclick="openRankingMode('60')">60秒番付</button>
+    <button data-en="Endless" class="menuBtn" onclick="openRankingMode('infinite')">無限番付</button>
+    <div class="tsRankNote" data-en="Rhythm Mode leaderboards are on each difficulty card.">リズムモードの番付は、難易度選択の画面から見られる。</div>
+  </div>
+
+  <div class="tsFooter">
+    <button class="lobby-back-btn" data-en="❓ How to play" onclick="openHowTo()">❓ 遊び方</button>
+    <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
+    <button class="lobby-back-btn bgmToggle" onclick="toggleBgm()">🔊 BGM</button>
+    <button class="lobby-back-btn bgmStyleToggle" onclick="toggleBgmStyle()">👻 曲</button>
+    <div id="bgmCredit" style="color:#777; font-size:11px; margin-top:2px;"></div>
+  </div>
  </div>
 </div>
 
@@ -1390,6 +1513,7 @@ function switchScreen(screenId) {
             target.style.display = "flex";
         } else if (screenId === "titleScreen") {
             target.style.display = "flex";
+            if (typeof renderTitle === "function") renderTitle();
         } else if (screenId === "game") {
             target.style.display = "block";
         } else {
@@ -3041,10 +3165,11 @@ function setAccount(name, pass) {
 }
 function clearAccount() {
     account = null; profile = null; playerStats = null;
-    try { sessionStorage.removeItem("sobamichi_account"); } catch (e) {}
+    try { sessionStorage.removeItem("sobamichi_account"); sessionStorage.removeItem("sobamichi_profile"); } catch (e) {}
 }
 function logout() {
     clearAccount();
+    renderTitle();
     switchScreen("titleScreen");
 }
 
@@ -3078,7 +3203,11 @@ async function playerAction(action, extra = {}) {
         body: JSON.stringify({ action, name: account.name, pass: account.pass, ...extra })
     });
     const data = await res.json();
-    if (data.profile) profile = data.profile;
+    if (data.profile) {
+        profile = data.profile;
+        try { sessionStorage.setItem("sobamichi_profile", JSON.stringify(profile)); } catch (e) {}
+        renderTitle();
+    }
     if (data.stats) playerStats = data.stats;
     if (data.status === "wrong_pass" || data.status === "no_user") clearAccount();
     return data;
@@ -3224,6 +3353,107 @@ async function earnCoins() {
 }
 
 // ログイン済みなら起動時にプロフィールを読み込み、連れて行くキャラの能力を使えるようにする
+
+// ===== タイトル画面：職人の入れ替わり・自分の情報・そばの花 =====
+// 前回の読み込みで取れたプロフィールを先に使い、タイトルの表示をすぐ出す（サーバーの応答で上書き）
+if (account && !profile) {
+    try { profile = JSON.parse(sessionStorage.getItem("sobamichi_profile") || "null"); } catch (e) { profile = null; }
+}
+function saveDailyDone(date, score) {
+    try { localStorage.setItem("sobamichi_daily_done", JSON.stringify({ date, score })); } catch (e) {}
+}
+function dailyDoneToday() {
+    try {
+        const d = JSON.parse(localStorage.getItem("sobamichi_daily_done") || "null");
+        return d && d.date === todayJST() ? d : null;
+    } catch (e) { return null; }
+}
+const TS_CHAR_IDS = Object.keys(CHARACTERS).filter(id => CHARACTERS[id].img);
+let tsCycle = Math.floor(Math.random() * TS_CHAR_IDS.length);
+function tsSetChar(img, id, instant) {
+    const c = CHARACTERS[id];
+    if (!c || img.dataset.id === id) return;
+    const apply = () => { img.src = c.img; img.alt = charName(c); img.dataset.id = id; img.classList.remove("out"); };
+    if (instant) { apply(); return; }
+    img.classList.add("out");
+    setTimeout(apply, 600);
+}
+function tsPartnerId() {
+    return account && profile && profile.selected && CHARACTERS[profile.selected] && CHARACTERS[profile.selected].img ? profile.selected : null;
+}
+function tsNextChar(skip) {
+    for (let i = 0; i < TS_CHAR_IDS.length; i++) {
+        tsCycle = (tsCycle + 1) % TS_CHAR_IDS.length;
+        const id = TS_CHAR_IDS[tsCycle];
+        if (!skip.includes(id)) return id;
+    }
+    return TS_CHAR_IDS[0];
+}
+function renderTitleChars(instant) {
+    const L = document.getElementById("tsCharL"), R = document.getElementById("tsCharR");
+    const tag = document.getElementById("tsCharLTag");
+    const partner = tsPartnerId();
+    if (partner) {
+        tsSetChar(L, partner, instant);
+        tag.textContent = T("相棒", "Partner");
+        tag.style.setProperty("--rc", RARITY_COLOR[CHARACTERS[partner].r]);
+        tag.style.display = "";
+    } else {
+        tag.style.display = "none";
+        if (!L.dataset.id || instant) tsSetChar(L, tsNextChar([R.dataset.id]), true);
+    }
+    if (!R.dataset.id) tsSetChar(R, tsNextChar([L.dataset.id, partner]), true);
+}
+// 数秒ごとに職人が入れ替わる（相棒がいれば左は固定）
+setInterval(() => {
+    const ts = document.getElementById("titleScreen");
+    if (!ts || ts.style.display === "none" || document.hidden) return;
+    const L = document.getElementById("tsCharL"), R = document.getElementById("tsCharR");
+    const partner = tsPartnerId();
+    tsSetChar(R, tsNextChar([L.dataset.id, R.dataset.id, partner]));
+    if (!partner) setTimeout(() => tsSetChar(L, tsNextChar([L.dataset.id, R.dataset.id])), 1700);
+}, 3600);
+
+function renderTitleInfo() {
+    const el = document.getElementById("tsInfo");
+    if (!el) return;
+    document.getElementById("tsDailyDate").textContent = shortDate();
+    if (!account) {
+        el.innerHTML = `<span>${T("ログインすると、ガチャ・今日のそば打ち・マイページが遊べる", "Log in to unlock gacha, the Daily Challenge and My Page")}</span>
+            <button class="tsLink" onclick="openMyPage()">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
+        return;
+    }
+    const parts = [`👤 <b>${escapeHtml(account.name)}</b>`];
+    if (profile) parts.push(`🌾 ${T("そば粉", "Flour")} <b>${Number(profile.coins || 0).toLocaleString()}</b>`);
+    const dd = dailyDoneToday();
+    parts.push(dd ? `📅 ${T("今日のそば打ち", "Daily")} <b>${T("済", "done")}</b>（${Number(dd.score).toLocaleString()}${T("点", " pts")}）`
+                  : `📅 ${T("今日のそば打ち", "Daily")} <b style="color:#ffcc88;">${T("まだ", "not yet")}</b>`);
+    el.innerHTML = parts.map(x => `<span>${x}</span>`).join("");
+}
+function renderTitle() {
+    renderTitleInfo();
+    renderTitleChars(false);
+}
+
+// そばの白い花びらを降らせる（スマホは少なめ）
+(function makePetals() {
+    const box = document.getElementById("tsPetals");
+    if (!box) return;
+    const n = (window.matchMedia && matchMedia("(pointer: coarse)").matches) || innerWidth < 800 ? 9 : 18;
+    for (let i = 0; i < n; i++) {
+        const p = document.createElement("span");
+        p.className = "tsPetal";
+        p.textContent = Math.random() < 0.7 ? "✿" : "❀";
+        p.style.left = (Math.random() * 100) + "vw";
+        p.style.fontSize = (10 + Math.random() * 12) + "px";
+        p.style.animationDuration = (9 + Math.random() * 9) + "s";
+        p.style.animationDelay = (-Math.random() * 18) + "s";
+        p.style.opacity = 0.5 + Math.random() * 0.4;
+        box.appendChild(p);
+    }
+})();
+renderTitleChars(true);
+renderTitleInfo();
 if (account) playerAction("profile").catch(() => {});
 
 // ===== 今日のそば打ち（デイリー） =====
@@ -3272,6 +3502,7 @@ function renderDaily() {
     document.getElementById("dlDate").textContent = T(`${shortDate(d.date)} の譜面`, `Chart for ${shortDate(d.date)}`);
     const me = document.getElementById("dlMe");
     const btn = document.getElementById("dlStartBtn");
+    if (d.me) saveDailyDone(d.date || todayJST(), d.me.score);
     if (d.me) {
         me.innerHTML = T(`今日の記録：<span style="color:gold;">${d.me.score.toLocaleString()}点</span>（${d.me.rank}位 / ${d.total}人）<br><span style="font-size:13px; color:#aaa;">記録は1日1回目だけ。もう一度遊ぶと練習になる。</span>`,
             `Your score today: <span style="color:gold;">${d.me.score.toLocaleString()} pts</span> (#${d.me.rank} of ${d.total})<br><span style="font-size:13px; color:#aaa;">Only your first try counts. Playing again is practice.</span>`);
@@ -3319,6 +3550,7 @@ async function submitDailyResult() {
             ? T(`📅 今日の番付 <span style="color:gold; font-size:30px;">${res.rank}位</span> / ${res.total}人中`, `📅 Today's ranking: <span style="color:gold; font-size:30px;">#${res.rank}</span> of ${res.total}`)
             : T(`今日はもう記録済み（${res.score.toLocaleString()}点・${rankText}）`, `Already recorded today (${res.score.toLocaleString()} pts, ${rankText})`);
         dailyInfo = { ...(dailyInfo || {}), me: { score: res.score, rank: res.rank }, total: res.total };
+        saveDailyDone((dailyInfo && dailyInfo.date) || todayJST(), res.score);
     } catch (e) {
         el.textContent = T("通信失敗。記録できたかは「今日のそば打ち」画面で確認してくれ。", "Connection failed. Check the Daily Challenge screen to see if it was saved.");
     }
