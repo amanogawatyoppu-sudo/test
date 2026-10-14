@@ -3749,99 +3749,204 @@ function sobaGrade(perfect, accuracy, kamiRate) {
 }
 
 function drawSobaBowl(ctx, cx, cy, grade, rand) {
-    const rx = 230, ry = 78;
+    const rx = 220, ry = 74;                 // 器の口（楕円）
     const lv = { yudesugi: 0, nami: 1, ume: 2, take: 3, matsu: 4 }[grade.key];
-
-    // 湯気
+    const bottom = cy + 190;
+    const rimColor = lv === 4 ? "#e3b94a" : lv === 3 ? "#b8322a" : "#2a1d16";
+    const rimLight = lv === 4 ? "#fff0b0" : lv === 3 ? "#f06a5a" : "#6b5444";
     ctx.save();
-    ctx.strokeStyle = "rgba(255,255,255,0.18)"; ctx.lineWidth = 6; ctx.lineCap = "round";
-    for (let i = 0; i < (lv === 0 ? 1 : 3); i++) {
-        const x = cx - 80 + i * 80;
+
+    // --- 机に落ちる影 ---
+    const sh = ctx.createRadialGradient(cx, bottom + 6, 10, cx, bottom + 6, 230);
+    sh.addColorStop(0, "rgba(0,0,0,0.55)"); sh.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = sh; ctx.beginPath(); ctx.ellipse(cx, bottom + 6, 230, 34, 0, 0, Math.PI * 2); ctx.fill();
+
+    // --- 器の胴（外は漆黒、左上から光） ---
+    const body = new Path2D();
+    body.moveTo(cx - rx, cy);
+    body.bezierCurveTo(cx - rx + 4, cy + 120, cx - rx * 0.5, bottom - 6, cx - 70, bottom);
+    body.lineTo(cx + 70, bottom);
+    body.bezierCurveTo(cx + rx * 0.5, bottom - 6, cx + rx - 4, cy + 120, cx + rx, cy);
+    body.ellipse(cx, cy, rx, ry, 0, 0, Math.PI, false);
+    const bg = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
+    bg.addColorStop(0, "#0b0807"); bg.addColorStop(0.28, "#3a2c26"); bg.addColorStop(0.42, "#1a1310"); bg.addColorStop(1, "#050303");
+    ctx.fillStyle = bg; ctx.fill(body);
+    // 胴の模様：竹以上は金の青海波、それ以外はうっすら
+    ctx.save(); ctx.clip(body);
+    ctx.strokeStyle = lv >= 3 ? "rgba(227,185,74,0.5)" : "rgba(255,255,255,0.07)"; ctx.lineWidth = 2;
+    for (let row = 0; row < 4; row++) for (let x = cx - rx - 40; x < cx + rx + 40; x += 40) {
+        const y = cy + 104 + row * 20, off = row % 2 ? 20 : 0;
+        for (const rr of [18, 11]) { ctx.beginPath(); ctx.arc(x + off, y, rr, Math.PI, 2 * Math.PI); ctx.stroke(); }
+    }
+    // 漆の照り（縦の光の筋）
+    const gl = ctx.createLinearGradient(cx - rx * 0.62, 0, cx - rx * 0.38, 0);
+    gl.addColorStop(0, "rgba(255,255,255,0)"); gl.addColorStop(0.5, "rgba(255,255,255,0.13)"); gl.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = gl; ctx.fillRect(cx - rx, cy, rx, bottom - cy);
+    ctx.restore();
+    // 高台
+    ctx.fillStyle = "#120c0a"; ctx.beginPath(); ctx.ellipse(cx, bottom, 82, 11, 0, 0, Math.PI * 2); ctx.fill();
+
+    // --- 器の内側（朱塗り）とつゆ ---
+    const inner = ctx.createLinearGradient(0, cy - ry, 0, cy + ry);
+    inner.addColorStop(0, "#7a1a12"); inner.addColorStop(0.5, "#b02a1e"); inner.addColorStop(1, "#5a120c");
+    ctx.fillStyle = inner; ctx.beginPath(); ctx.ellipse(cx, cy, rx - 4, ry - 3, 0, 0, Math.PI * 2); ctx.fill();
+    const broth = ctx.createRadialGradient(cx - 50, cy + 2, 10, cx, cy + 12, rx);
+    broth.addColorStop(0, lv === 0 ? "#8a6a4a" : "#7a4a1e"); broth.addColorStop(0.7, lv === 0 ? "#6a5038" : "#4e2a0e"); broth.addColorStop(1, "#2c1606");
+    ctx.fillStyle = broth; ctx.beginPath(); ctx.ellipse(cx, cy + 12, rx - 18, ry - 18, 0, 0, Math.PI * 2); ctx.fill();
+    // 奥側のふち
+    ctx.lineWidth = 9; ctx.strokeStyle = rimColor;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, Math.PI, 2 * Math.PI); ctx.stroke();
+
+    // --- 湯気（ふわっと） ---
+    ctx.save();
+    ctx.lineCap = "round"; ctx.shadowColor = "rgba(255,255,255,0.6)"; ctx.shadowBlur = 18;
+    const wisps = lv === 0 ? 1 : 3;
+    for (let i = 0; i < wisps; i++) {
+        const x = cx - 70 + i * 70 + (rand() - 0.5) * 20, len = 120 + rand() * 50;
+        const g = ctx.createLinearGradient(0, cy - 40, 0, cy - 40 - len);
+        g.addColorStop(0, "rgba(255,255,255,0.0)"); g.addColorStop(0.3, "rgba(255,255,255,0.22)"); g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.strokeStyle = g; ctx.lineWidth = 9;
         ctx.beginPath(); ctx.moveTo(x, cy - 40);
-        ctx.bezierCurveTo(x - 30, cy - 90, x + 30, cy - 120, x, cy - 170);
+        ctx.bezierCurveTo(x - 28, cy - 40 - len * 0.35, x + 30, cy - 40 - len * 0.65, x - 6, cy - 40 - len);
         ctx.stroke();
     }
     ctx.restore();
 
-    // 器の胴（漆黒。松は金縁、竹は朱縁）
-    const rimColor = lv === 4 ? "#e8c04a" : lv === 3 ? "#c8342c" : "#3a2a1e";
-    ctx.beginPath();
-    ctx.moveTo(cx - rx, cy);
-    ctx.bezierCurveTo(cx - rx, cy + 150, cx - rx * 0.45, cy + 195, cx - 80, cy + 200);
-    ctx.lineTo(cx + 80, cy + 200);
-    ctx.bezierCurveTo(cx + rx * 0.45, cy + 195, cx + rx, cy + 150, cx + rx, cy);
-    ctx.closePath();
-    const bodyGrad = ctx.createLinearGradient(cx - rx, 0, cx + rx, 0);
-    bodyGrad.addColorStop(0, "#050404"); bodyGrad.addColorStop(0.35, "#2a2220"); bodyGrad.addColorStop(1, "#050404");
-    ctx.fillStyle = bodyGrad; ctx.fill();
-    // 胴の青海波（竹以上は金）
-    ctx.save(); ctx.clip();
-    ctx.strokeStyle = lv >= 3 ? "rgba(232,192,74,0.55)" : "rgba(255,255,255,0.08)"; ctx.lineWidth = 2;
-    for (let row = 0; row < 3; row++) {
-        for (let x = cx - rx; x < cx + rx; x += 44) {
-            const y = cy + 120 + row * 22, off = row % 2 ? 22 : 0;
-            ctx.beginPath(); ctx.arc(x + off, y, 20, Math.PI, 2 * Math.PI); ctx.stroke();
-        }
-    }
-    ctx.restore();
-    // 高台
-    ctx.fillStyle = "#0d0a08";
-    ctx.beginPath(); ctx.ellipse(cx, cy + 202, 95, 14, 0, 0, Math.PI * 2); ctx.fill();
-
-    // つゆ面
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "#5a3417"; ctx.fill();
-    ctx.lineWidth = 10; ctx.strokeStyle = rimColor; ctx.stroke();
-
-    // 麺・薬味は器の口の中だけに描く
+    // --- 麺：器の中でこんもり渦を巻く（越前そばは黒っぽく、そば殻の粒が見える） ---
     ctx.save();
-    ctx.beginPath(); ctx.ellipse(cx, cy, rx - 12, ry - 8, 0, 0, Math.PI * 2); ctx.clip();
-    const noodle = lv === 0 ? ["#9f978a", "#b9b2a6"] : ["#b89a6a", "#e2cfa6"];
-    for (let i = 0; i < 90; i++) {
-        const x0 = cx + (rand() - 0.5) * rx * 2, y0 = cy + (rand() - 0.5) * ry * 2;
-        const x3 = x0 + (rand() - 0.5) * 260, y3 = y0 + (rand() - 0.5) * 60;
-        const path = () => {
-            ctx.beginPath(); ctx.moveTo(x0, y0);
-            ctx.bezierCurveTo(x0 + (rand() - 0.5) * 200, y0 + (rand() - 0.5) * 80, x3 + (rand() - 0.5) * 200, y3 + (rand() - 0.5) * 80, x3, y3);
-        };
-        const s = rand();
-        path(); ctx.strokeStyle = noodle[0]; ctx.lineWidth = lv === 0 ? 8 : 6; ctx.stroke();
-        ctx.strokeStyle = noodle[1]; ctx.lineWidth = 2; ctx.globalAlpha = 0.6 + s * 0.4; ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.beginPath(); ctx.rect(cx - rx, cy - 140, rx * 2, 140); ctx.ellipse(cx, cy + 6, rx - 16, ry - 12, 0, 0, Math.PI * 2); ctx.clip();
+    const ncx = cx - 18, ncy = cy + 6;
+    const cols = lv === 0 ? ["#6e675d", "#a39b8e", "#cfc8bb"] : ["#3b2d22", "#806a52", "#b9a07e"];
+    const strands = [];
+    const nStr = lv === 0 ? 60 : 150;
+    for (let i = 0; i < nStr; i++) {
+        const t = Math.sqrt(rand());                       // 外側ほど多い
+        const R = 22 + t * (rx - 70);
+        strands.push({ R, a0: rand() * Math.PI * 2, len: (lv === 0 ? 0.5 : 1.1) + rand() * 1.6, w: (rand() - 0.5) * 6, ph: rand() * 6 });
     }
+    strands.sort((a, b) => b.R - a.R);                     // 外側（低い）→内側（高い）の順に描く
+    const pt = (s, a) => {
+        const lift = Math.pow(1 - s.R / (rx - 48), 1.4) * 78;           // 内側ほど盛り上がる
+        return [ncx + Math.cos(a) * s.R + Math.sin(a * 3 + s.ph) * 3, ncy + Math.sin(a) * s.R * 0.34 - lift + s.w * 0.3];
+    };
+    for (const s of strands) {
+        const steps = 18;
+        const trace = () => { ctx.beginPath(); for (let k = 0; k <= steps; k++) { const [x, y] = pt(s, s.a0 + s.len * k / steps); k ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } };
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        trace(); ctx.strokeStyle = cols[0]; ctx.lineWidth = lv === 0 ? 9 : 7; ctx.stroke();
+        trace(); ctx.strokeStyle = cols[1]; ctx.lineWidth = lv === 0 ? 6 : 4.5; ctx.stroke();
+        ctx.save(); ctx.translate(-0.8, -1.4);
+        trace(); ctx.strokeStyle = cols[2]; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.4; ctx.stroke();
+        ctx.restore();
+    }
+    // そば殻の粒
     if (lv > 0) {
-        // 大根おろし（格付けが高いほどたっぷり）
-        const mound = 30 + lv * 12, mx = cx + 20, my = cy - 12;
-        for (let i = 0; i < 26 + lv * 10; i++) {
-            const a = rand() * Math.PI * 2, r = rand() * mound;
-            ctx.beginPath(); ctx.arc(mx + Math.cos(a) * r * 1.4, my + Math.sin(a) * r * 0.55, 9 + rand() * 9, 0, Math.PI * 2);
-            ctx.fillStyle = rand() < 0.3 ? "#e9e4d8" : "#f8f6f0"; ctx.fill();
-        }
-        // ねぎ
-        for (let i = 0; i < 4 + lv * 4; i++) {
-            const x = cx + (rand() - 0.5) * rx * 1.5, y = cy + (rand() - 0.5) * ry * 1.4;
-            ctx.beginPath(); ctx.ellipse(x, y, 9, 6, rand() * Math.PI, 0, Math.PI * 2);
-            ctx.fillStyle = "#d8f0a8"; ctx.fill(); ctx.lineWidth = 3.5; ctx.strokeStyle = "#5fae2e"; ctx.stroke();
-        }
-    }
-    if (lv >= 3) {
-        // かつお節
-        for (let i = 0; i < 14 + (lv - 3) * 8; i++) {
-            const x = cx - 60 + (rand() - 0.5) * 160, y = cy - 20 + (rand() - 0.5) * 50;
-            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14 + rand() * 10, y + (rand() - 0.5) * 10); ctx.lineTo(x + 6, y + 10 + rand() * 6); ctx.closePath();
-            ctx.fillStyle = rand() < 0.5 ? "#c9876a" : "#e0a888"; ctx.fill();
+        ctx.fillStyle = "rgba(30,20,14,0.6)";
+        for (let i = 0; i < 160; i++) {
+            const s = strands[Math.floor(rand() * strands.length)], [x, y] = pt(s, s.a0 + rand() * s.len);
+            ctx.fillRect(x, y, 1.6, 1.6);
         }
     }
     ctx.restore();
 
-    if (lv === 4) {
-        // 金箔のきらめき
-        ctx.fillStyle = "#ffe27a";
-        for (let i = 0; i < 12; i++) {
-            const x = cx + (rand() - 0.5) * rx * 2.2, y = cy - 30 + (rand() - 0.5) * 200, s = 5 + rand() * 7;
-            ctx.beginPath(); ctx.moveTo(x, y - s); ctx.lineTo(x + s * 0.3, y); ctx.lineTo(x, y + s); ctx.lineTo(x - s * 0.3, y); ctx.closePath(); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(x - s, y); ctx.lineTo(x, y + s * 0.3); ctx.lineTo(x + s, y); ctx.lineTo(x, y - s * 0.3); ctx.closePath(); ctx.fill();
+    if (lv > 0) {
+        // --- 大根おろし：ふんわりした山（格付けが高いほどたっぷり） ---
+        const ox = cx + 34, oy = cy - 46 + (4 - lv) * 4, ow = 58 + lv * 12, oh = 30 + lv * 6;
+        // 汁のにじみ
+        ctx.fillStyle = "rgba(240,236,220,0.18)";
+        ctx.beginPath(); ctx.ellipse(ox, oy + oh * 0.75, ow * 1.15, oh * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+        const blobs = 7 + lv * 2;
+        for (let i = 0; i < blobs; i++) {
+            const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
+            const bx = ox + Math.cos(a) * ow * 0.62 * d, by = oy + Math.sin(a) * oh * 0.45 * d + (1 - d) * -8;
+            const br = 22 + rand() * 14 + lv * 2;
+            const g = ctx.createRadialGradient(bx - br * 0.35, by - br * 0.45, 2, bx, by, br);
+            g.addColorStop(0, "#ffffff"); g.addColorStop(0.6, "#f1eee4"); g.addColorStop(1, "#cfc8b6");
+            ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(bx, by, br, br * 0.8, 0, 0, Math.PI * 2); ctx.fill();
+        }
+        // すりおろしの細かい筋
+        ctx.lineWidth = 1.2; ctx.lineCap = "round";
+        for (let i = 0; i < 90 + lv * 20; i++) {
+            const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
+            const x = ox + Math.cos(a) * ow * 0.75 * d, y = oy + Math.sin(a) * oh * 0.55 * d - 4;
+            ctx.strokeStyle = rand() < 0.5 ? "rgba(255,255,255,0.9)" : "rgba(190,182,160,0.55)";
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + (rand() - 0.5) * 7, y + (rand() - 0.5) * 4); ctx.stroke();
+        }
+
+        // --- かつお節（竹以上）：薄く反った削り節 ---
+        if (lv >= 3) {
+            for (let i = 0; i < 14 + (lv - 3) * 10; i++) {
+                const a = rand() * Math.PI * 2, d = Math.sqrt(rand());
+                const x = ox + Math.cos(a) * ow * 0.8 * d, y = oy + Math.sin(a) * oh * 0.5 * d - 16;
+                const w = 9 + rand() * 9, h = 5 + rand() * 5, rot = (rand() - 0.5) * 2.4;
+                ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+                const g = ctx.createLinearGradient(0, -h, 0, h);
+                g.addColorStop(0, "#f6dccb"); g.addColorStop(0.55, "#dca88d"); g.addColorStop(1, "#b67a60");
+                ctx.fillStyle = g; ctx.globalAlpha = 0.88;
+                // 縁が波打つ薄い削り節
+                ctx.beginPath(); ctx.moveTo(-w, 0);
+                for (let k = 1; k <= 6; k++) { const xx = -w + (2 * w) * k / 6; ctx.lineTo(xx, -h * (0.6 + 0.4 * Math.sin(k * 1.7 + i)) * Math.sin(Math.PI * k / 6)); }
+                ctx.quadraticCurveTo(0, h * 0.9, -w, 0); ctx.fill();
+                ctx.globalAlpha = 0.5; ctx.strokeStyle = "#8e5640"; ctx.lineWidth = 0.8; ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // --- 刻みねぎ：輪切り ---
+        for (let i = 0, tries = 0; i < 5 + lv * 4 && tries < 400; tries++) {
+            const a = rand() * Math.PI * 2, d = 0.3 + rand() * 0.9;
+            const x = ox - 20 + Math.cos(a) * (ow + 40) * d, y = oy + 14 + Math.sin(a) * (oh + 26) * d;
+            const inMouth = ((x - cx) / (rx - 34)) ** 2 + ((y - cy - 6) / (ry - 22)) ** 2 <= 1;
+            const onTop = ((x - ox) / ow) ** 2 + ((y - oy) / oh) ** 2 <= 0.8;
+            if (!inMouth && !onTop) continue;
+            i++;
+            const r = 6 + rand() * 3, tilt = 0.45 + rand() * 0.4;
+            ctx.save(); ctx.translate(x, y); ctx.rotate((rand() - 0.5) * 0.8);
+            ctx.fillStyle = "#4f8f22"; ctx.beginPath(); ctx.ellipse(0, 0, r, r * tilt, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#d9efb0"; ctx.beginPath(); ctx.ellipse(0, -0.5, r * 0.68, r * tilt * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#9ccc5c"; ctx.beginPath(); ctx.ellipse(0, -0.5, r * 0.32, r * tilt * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
         }
     }
+
+    // --- 手前側のふち（具の手前にかぶせて、器の中に入って見えるように） ---
+    ctx.lineWidth = 11; ctx.strokeStyle = rimColor;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI); ctx.stroke();
+    ctx.lineWidth = 2.5; ctx.strokeStyle = rimLight; ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.ellipse(cx, cy - 3, rx - 2, ry - 2, 0, Math.PI * 0.15, Math.PI * 0.55); ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // --- 箸と箸置き（並以上） ---
+    if (lv > 0) {
+        // 箸置き（白磁）に箸の先を乗せる
+        const px = cx + 250, py = bottom - 18;
+        const rg = ctx.createLinearGradient(0, py - 10, 0, py + 10);
+        rg.addColorStop(0, "#fbf7ee"); rg.addColorStop(1, "#bdb3a2");
+        ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.beginPath(); ctx.ellipse(px, py + 12, 24, 6, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = rg; ctx.beginPath(); ctx.ellipse(px, py, 22, 10, 0, 0, Math.PI * 2); ctx.fill();
+        for (let k = 0; k < 2; k++) {
+            const x0 = cx + 60 + k * 6, y0 = bottom + 22 - k * 12, x1 = px + 12 + k * 4, y1 = py - 7 - k * 5;
+            const ang = Math.atan2(y1 - y0, x1 - x0), len = Math.hypot(x1 - x0, y1 - y0) + 18;
+            ctx.save(); ctx.translate(x0, y0); ctx.rotate(ang);
+            const g = ctx.createLinearGradient(0, -4, 0, 4);
+            g.addColorStop(0, lv === 4 ? "#f6dc8a" : "#b3462c"); g.addColorStop(1, lv === 4 ? "#9a7418" : "#4a160c");
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(4, 6, len, 4);
+            ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -4.5); ctx.lineTo(len, -2); ctx.lineTo(len, 2); ctx.lineTo(0, 4.5); ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    // --- 松：金箔のきらめき ---
+    if (lv === 4) {
+        for (let i = 0; i < 14; i++) {
+            const x = cx + (rand() - 0.5) * rx * 2.3, y = cy - 40 + (rand() - 0.5) * 230, s = 4 + rand() * 8;
+            ctx.save(); ctx.translate(x, y); ctx.fillStyle = "#ffe27a"; ctx.shadowColor = "rgba(255,220,120,0.9)"; ctx.shadowBlur = 10;
+            ctx.beginPath(); ctx.moveTo(0, -s); ctx.lineTo(s * 0.28, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.28, 0); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(-s, 0); ctx.lineTo(0, s * 0.28); ctx.lineTo(s, 0); ctx.lineTo(0, -s * 0.28); ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+    }
+    ctx.restore();
 }
 
 function loadImage(src) {
