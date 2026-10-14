@@ -3229,6 +3229,8 @@ async function showRanking(){
         : currentMode === "infinite" ? T("終わりなき修行部門", "Endless") : T(currentMode + "秒修行部門", currentMode + "-sec");
     const rankmaLabel = isRankmaMode ? T(" ⚔️ ランクマ", " ⚔️ Ranked") : "";
     document.getElementById("modeTitleLabel").innerText = `【 ${modeLabel}${rankmaLabel} 】`;
+    // リズムモードは月間番付に参戦する方法がないので、月間の欄は出さない（歴代番付だけ）
+    document.querySelector("#rankPanelScore .rank-column.month").style.display = String(currentMode).startsWith("rhythm_") ? "none" : "";
     document.getElementById("monthLabelHeader").innerText = T(`${now.getFullYear()}年${now.getMonth()+1}月 限定番付`, `${now.toLocaleString("en-US", { month: "long" })} ${now.getFullYear()}`);
     document.getElementById("perfectMonthLabel").innerText = T(`累計極上番付（全部門合算）`, `Total PERFECTs (all modes)`);
 
