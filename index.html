@@ -2330,7 +2330,7 @@ function syncAudioClock() {
 function startSong() {
     ensureMusicNodes();
     chartQueue.length = 0; soundQueue.length = 0;
-    nextBar = 0; melodyDeg = 4;
+    nextBar = 0; melodyDeg = 4; lastChartT = -9;
     // デイリーはその日の乱数で、全員同じ曲・同じ譜面にする
     chartRand = isDaily && dailyRand ? dailyRand : mulberry32((Math.random() * 1e9) | 0);
     const rs = isRhythm ? rhythmSong() : null;
@@ -2380,6 +2380,9 @@ function stopSong() {
     chartQueue.length = 0; soundQueue.length = 0;
 }
 
+// 終わりなき修行：画面上でノーツ同士がこれ以上近づかないようにする（ノーツの幅は120px）
+const INF_MIN_GAP_PX = 180;
+let lastChartT = -9;
 function targetPxPerSec() {
     if (isRhythm && rhythmDiff) return rhythmDiff.speed * 60;
     return (isInfinite ? 6 + Math.min(10, combo * 0.08) : 12) * 60;
@@ -2430,7 +2433,10 @@ function composeBar(bar) {
         if (melodyDeg > 9) melodyDeg = 9 - step;
         const t = t0 + k * EIGHTH;
         const lane = melodyDeg >= 7 ? 0 : melodyDeg >= 4 ? 1 : 2; // 高い音ほど上のレーン
-        chartQueue.push({ t, lane });
+        // 終わりなき修行は、今の速さで画面上の間隔が INF_MIN_GAP_PX 未満になるノーツを出さない（音は鳴らす）
+        // 速くなるほど同じ時間差でも間が開くので、連打が増えると自然に細かいノーツが出てくる
+        const tooClose = isInfinite && (t - lastChartT) * targetPxPerSec() < INF_MIN_GAP_PX;
+        if (!tooClose) { chartQueue.push({ t, lane }); lastChartT = t; }
         if (!track) soundQueue.push({ t, kind: bgmStyle === "yokai" ? "shaku" : "koto", hz: hzOf(melodyDeg) });
     }
 }
