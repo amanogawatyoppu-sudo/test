@@ -3491,17 +3491,41 @@ function charCardHtml(id, opts = {}) {
     const badge = opts.badge ? `<span class="cBadge">${opts.badge}</span>` : "";
     const info = opts.info && c.bio ? `<span class="cInfo" title="${T("プロフィール", "Profile")}" onclick="event.stopPropagation();openCharProfile('${id}')">📖</span>` : "";
     const style = `--rc:${rc};` + (opts.delay ? `animation-delay:${opts.delay}s;` : "");
-    return `<div class="${cls.join(" ")}" style="${style}"${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${charName(c)}</div><div class="cDesc">${charDesc(c)}</div>${info}${badge}</div>`;
+    const dataId = opts.clickable ? ` data-id="${id}"` : "";
+    return `<div class="${cls.join(" ")}" style="${style}"${dataId}${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${charName(c)}</div><div class="cDesc">${charDesc(c)}</div>${info}${badge}</div>`;
+}
+
+// マイページ上部の「修行に連れて行く職人」欄
+function renderMySelected() {
+    const p = profile || { selected: "" };
+    const sel = CHARACTERS[p.selected];
+    const box = document.getElementById("mpSelectedEmoji");
+    if (box.dataset.id !== (p.selected || "")) { // 同じ職人なら画像を作り直さない（ちらつき防止）
+        box.innerHTML = sel ? charVisual(sel, "mpSelImg") : "❔";
+        box.dataset.id = p.selected || "";
+    }
+    document.getElementById("mpSelectedName").textContent = sel ? charName(sel) : T("まだいない", "None yet");
+    document.getElementById("mpSelectedDesc").textContent = sel ? T(`能力：${charDesc(sel)}`, `Ability: ${charDesc(sel)}`) : T("ガチャで仲間を集めよう", "Pull the gacha to find partners!");
+    document.getElementById("mpUnselectBtn").style.display = sel ? "inline-block" : "none";
+}
+
+// 連れて行く職人だけ変わったときは、図鑑を作り直さずに印（枠の光・「連れて行く」札）だけ付け替える
+function updateMySelection() {
+    renderMySelected();
+    const selId = profile ? profile.selected : "";
+    document.querySelectorAll("#mpCollection .charCard[data-id]").forEach(card => {
+        const on = card.dataset.id === selId;
+        card.classList.toggle("selected", on);
+        const badge = card.querySelector(".cBadge");
+        if (on && !badge) card.insertAdjacentHTML("beforeend", `<span class="cBadge">${T("連れて行く", "Partner")}</span>`);
+        else if (!on && badge) badge.remove();
+    });
 }
 
 function renderMyPage() {
     document.getElementById("mpName").innerHTML = account ? `${T("職人", "Player")} <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
     const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
-    const sel = CHARACTERS[p.selected];
-    document.getElementById("mpSelectedEmoji").innerHTML = sel ? charVisual(sel, "mpSelImg") : "❔";
-    document.getElementById("mpSelectedName").textContent = sel ? charName(sel) : T("まだいない", "None yet");
-    document.getElementById("mpSelectedDesc").textContent = sel ? T(`能力：${charDesc(sel)}`, `Ability: ${charDesc(sel)}`) : T("ガチャで仲間を集めよう", "Pull the gacha to find partners!");
-    document.getElementById("mpUnselectBtn").style.display = sel ? "inline-block" : "none";
+    renderMySelected();
     document.getElementById("mpCoins").textContent = `🌾 ${p.coins}`;
     document.getElementById("gacha1Btn").disabled = !profile || p.coins < 100;
     document.getElementById("gacha10Btn").disabled = !profile || p.coins < 900;
@@ -3542,15 +3566,47 @@ function closeCharProfile() {
     document.getElementById("charProfileOverlay").classList.remove("open");
 }
 
+// タップしたらすぐ画面を切り替え、サーバーへの保存は裏で行う（失敗したら元に戻す）。
+// 保存は1件ずつ順番に送り、連打しても最後に選んだ職人が残るようにする。
+let selectWanted = null, selectSaving = false;
+function cacheProfile() {
+    try { sessionStorage.setItem("sobamichi_profile", JSON.stringify(profile)); } catch (e) {}
+}
 async function selectCharacter(id) {
     if (!profile || (id && !(profile.chars[id] > 0)) || id === profile.selected) return;
+    const before = profile.selected;
+    profile.selected = id;
+    selectWanted = id;
+    cacheProfile();
+    updateMySelection();
+    renderTitleChars(true);
+    if (selectSaving) return; // 保存中なら、終わったあとに最新の選択を送る
+    selectSaving = true;
     const status = document.getElementById("mpStatus");
-    status.textContent = T("変更中...", "Saving...");
-    try {
-        const res = await playerAction("select", { charId: id });
-        status.textContent = res && res.status === "ok" ? "" : T("変更できなかった。", "Couldn't change.");
-    } catch (e) { status.textContent = T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again."); }
-    renderMyPage();
+    status.textContent = "";
+    let confirmed = before, error = ""; // confirmed = サーバーに保存済みの職人
+    while (selectWanted !== null) {
+        const target = selectWanted;
+        try {
+            const res = await playerAction("select", { charId: target });
+            if (res && res.status === "ok") confirmed = target;
+            else error = T("変更できなかった。", "Couldn't change.");
+        } catch (e) { error = T("通信失敗。もう一度試してくれ。", "Connection failed. Please try again."); }
+        if (error || selectWanted === target) break;
+        // 保存中に別の職人がタップされた：サーバーの返事で戻った選択を最新に直して、続けて保存する
+        if (profile) profile.selected = selectWanted;
+    }
+    selectWanted = null;
+    selectSaving = false;
+    if (!profile) return;
+    // 失敗したときは、サーバーに保存済みの職人に戻す
+    if (error) {
+        profile.selected = confirmed;
+        status.textContent = error;
+    }
+    cacheProfile();
+    updateMySelection();
+    renderTitleChars(true);
 }
 
 let isPulling = false;
