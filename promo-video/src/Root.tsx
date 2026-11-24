@@ -7,6 +7,7 @@ import { EndingScene } from "./EndingScene";
 import { CharIntro } from "./char-intro/CharIntro";
 import { CHAR_INTROS } from "./char-intro/characters";
 import { Thumbnail } from "./char-intro/Thumbnail";
+import { ThumbAll } from "./char-intro/ThumbAll";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -42,6 +43,7 @@ export const RemotionRoot: React.FC = () => {
             defaultProps={{ ...c, no: i + 1 }}
           />
         ))}
+        <Still id="Thumb-17-all" component={ThumbAll} width={1080} height={1920} />
       </Folder>
       <Composition
         id="PromoVideo"
