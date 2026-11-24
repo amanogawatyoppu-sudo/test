@@ -54,9 +54,9 @@
         const show = () => {
             if (i >= lines.length) { choice ? showChoice() : finish(); return; }
             const l = lines[i];
-            const ch = CHARACTERS[l.who];
+            const ch = l.mask ? null : CHARACTERS[l.who];
             dlg.innerHTML = `<div class="sdBox">${ch && ch.img ? `<img class="sdImg" src="${ch.img}" alt="">` : ""}
-              <div class="sdWho">${esc(whoName(l.who))}</div><div class="sdText">${esc(T(l.ja, l.en))}</div>
+              <div class="sdWho">${esc(l.mask ? T("京都から来たそば職人", "Soba maker from Kyoto") : whoName(l.who))}</div><div class="sdText">${esc(T(l.ja, l.en))}</div>
               <button class="sdSkip">${T("スキップ", "Skip")}</button><div class="sdNext">${T("タップで次へ ▶", "Tap to continue ▶")}</div></div>`;
             dlg.querySelector(".sdBox").onclick = () => { i++; show(); };
             dlg.querySelector(".sdSkip").onclick = (e) => { e.stopPropagation(); i = lines.length; show(); };

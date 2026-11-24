@@ -95,6 +95,13 @@ await check("final screen asks for a taste pick that was never saved", async (pa
   await page.evaluate(() => document.querySelectorAll("#storyDlg .sdChoices button")[1].click());
   assert.strictEqual(await page.evaluate(() => StoryCore.tasteTypeId(StorySave.load().prefs)), "thick_hot");
 });
+await check("masked lines hide the name and picture", async (page) => {
+  const r = await page.evaluate(() => {
+    StoryUI.dialogue([{ who: "kaneko", mask: true, ja: "…", en: "..." }]);
+    return { who: document.querySelector("#storyDlg .sdWho").textContent, img: !!document.querySelector("#storyDlg .sdImg") };
+  });
+  assert.deepStrictEqual(r, { who: "京都から来たそば職人", img: false });
+});
 await check("corrupt save loads as a fresh story", async (page) => {
   await page.evaluate(() => localStorage.setItem("sobamichi_story", "garbage"));
   await page.reload(); await page.waitForTimeout(500);

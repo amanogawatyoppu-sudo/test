@@ -92,3 +92,16 @@ test("story data shape", () => {
   assert.strictEqual(D.STORY_SHOPS.length, 0);
   assert.ok(D.STORY_GUIDE_URL.startsWith("https://"));
 });
+
+test("kaneko stays a nameless Kyoto soba maker until the 6-2 reveal", () => {
+  const D = require("../story/story-data.js");
+  const order = D.STORY_CHAPTERS.flatMap(c => c.stages);
+  const revealAt = order.findIndex(s => s.id === "6-2");
+  const kanekoLines = (s) => [...s.before, ...s.after].filter(l => l.who === "kaneko");
+  const early = order.slice(0, revealAt).flatMap(kanekoLines);
+  assert.ok(early.length >= 3, "appears at least 3 times before the reveal");
+  assert.ok(early.every(l => l.mask === true), "masked before the reveal");
+  assert.ok(early.every(l => !l.ja.includes("金子")), "name not spoken before the reveal");
+  const reveal = order[revealAt];
+  assert.ok([...reveal.before, ...reveal.after].some(l => l.who === "kaneko" && !l.mask && l.ja.includes("金子権左衛門")));
+});
