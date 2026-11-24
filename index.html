@@ -2754,9 +2754,9 @@ function playInstrument(s, at) {
         // 恐竜の足音「ドスン」：とても低く重い音
         const o = ac.createOscillator(), g = ac.createGain();
         o.type = "sine"; o.frequency.setValueAtTime(75, at); o.frequency.exponentialRampToValueAtTime(30, at + 0.5);
-        g.gain.setValueAtTime(0.9, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.6);
+        g.gain.setValueAtTime(0.6, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.6);
         o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.62);
-        noiseHit(at, 220, "lowpass", 0.5, 0.15);
+        noiseHit(at, 220, "lowpass", 0.35, 0.15);
     } else if (s.kind === "shizuku") {
         // 名水のしずく「ポチャン」
         const o = ac.createOscillator(), g = ac.createGain();
