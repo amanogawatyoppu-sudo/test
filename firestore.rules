@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// 無限そば道 クラウドセーブ用のセキュリティルール
+// ・ログインしている人は、自分のユーザーIDの書類（users/{自分のID}）だけ読み書きできる。
+// ・他人の書類や、それ以外の場所は誰も読み書きできない。
+// Firebase コンソール → Firestore Database → ルール に、この中身をまるごと貼り付けて「公開」する。
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // 送られてきたセーブの形が正しいか（変な項目や巨大なデータを入れさせない）
+    function isValidSave() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['v', 'save', 'clientSavedAt', 'updatedAt'])
+        && d.v is int
+        && d.save is map
+        && d.save.size() <= 60
+        && d.clientSavedAt is int
+        && d.updatedAt == request.time;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidSave();
+      allow delete: if false;
+    }
+
+    // ここに書いていない場所はすべて禁止
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

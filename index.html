@@ -1055,6 +1055,7 @@ body.mobileLayout #workerArea { display: none; }
 
   <div class="tsFooter">
     <button class="lobby-back-btn" data-en="❓ How to play" onclick="openHowTo()">❓ 遊び方</button>
+    <button class="lobby-back-btn" data-en="⚙ Settings" onclick="window.openCloudSettings && openCloudSettings()">⚙ 設定</button>
     <button class="lobby-back-btn" data-en="🌐 日本語" onclick="toggleLang()">🌐 English</button>
     <button class="lobby-back-btn bgmToggle" onclick="toggleBgm()">🔊 BGM</button>
     <button class="lobby-back-btn bgmStyleToggle" onclick="toggleBgmStyle()">👻 曲</button>
@@ -4385,5 +4386,7 @@ window.addEventListener("pointerup", releaseAllPointers);
 // タッチが中断された（通知・ジェスチャー等）場合もレーンのロックを解除する
 window.addEventListener("pointercancel", releaseAllPointers);
 </script>
+<!-- クラウドセーブ（自動ログイン・Google連携）。設定は js/firebase-config.js、手順は docs/firebase-setup.md -->
+<script type="module" src="js/cloud-save.js"></script>
 </body>
 </html>
