@@ -1387,16 +1387,46 @@ const RHYTHM_DIFFS = {
 };
 const GRADE_ORDER = ["C", "B", "A", "S"];
 
+// リズムモード専用の曲ファイル（曲を選んだときに読み込む）。bpm と offset はファイル全体の拍の解析で求めた。
+// chartEnd：音が鳴り終わる時刻（秒）。それより後の小節にはノーツを置かない
+// 3曲とも Maniira さん作（OpenTracks、旧DOVA-SYNDROME）。クレジット表記は不要だが表示している。
+const EXTRA_TRACKS = {
+    ariake:    { src: "bgm/ariake.bgm",    bpm: 162.2, offset: 0.074, chartEnd: 217.0, title: "有明のユーロビート", composer: "Maniira", site: "OpenTracks" },
+    sakurajo:  { src: "bgm/sakurajo.bgm",  bpm: 120,   offset: 0.024, chartEnd: 132.5, title: "桜城にて",           composer: "Maniira", site: "OpenTracks" },
+    machinami: { src: "bgm/machinami.bgm", bpm: 100,   offset: 0.012, chartEnd: 89.0,  title: "和の街並み",         composer: "Maniira", site: "OpenTracks" },
+};
+const GEN_FORM_STD = [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 0.95], ["D", 8, 0.45], ["A", 8, 0.55], ["C", 8, 1.0], ["O", 2, 0]];
 // リズムモードの曲。track＝曲ファイル（低音衝動）、gen＝ゲームの中で作るオリジナル曲（ファイル不要）
 const RHYTHM_SONGS = {
     hyakki:  { key: "hyakki",  type: "gen", style: "yokai",   bpm: 112, seed: 8002, icon: "👻",
                title: () => T("百鬼夜行", "Night Parade"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ゆっくり・妖しい", "Slow & spooky"),
                form: [["I", 2, 0.2], ["A", 8, 0.45], ["B", 8, 0.65], ["C", 8, 0.95], ["D", 8, 0.4], ["A", 8, 0.55], ["C", 8, 1.0], ["O", 2, 0]] },
-    teion:   { key: "teion",   type: "track", bpm: 141, icon: "🎸",
+    teion:   { key: "teion",   type: "track", get track() { return TRACK; }, bpm: 141, icon: "🎸",
                title: () => TRACK.title, credit: () => `${TRACK.composer}（${TRACK.site}）`, mood: () => T("かっこいい・ノリノリ", "Cool & groovy") },
     matsuri: { key: "matsuri", type: "gen", style: "matsuri", bpm: 168, seed: 7001, icon: "🏮",
                title: () => T("越前祭り囃子", "Echizen Festival"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("速い・にぎやか", "Fast & festive"),
                form: [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 1.0], ["D", 8, 0.45], ["A", 8, 0.6], ["B", 8, 0.75], ["C", 8, 1.0], ["C", 8, 1.0], ["O", 2, 0]] },
+    // OpenTracks（旧DOVA-SYNDROME）の曲。会長が選んだもの
+    ariake:  { key: "ariake", type: "track", track: EXTRA_TRACKS.ariake, bpm: EXTRA_TRACKS.ariake.bpm, icon: "🌅",
+               title: () => EXTRA_TRACKS.ariake.title, credit: () => `${EXTRA_TRACKS.ariake.composer}（${EXTRA_TRACKS.ariake.site}）`, mood: () => T("和風ユーロビート・速い", "Japanese Eurobeat") },
+    sakurajo:{ key: "sakurajo", type: "track", track: EXTRA_TRACKS.sakurajo, bpm: EXTRA_TRACKS.sakurajo.bpm, icon: "🌸",
+               title: () => EXTRA_TRACKS.sakurajo.title, credit: () => `${EXTRA_TRACKS.sakurajo.composer}（${EXTRA_TRACKS.sakurajo.site}）`, mood: () => T("三味線と琴・のんびり", "Shamisen & koto") },
+    machinami:{ key: "machinami", type: "track", track: EXTRA_TRACKS.machinami, bpm: EXTRA_TRACKS.machinami.bpm, icon: "🏘️",
+               title: () => EXTRA_TRACKS.machinami.title, credit: () => `${EXTRA_TRACKS.machinami.composer}（${EXTRA_TRACKS.machinami.site}）`, mood: () => T("おだやか・ゆっくり", "Calm & gentle") },
+    // 福井めぐり：エリアごとのオリジナル曲（ストーリーの各章と同じ曲調）
+    takefu:  { key: "takefu", type: "gen", style: "takefu", bpm: 132, seed: 9111, icon: "🔨",
+               title: () => T("鎚音の町", "Hammer Town"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("職人・力強い", "Crafty & strong"), form: GEN_FORM_STD },
+    sabae:   { key: "sabae", type: "gen", style: "sabae", bpm: 144, seed: 9222, icon: "👓",
+               title: () => T("めがねキラリ", "Sparkle Glasses"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ポップ・軽快", "Pop & bouncy"), form: GEN_FORM_STD },
+    imajo:   { key: "imajo", type: "gen", style: "imajo", bpm: 150, seed: 9333, icon: "🚂",
+               title: () => T("今庄宿の汽車", "Imajo Steam Line"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ガタンゴトン", "Chugging along"), form: GEN_FORM_STD },
+    ichijo:  { key: "ichijo", type: "gen", style: "ichijo", bpm: 126, seed: 9444, icon: "🏯",
+               title: () => T("一乗谷の夢", "Dream of Ichijodani"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("戦国・雅", "Samurai elegance"), form: GEN_FORM_STD },
+    dino:    { key: "dino", type: "gen", style: "dino", bpm: 138, seed: 9555, icon: "🦖",
+               title: () => T("恐竜と名水", "Dinosaurs & Springs"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ドスン・冒険", "Stomping adventure"), form: GEN_FORM_STD },
+    fuchu:   { key: "fuchu", type: "gen", style: "fuchu", bpm: 160, seed: 9666, icon: "🎌",
+               title: () => T("府中城、開門", "Fuchu Castle Gates"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("壮大・最終決戦", "Grand finale"),
+               form: [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 1.0], ["D", 8, 0.45], ["B", 8, 0.75], ["C", 8, 1.0], ["C", 8, 1.0], ["O", 2, 0]] },
 };
 let rhythmSongKey = "teion";
 try { if (RHYTHM_SONGS[localStorage.getItem("sobamichi_rhythm_song")]) rhythmSongKey = localStorage.getItem("sobamichi_rhythm_song"); } catch (e) {}
@@ -1412,9 +1442,10 @@ const rhythmModeOf = (song, diff) => "rhythm_" + rhythmRecKey(song, diff);
 function composeGenSong(song) {
     const r = mulberry32(song.seed);
     const sounds = [], notes = [], drums = [];
+    const P = GEN_PROFILES[song.style] || GEN_PROFILES.matsuri;
     const yokai = song.style === "yokai";
-    const lead = yokai ? "shaku" : "koto";
-    const prog = yokai ? [0, 1, 5, 0] : [0, 5, 7, 0]; // ベースの動き（半音）
+    const lead = P.lead;
+    const prog = P.prog; // ベースの動き（半音）
     const motifs = {};
     const startDeg = { A: 4, B: 5, C: 7, D: 2 };
     function makeMotif(energy, deg0) {
@@ -1437,7 +1468,7 @@ function composeGenSong(song) {
             const t0 = TRACK_LEAD + bar * BAR;
             // --- 打楽器 ---
             if (sec === "O") {
-                if (b === 0) { sounds.push({ t: t0, kind: "taiko", strong: true }, { t: t0, kind: "rin" }, { t: t0, kind: "bass", hz: styleOf().root / 2 }); }
+                if (b === 0) { sounds.push({ t: t0, kind: "taiko", strong: true }, { t: t0, kind: P.end || "rin" }, { t: t0, kind: "bass", hz: styleOf().root / 2 }); }
                 continue;
             }
             sounds.push({ t: t0, kind: "taiko", strong: true });
@@ -1450,9 +1481,9 @@ function composeGenSong(song) {
                 if (e >= 0.95 && !yokai) for (let k = 1; k < 8; k += 2) drums.push({ t: t0 + k * EIGHTH, e, kind: "shime" });
                 if (yokai || e < 0.95) [1, 3].forEach(q => drums.push({ t: t0 + BEAT * q, e, kind: "shime" })); // 2・4拍目（拍子木・締め太鼓）
             }
-            const back = yokai ? "hyoshigi" : "shime";
+            const back = P.back;
             sounds.push({ t: t0 + BEAT, kind: back }, { t: t0 + BEAT * 3, kind: back });
-            if (e >= 0.95 && !yokai) for (let k = 1; k < 8; k += 2) sounds.push({ t: t0 + k * EIGHTH, kind: "shime" }); // サビは締め太鼓を細かく
+            if (e >= 0.95 && !yokai) for (let k = 1; k < 8; k += 2) sounds.push({ t: t0 + k * EIGHTH, kind: P.fill }); // サビは細かく刻む
             for (let k = 0; k < 8; k++) sounds.push({ t: t0 + k * EIGHTH, kind: "shaker" });
             sounds.push({ t: t0, kind: "bass", hz: styleOf().root / 2 * Math.pow(2, prog[bar % 4] / 12) });
             if (e >= 0.6) sounds.push({ t: t0 + BEAT * 2, kind: "bass", hz: styleOf().root / 2 * Math.pow(2, prog[bar % 4] / 12) });
@@ -1461,6 +1492,7 @@ function composeGenSong(song) {
                 if (bar % 2 === 0) sounds.push({ t: t0, kind: "rin" });
                 if (b === 0 && sec !== "I") sounds.push({ t: t0 - BEAT, kind: "hyudoro" });
             }
+            if (P.decor) P.decor(sounds, { t0, b, bar, sec, e });
             if (sec === "I") continue;
             // --- メロディ（＝譜面の元） ---
             const motif = motifs[sec0];
@@ -1477,13 +1509,48 @@ function composeGenSong(song) {
                 const k = m.k % 8, t = t0 + k * EIGHTH;
                 notes.push({ t, deg: m.deg, k, e });
                 sounds.push({ t, kind: lead, hz: hzOf(m.deg) });
-                if (!yokai && e >= 0.95) sounds.push({ t, kind: "shaku", hz: hzOf(m.deg) * 2 }); // 祭りのサビは笛を重ねる
+                if (P.double && e >= P.doubleAt) sounds.push({ t, kind: P.double, hz: hzOf(m.deg) * P.doubleOct }); // サビは別の楽器を重ねる
             });
         }
     });
     return { sounds, notes, drums, endT: TRACK_LEAD + bar * BAR + 0.5 };
 }
 const TRACK_LEAD = 0.1; // オリジナル曲の1拍目（少しだけ間を置く）
+
+// オリジナル曲の曲調ごとの楽器の組み合わせ。メロディ（＝譜面）の作り方はどの曲調も同じで、鳴らす楽器と飾りの音だけが変わる。
+// lead＝メロディの楽器、back＝2・4拍目、fill＝サビの細かい刻み、double＝サビで重ねる楽器、decor＝小節ごとの飾り
+const GEN_PROFILES = {
+    yokai:   { lead: "shaku", back: "hyoshigi", fill: "shime", prog: [0, 1, 5, 0] },
+    matsuri: { lead: "koto", back: "shime", fill: "shime", prog: [0, 5, 7, 0], double: "shaku", doubleAt: 0.95, doubleOct: 2 },
+    // 越前市（武生）：越前打刃物の鎚の音が響く、職人の町
+    takefu:  { lead: "koto", back: "anvil", fill: "shime", prog: [0, 5, 7, 5], double: "shamisen", doubleAt: 0.65, doubleOct: 1, end: "anvil",
+               decor: (out, { t0, e }) => { if (e >= 0.6) out.push({ t: t0 + BEAT * 3 + EIGHTH, kind: "anvil", soft: true }); } },
+    // 鯖江：めがねのキラッと光る音の、軽くてポップな曲
+    sabae:   { lead: "chip", back: "clap", fill: "clap", prog: [0, 9, 5, 7], double: "mokkin", doubleAt: 0.65, doubleOct: 2, end: "kira",
+               decor: (out, { t0, bar, sec }) => { if (bar % 4 === 0 && sec !== "O") out.push({ t: t0, kind: "kira" }); } },
+    // 今庄：宿場町と汽車。ガタンゴトンの刻みと汽笛
+    imajo:   { lead: "shamisen", back: "shime", fill: "shime", prog: [0, 0, 5, 7], double: "shaku", doubleAt: 0.95, doubleOct: 2, end: "kiteki",
+               decor: (out, { t0, b, sec }) => {
+                   for (let k = 0; k < 8; k++) out.push({ t: t0 + k * EIGHTH, kind: "chug", strong: k % 4 === 0 });
+                   if (b === 0 && sec !== "I") out.push({ t: t0, kind: "kiteki" });
+               } },
+    // 一乗谷：戦国の城下町。篠笛と鼓、法螺貝
+    ichijo:  { lead: "fue", back: "tsuzumi", fill: "tsuzumi", prog: [0, 7, 5, 0], double: "koto", doubleAt: 0.65, doubleOct: 1, end: "horagai",
+               decor: (out, { t0, b, sec }) => { if (b === 0 && (sec === "I" || sec === "C")) out.push({ t: t0, kind: "horagai" }); } },
+    // 勝山・大野：恐竜の足音（ドスン）と、名水のしずく
+    dino:    { lead: "mokkin", back: "hyoshigi", fill: "shime", prog: [0, 8, 7, 0], double: "fue", doubleAt: 0.95, doubleOct: 1, end: "dosun",
+               decor: (out, { t0, bar, e }) => {
+                   if (bar % 2 === 0 || e >= 0.6) out.push({ t: t0, kind: "dosun" });
+                   if (e >= 0.95) out.push({ t: t0 + BEAT * 2, kind: "dosun" });
+                   if (e < 0.95) out.push({ t: t0 + ((bar * 5) % 8) * EIGHTH + EIGHTH / 2, kind: "shizuku", hz: 1100 + (bar % 3) * 260 });
+               } },
+    // 越前府中の城：最終章。琴と笛を重ね、銅鑼で幕を開ける
+    fuchu:   { lead: "koto", back: "shime", fill: "shime", prog: [0, 5, 7, 9], double: "fue", doubleAt: 0.6, doubleOct: 1, end: "dora",
+               decor: (out, { t0, b, sec, e }) => {
+                   if (b === 0 && sec !== "O") out.push({ t: t0, kind: "dora" });
+                   if (e >= 0.9) out.push({ t: t0 + BEAT * 2 + EIGHTH, kind: "taiko", strong: false });
+               } },
+};
 
 // 難易度ごとに、メロディから叩く音を選ぶ（叩く音は必ず聞こえる音）
 function genChart(g, diff, song) {
@@ -1531,14 +1598,15 @@ let reflexSilent = false; // 反射モード（BGMなし）：曲を流さず効
 let barEnergy = null;
 
 // 小節ごとの音量（0〜1、曲の中での順位）を求める
-function computeBarEnergy() {
-    if (!trackBuf) return null;
-    const d = trackBuf.getChannelData(0), sr = trackBuf.sampleRate;
-    const barLen = 60 / TRACK.bpm * 4;
-    const bars = Math.floor((trackBuf.duration - TRACK.offset) / barLen);
+function computeBarEnergy(tr = TRACK) {
+    const buf = trackBufOf(tr);
+    if (!buf) return null;
+    const d = buf.getChannelData(0), sr = buf.sampleRate;
+    const barLen = 60 / tr.bpm * 4;
+    const bars = Math.floor(((tr.chartEnd || buf.duration) - tr.offset) / barLen);
     const rms = [];
     for (let b = 0; b < bars; b++) {
-        const s = Math.floor((TRACK.offset + b * barLen) * sr), e = Math.min(d.length, Math.floor((TRACK.offset + (b + 1) * barLen) * sr));
+        const s = Math.floor((tr.offset + b * barLen) * sr), e = Math.min(d.length, Math.floor((tr.offset + (b + 1) * barLen) * sr));
         let sum = 0, n = 0;
         for (let i = s; i < e; i += 64) { sum += d[i] * d[i]; n++; }
         rms.push(Math.sqrt(sum / Math.max(1, n)));
@@ -1548,14 +1616,18 @@ function computeBarEnergy() {
 }
 
 function buildRhythmChart(diff) {
-    if (!barEnergy) barEnergy = computeBarEnergy();
-    const r = mulberry32(diff.seed);
-    const bars = barEnergy.length;
+    const tr = activeTrack();
+    // 低音衝動は前からの譜面のまま（seed も同じ）。ほかの曲は曲ごとに譜面を変える
+    if (tr === TRACK && !barEnergy) barEnergy = computeBarEnergy(TRACK);
+    if (tr !== TRACK && !tr.energy) tr.energy = computeBarEnergy(tr);
+    const energy = tr === TRACK ? barEnergy : tr.energy;
+    const r = mulberry32(tr === TRACK ? diff.seed : diff.seed + Math.round(tr.bpm * 10));
+    const bars = energy.length;
     const notes = [];
     let deg = 4;
     for (let bar = 1; bar < bars - 1; bar++) {          // 最初の1小節は前奏、最後の1小節は余韻
-        const t0 = TRACK.offset + bar * BAR;
-        const scale = diff.quiet + (1 - diff.quiet) * barEnergy[bar]; // 静かな小節はノーツ少なめ
+        const t0 = tr.offset + bar * BAR;
+        const scale = diff.quiet + (1 - diff.quiet) * energy[bar]; // 静かな小節はノーツ少なめ
         for (let k = 0; k < 8; k++) {
             const onBeat = k % 2 === 0;
             if (r() >= (onBeat ? diff.pOn : diff.pOff) * scale) continue;
@@ -1611,12 +1683,13 @@ function renderRhythmSelect() {
     if (!box) return;
     const rec = loadRhythmRecords();
     const song = rhythmSong();
-    const needLoad = song.type === "track" && !trackBuf;
+    const needLoad = song.type === "track" && !trackBufOf(song.track);
+    if (needLoad && song.track !== TRACK) loadExtraTrack(song.track);
     // 曲を選ぶタブ
     document.getElementById("rhythmSongs").innerHTML = Object.values(RHYTHM_SONGS).map(sg =>
         `<button class="rhSongBtn${sg.key === song.key ? " active" : ""}" onclick="selectRhythmSong('${sg.key}')">
             <span class="rhSongIcon">${sg.icon}</span><span class="rhSongTitle">${sg.title()}</span>
-            <span class="rhSongMeta">${sg.mood()}・BPM ${sg.bpm}</span></button>`).join("");
+            <span class="rhSongMeta">${sg.mood()}・BPM ${Math.round(sg.bpm)}</span></button>`).join("");
     document.getElementById("rhythmSong").textContent = `${song.icon} ${song.title()} / ${song.credit()}`;
     const status = document.getElementById("rhythmStatus");
     status.textContent = needLoad ? T("曲を読み込み中…（数秒かかることがあります）", "Loading the song... (may take a few seconds)") : "";
@@ -1638,7 +1711,7 @@ function renderRhythmSelect() {
 
 function startRhythm(key) {
     const d = RHYTHM_DIFFS[key];
-    if (!d || (rhythmSong().type === "track" && !trackBuf)) return;
+    if (!d || (rhythmSong().type === "track" && !trackBufOf(rhythmSong().track))) return;
     if (key === "kiwami" && !kiwamiUnlocked()) return;
     isStory = false; storySong = null;
     isRankmaMode = false; isDaily = false; reflexSilent = false;
@@ -2283,7 +2356,7 @@ function setTempo(bpm) { BEAT = 60 / bpm; EIGHTH = BEAT / 2; BAR = BEAT * 4; }
 // テンポと拍の位置は曲全体の解析で求めた（141.00 BPM、拍のずれは曲の最初から最後まで±数ミリ秒）。
 // ファイルはちょうど92小節（156.6秒）で、頭から終わりまでがそのままループする作り。
 const TRACK = {
-    src: "bgm/main.mp3",
+    src: "bgm/main.bgm", // 曲ファイルは素のmp3のまま公開しない（素材サイトの規約）。読み込むときに元に戻す
     bpm: 141,
     offset: 0.055,     // 最初の拍（秒）
     loopStart: 0,      // ループ区間の始まり（秒）
@@ -2292,6 +2365,20 @@ const TRACK = {
     composer: "伊藤ケイスケ",
     site: "DOVA-SYNDROME",
 };
+// 曲ファイル（.bgm）を元の音声に戻す。先頭4文字「SOBA」の後ろが、決まった数列と重ねて（XOR）変換した音声。
+// 素材サイト（OpenTracks・旧DOVA-SYNDROME）の規約で、音声ファイルをそのまま取り出せる形で置くことが禁じられているため。
+// 作り直すとき：tools/pack-bgm.py に mp3 を渡す
+function unpackBgm(ab) {
+    const u = new Uint8Array(ab);
+    if (u[0] !== 83 || u[1] !== 79 || u[2] !== 66 || u[3] !== 65) return ab; // 「SOBA」で始まらなければそのまま
+    const out = new Uint8Array(u.length - 4);
+    let s = 0x50BA2026;
+    for (let i = 0; i < out.length; i++) {
+        s = (Math.imul(s, 1103515245) + 12345) >>> 0;
+        out[i] = u[i + 4] ^ ((s >>> 16) & 0xff);
+    }
+    return out.buffer;
+}
 let trackBuf = null;
 let trackSrc = null;
 let trackLoopStart = 0, trackLoopLen = 0;
@@ -2300,7 +2387,7 @@ async function loadTrack() {
     try {
         const res = await fetch(TRACK.src);
         if (!res.ok) return;
-        const buf = await audioContext.decodeAudioData(await res.arrayBuffer());
+        const buf = await audioContext.decodeAudioData(unpackBgm(await res.arrayBuffer()));
         const barLen = 60 / TRACK.bpm * 4;
         const bars = TRACK.loopBars || Math.floor((buf.duration - TRACK.offset) / barLen);
         if (bars < 1) return;
@@ -2312,19 +2399,40 @@ async function loadTrack() {
         if (document.getElementById("rhythm").style.display === "block") renderRhythmSelect();
     } catch (e) { trackBuf = null; }
 }
+// リズムモード専用の曲ファイルを読み込む（読み込んだ音は tr.buf に入る）
+async function loadExtraTrack(tr) {
+    if (!tr || tr.buf || tr.loading || !audioContext) return;
+    tr.loading = true;
+    try {
+        const res = await fetch(tr.src);
+        if (res.ok) tr.buf = await audioContext.decodeAudioData(unpackBgm(await res.arrayBuffer()));
+    } catch (e) { tr.buf = null; }
+    tr.loading = false;
+    if (document.getElementById("rhythm").style.display === "block") renderRhythmSelect();
+}
+// 曲の読み込み状態。低音衝動（TRACK）は trackBuf、ほかは tr.buf
+const trackBufOf = (tr) => tr === TRACK ? trackBuf : tr && tr.buf;
+// 今のプレイで鳴らす曲ファイル（リズムモードは選んだ曲、ほかは低音衝動）
+const activeTrack = () => isRhythm && rhythmSong().type === "track" ? rhythmSong().track : TRACK;
 const usingTrack = () => !!trackBuf && bgmStyle === "track";
 // 今のプレイで曲ファイルを流すか（リズムモードは必ず曲、反射モードは流さない）
-const songUsesTrack = () => !!trackBuf && !reflexSilent && (isRhythm ? rhythmSong().type === "track" : bgmStyle === "track");
+const songUsesTrack = () => !reflexSilent && (isRhythm ? rhythmSong().type === "track" && !!trackBufOf(rhythmSong().track) : !!trackBuf && bgmStyle === "track");
 // 曲の時刻 songT の位置から曲ファイルを鳴らす（ループ区間を考慮）
 function playTrackFrom(songT) {
     stopTrack();
     if (!songUsesTrack() || !audioReady()) return;
-    let pos = songT;
-    if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
-    if (pos < 0) pos = 0;
+    const tr = activeTrack();
     const src = audioContext.createBufferSource();
-    src.buffer = trackBuf;
-    src.loop = true; src.loopStart = trackLoopStart; src.loopEnd = trackLoopStart + trackLoopLen;
+    let pos = songT;
+    if (tr === TRACK) {
+        if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
+        src.buffer = trackBuf;
+        src.loop = true; src.loopStart = trackLoopStart; src.loopEnd = trackLoopStart + trackLoopLen;
+    } else {
+        src.buffer = tr.buf; // リズムモード専用の曲は1回流して終わり
+        if (pos >= tr.buf.duration) return;
+    }
+    if (pos < 0) pos = 0;
     src.connect(musicGain);
     src.start(audioContext.currentTime, pos);
     trackSrc = src;
@@ -2340,6 +2448,12 @@ try { bgmStyle = localStorage.getItem("sobamichi_bgm_style") || "yokai"; } catch
 const STYLES = {
     yokai:   { semi: [0, 1, 5, 7, 8, 12, 13, 17, 19, 20], root: 329.63 },  // E4基準
     matsuri: { semi: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21], root: 293.66 },  // D4基準
+    takefu:  { semi: [0, 2, 5, 7, 9, 12, 14, 17, 19, 21], root: 261.63 },  // 陽音階・C4（民謡風）
+    sabae:   { semi: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21], root: 329.63 },  // 明るい五音音階・E4
+    imajo:   { semi: [0, 3, 5, 7, 10, 12, 15, 17, 19, 22], root: 293.66 }, // 民謡音階・D4
+    ichijo:  { semi: [0, 2, 5, 7, 10, 12, 14, 17, 19, 22], root: 220.00 }, // 雅楽風・A3（笛が1オクターブ上を吹く）
+    dino:    { semi: [0, 2, 3, 7, 8, 12, 14, 15, 19, 20], root: 329.63 },  // 平調子・E4（冒険っぽい響き）
+    fuchu:   { semi: [0, 2, 4, 7, 9, 12, 14, 16, 19, 21], root: 349.23 },  // 明るい五音音階・F4
 };
 let songStyle = null; // リズムモードのオリジナル曲を流している間の曲調
 const styleOf = () => STYLES[songStyle || bgmStyle] || STYLES.matsuri;
@@ -2449,7 +2563,7 @@ function targetPxPerSec() {
 function composeBar(bar) {
     if (isRhythm && rhythmSong().type === "gen") return; // オリジナル曲は startSong で全部作ってある
     const track = songUsesTrack() || isRhythm;
-    const t0 = (track ? TRACK.offset : 0) + bar * BAR;
+    const t0 = (track ? activeTrack().offset : 0) + bar * BAR;
     const r = chartRand;
     if (track) {
         for (let k = 0; k < 8; k++) soundQueue.push({ t: t0 + k * EIGHTH, kind: "shaker" }); // フィーバー中だけ鳴る
@@ -2605,6 +2719,115 @@ function playInstrument(s, at) {
     } else if (s.kind === "koto") {
         pluck(at, s.hz, 0.28, 0.7, 3200);
         if (fever) pluck(at, s.hz * 2, 0.12, 0.4, 5000); // フィーバー中は1オクターブ上を重ねて華やかに
+    } else if (s.kind === "shamisen") {
+        // 三味線風：短く、ばちの「ペン」という当たり
+        pluck(at, s.hz, 0.24, 0.32, 2600);
+        noiseHit(at, 3000, "bandpass", 0.10, 0.02);
+        if (fever) pluck(at, s.hz * 2, 0.10, 0.3, 5000);
+    } else if (s.kind === "anvil") {
+        // 鎚で鉄を打つ「カーン」：高い金属の響き（倍音がずれているのが金属らしさ）
+        const v = s.soft ? 0.4 : 1;
+        [[1870, 0.07], [2950, 0.045], [4680, 0.025]].forEach(([hz, vol]) => {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine"; o.frequency.setValueAtTime(hz, at);
+            g.gain.setValueAtTime(vol * v, at); g.gain.exponentialRampToValueAtTime(0.0005, at + 0.35);
+            o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.4);
+        });
+        noiseHit(at, 4200, "bandpass", 0.25 * v, 0.03);
+    } else if (s.kind === "chip") {
+        // ピコピコした四角い音（ポップなメロディ）
+        const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+        o.type = "square"; o.frequency.setValueAtTime(s.hz, at);
+        f.type = "lowpass"; f.frequency.value = 3800;
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.09, at + 0.005);
+        g.gain.setValueAtTime(0.09, at + EIGHTH * 0.6); g.gain.exponentialRampToValueAtTime(0.001, at + EIGHTH * 0.95);
+        o.connect(f); f.connect(g); g.connect(musicGain); o.start(at); o.stop(at + EIGHTH);
+        if (fever) pluck(at, s.hz * 2, 0.08, 0.3, 6000);
+    } else if (s.kind === "mokkin") {
+        // 木琴風：コロンと丸い音
+        [[1, 0.26], [4, 0.05]].forEach(([m, vol]) => {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine"; o.frequency.setValueAtTime(s.hz * m, at);
+            g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(vol, at + 0.004);
+            g.gain.exponentialRampToValueAtTime(0.001, at + (m === 1 ? 0.45 : 0.12));
+            o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.5);
+        });
+    } else if (s.kind === "kira") {
+        // めがねが光る「キラーン」：高い音が駆け上がる
+        [0, 4, 7, 12, 16].forEach((st, i) => {
+            const tt = at + i * 0.035, o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine"; o.frequency.setValueAtTime(1568 * Math.pow(2, st / 12), tt);
+            g.gain.setValueAtTime(0.05, tt); g.gain.exponentialRampToValueAtTime(0.0005, tt + 0.5);
+            o.connect(g); g.connect(musicGain); o.start(tt); o.stop(tt + 0.52);
+        });
+    } else if (s.kind === "clap") {
+        // 手拍子
+        [0, 0.012, 0.024].forEach((d, i) => noiseHit(at + d, 1300, "bandpass", i === 2 ? 0.32 : 0.18, i === 2 ? 0.09 : 0.02));
+    } else if (s.kind === "chug") {
+        // 汽車の「ガタン・ゴトン」：低めのシュッという刻み
+        noiseHit(at, s.strong ? 700 : 1100, "bandpass", s.strong ? 0.28 : 0.13, s.strong ? 0.09 : 0.05);
+    } else if (s.kind === "kiteki") {
+        // 汽笛「ポーッ」：2つの音を重ねた笛
+        [587.33, 698.46].forEach(hz => {
+            const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+            o.type = "sawtooth"; o.frequency.setValueAtTime(hz * 0.97, at); o.frequency.linearRampToValueAtTime(hz, at + 0.12);
+            f.type = "lowpass"; f.frequency.value = 1500;
+            g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.045, at + 0.1);
+            g.gain.setValueAtTime(0.045, at + 0.7); g.gain.linearRampToValueAtTime(0.0001, at + 1.0);
+            o.connect(f); f.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 1.05);
+        });
+    } else if (s.kind === "fue") {
+        // 篠笛風：澄んだ高い笛。伸ばすとビブラート
+        const dur = EIGHTH * 1.7;
+        const o = ac.createOscillator(), g = ac.createGain(), lfo = ac.createOscillator(), lg = ac.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(s.hz * 1.02, at); o.frequency.exponentialRampToValueAtTime(s.hz, at + 0.04);
+        lfo.frequency.value = 6; lg.gain.setValueAtTime(0, at); lg.gain.linearRampToValueAtTime(s.hz * 0.01, at + dur);
+        lfo.connect(lg); lg.connect(o.frequency);
+        g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(0.16, at + 0.03); g.gain.exponentialRampToValueAtTime(0.001, at + dur);
+        o.connect(g); g.connect(musicGain);
+        o.start(at); lfo.start(at); o.stop(at + dur + 0.02); lfo.stop(at + dur + 0.02);
+        noiseHit(at, Math.min(8000, s.hz * 3), "bandpass", 0.05, 0.06);
+    } else if (s.kind === "tsuzumi") {
+        // 鼓「ポン」：音がふっと上がる皮の音
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(300, at); o.frequency.exponentialRampToValueAtTime(420, at + 0.04);
+        g.gain.setValueAtTime(0.45, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.3);
+        o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.32);
+        noiseHit(at, 2000, "bandpass", 0.12, 0.02);
+    } else if (s.kind === "horagai") {
+        // 法螺貝「ブオォ〜」：低くふくらむ音
+        [196, 197.5, 392].forEach((hz, i) => {
+            const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+            o.type = "sawtooth"; o.frequency.setValueAtTime(hz * 0.94, at); o.frequency.linearRampToValueAtTime(hz, at + 0.3);
+            o.frequency.linearRampToValueAtTime(hz * 0.9, at + 1.5);
+            f.type = "lowpass"; f.frequency.setValueAtTime(500, at); f.frequency.linearRampToValueAtTime(1100, at + 0.5);
+            const v = i === 2 ? 0.02 : 0.05;
+            g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(v, at + 0.35);
+            g.gain.setValueAtTime(v, at + 1.1); g.gain.linearRampToValueAtTime(0.0001, at + 1.55);
+            o.connect(f); f.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 1.6);
+        });
+    } else if (s.kind === "dosun") {
+        // 恐竜の足音「ドスン」：とても低く重い音
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(75, at); o.frequency.exponentialRampToValueAtTime(30, at + 0.5);
+        g.gain.setValueAtTime(0.6, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.6);
+        o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.62);
+        noiseHit(at, 220, "lowpass", 0.35, 0.15);
+    } else if (s.kind === "shizuku") {
+        // 名水のしずく「ポチャン」
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = "sine"; o.frequency.setValueAtTime(s.hz * 0.6, at); o.frequency.exponentialRampToValueAtTime(s.hz, at + 0.05);
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.11, at + 0.01); g.gain.exponentialRampToValueAtTime(0.001, at + 0.22);
+        o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 0.25);
+    } else if (s.kind === "dora") {
+        // 銅鑼「ジャーン」：低い金属が長く残る
+        [[98, 0.07], [151, 0.05], [207, 0.04], [289, 0.03], [413, 0.015]].forEach(([hz, vol]) => {
+            const o = ac.createOscillator(), g = ac.createGain();
+            o.type = "sine"; o.frequency.setValueAtTime(hz * 1.01, at); o.frequency.linearRampToValueAtTime(hz, at + 0.4);
+            g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0005, at + 2.6);
+            o.connect(g); g.connect(musicGain); o.start(at); o.stop(at + 2.7);
+        });
+        noiseHit(at, 3000, "bandpass", 0.18, 0.4);
     }
 }
 function noiseHit(at, freq, type, vol, dur) {
