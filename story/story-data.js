@@ -13,7 +13,7 @@
             id: "c1", area: { ja: "越前市（武生）", en: "Echizen City (Takefu)" }, guides: ["minarai", "shokunin"],
             stages: [
                 {
-                    id: "1-1", kind: "meet", diff: "easy", song: song("matsuri", 120, 9101),
+                    id: "1-1", kind: "meet", diff: "easy", song: song("takefu", 120, 9101),
                     title: { ja: "そばの香りに誘われて", en: "Drawn in by the Scent" },
                     before: [
                         L("you", "（福井にやってきた。駅前を歩いていると、どこからかいい香りが…）", "(You've just arrived in Fukui. Walking from the station, a wonderful smell drifts by...)"),
@@ -26,7 +26,7 @@
                     ],
                 },
                 {
-                    id: "1-2", kind: "train", diff: "easy", song: song("matsuri", 128, 9102),
+                    id: "1-2", kind: "train", diff: "easy", song: song("takefu", 128, 9102),
                     title: { ja: "ぶっかけ修行", en: "The Pour-Over Lesson" },
                     before: [
                         L("minarai", "越前のおろしそばはな、つゆにつけるんやなくて、上から「ぶっかけ」るんや！", "Echizen oroshi soba isn't dipped. You pour the broth right over it!"),
@@ -38,7 +38,7 @@
                     tip: { ja: "越前おろしそばは、冷たいそばに大根おろし・かつお節・ねぎをのせ、つゆを上から「ぶっかけ」て食べるのが定番。", en: "Echizen oroshi soba: cold noodles topped with grated daikon, bonito flakes and green onion, with broth poured over the top." },
                 },
                 {
-                    id: "1-3", kind: "taste", diff: "easy", song: song("matsuri", 136, 9103),
+                    id: "1-3", kind: "taste", diff: "easy", song: song("takefu", 136, 9103),
                     title: { ja: "三つのかけ方", en: "Three Ways to Pour" },
                     before: [
                         L("shokunin", "つゆのかけ方は、だいたい三通りあると言われとる。", "They say there are roughly three ways to pour the broth."),
@@ -58,7 +58,7 @@
             id: "c2", area: { ja: "鯖江市", en: "Sabae City" }, guides: ["megane"],
             stages: [
                 {
-                    id: "2-1", kind: "meet", diff: "easy", song: song("matsuri", 130, 9201),
+                    id: "2-1", kind: "meet", diff: "easy", song: song("sabae", 130, 9201),
                     title: { ja: "眼鏡の町の職人", en: "The Glasses-Town Craftsman" },
                     before: [
                         L("megane", "おや、弟子入りした旅の方ですね。…失礼、背筋が0.5度傾いていますよ。", "Ah, the traveller who became an apprentice. ...Pardon me, your posture is tilted 0.5 degrees."),
@@ -69,7 +69,7 @@
                     ],
                 },
                 {
-                    id: "2-2", kind: "train", diff: "easy", song: song("matsuri", 138, 9202), ask: "noodle",
+                    id: "2-2", kind: "train", diff: "easy", song: song("sabae", 138, 9202), ask: "noodle",
                     title: { ja: "太さをそろえる", en: "Even Thickness" },
                     before: [
                         L("megane", "越前のそばは、色が黒っぽく、やや太めの田舎そばが多いと言われます。", "Echizen soba is said to be mostly dark, slightly thick country-style noodles."),
@@ -81,7 +81,7 @@
                     tip: { ja: "越前そばは、そばの実を甘皮ごと挽く「挽きぐるみ」。色が黒っぽく、香りが強い。やや太めの田舎そばが多い。", en: "Echizen soba flour is ground with the inner husk, so it's dark and fragrant. Many shops serve slightly thick country-style noodles." },
                 },
                 {
-                    id: "2-3", kind: "taste", diff: "easy", song: song("matsuri", 144, 9203),
+                    id: "2-3", kind: "taste", diff: "easy", song: song("sabae", 144, 9203),
                     title: { ja: "石臼の回る音", en: "The Turning Millstone" },
                     before: [
                         L("megane", "福井のそば粉は、ほとんどが石臼でゆっくり挽かれているそうです。", "They say most Fukui soba flour is slowly ground on stone mills."),
@@ -98,7 +98,7 @@
             id: "c3", area: { ja: "南越前町（今庄）", en: "Minamiechizen (Imajo)" }, guides: ["ekiin"],
             stages: [
                 {
-                    id: "3-1", kind: "meet", diff: "normal", song: song("matsuri", 140, 9301),
+                    id: "3-1", kind: "meet", diff: "normal", song: song("imajo", 140, 9301),
                     title: { ja: "次は〜今庄〜", en: "Next Stop, Imajo" },
                     before: [
                         L("ekiin", "次は〜今庄〜。そばの町でございます！ ようこそ、修行中の旅の方！", "Next stop, Imajo! The town of soba! Welcome, travelling apprentice!"),
@@ -109,7 +109,7 @@
                     ],
                 },
                 {
-                    id: "3-2", kind: "train", diff: "normal", song: song("yokai", 118, 9302),
+                    id: "3-2", kind: "train", diff: "normal", song: song("imajo", 118, 9302),
                     title: { ja: "峠の在来種", en: "The Mountain Native Strain" },
                     before: [
                         L("ekiin", "福井には、昔からその土地で育てられてきた「在来種」のそばがいくつもあるんです。", "Fukui has several native buckwheat strains, grown in the same places for generations."),
@@ -121,7 +121,7 @@
                     tip: { ja: "福井には「大野在来」「丸岡在来」「今庄在来」など、土地ごとの在来種のそばがある。小粒だが味が濃く香りが高いと言われる。", en: "Fukui has local native strains such as Ono, Maruoka and Imajo Zairai. Small grains, said to be rich and fragrant." },
                 },
                 {
-                    id: "3-3", kind: "taste", diff: "normal", song: song("matsuri", 148, 9303),
+                    id: "3-3", kind: "taste", diff: "normal", song: song("imajo", 148, 9303),
                     title: { ja: "大盛りは二枚", en: "Large Means Two Plates" },
                     before: [
                         L("ekiin", "越前のおろしそばは、一杯の量が控えめなことが多いんです。", "A bowl of Echizen oroshi soba is often on the small side."),
@@ -139,7 +139,7 @@
             id: "c4", area: { ja: "福井市（一乗谷）", en: "Fukui City (Ichijodani)" }, guides: ["ashigaru", "oroshi_musume"],
             stages: [
                 {
-                    id: "4-1", kind: "meet", diff: "normal", song: song("matsuri", 146, 9401),
+                    id: "4-1", kind: "meet", diff: "normal", song: song("ichijo", 146, 9401),
                     title: { ja: "朝倉の谷", en: "The Asakura Valley" },
                     before: [
                         L("ashigaru", "おう、旅の弟子か！ ここは朝倉家の城下、一乗谷だ。", "Hey, the travelling apprentice! This is Ichijodani, the Asakura clan's castle town."),
@@ -150,7 +150,7 @@
                     ],
                 },
                 {
-                    id: "4-2", kind: "train", diff: "normal", song: song("yokai", 124, 9402), ask: "spice",
+                    id: "4-2", kind: "train", diff: "normal", song: song("ichijo", 124, 9402), ask: "spice",
                     title: { ja: "籠城のそば", en: "Soba for the Siege" },
                     before: [
                         L("ashigaru", "福井のそばの始まりは、朝倉家が一乗谷に城を築いたころと言われてるんだ。", "They say Fukui's soba began around when the Asakura clan built their castle here."),
@@ -163,7 +163,7 @@
                     tip: { ja: "福井のそばの始まりは、朝倉氏が一乗谷に城を築いたころと伝わる。育つのが早いそばを籠城の食料にし、当時は麺ではなく「そばがき」などで食べたという。", en: "Fukui's soba is said to date back to the Asakura clan at Ichijodani, who stored fast-growing buckwheat as siege food, eaten as dough rather than noodles." },
                 },
                 {
-                    id: "4-3", kind: "taste", diff: "normal", song: song("matsuri", 152, 9403),
+                    id: "4-3", kind: "taste", diff: "normal", song: song("ichijo", 152, 9403),
                     title: { ja: "辛さはお好みで", en: "Spice to Taste" },
                     before: [
                         L("oroshi_musume", "大根おろしは、越前おろしそばの主役のひとつ。辛さで印象がガラッと変わるんよ。", "Grated daikon is one of the stars of oroshi soba. The spiciness changes everything."),
@@ -180,7 +180,7 @@
             id: "c5", area: { ja: "勝山市・大野市（奥越）", en: "Katsuyama & Ono (Okuetsu)" }, guides: ["kyoryu", "soba_hatake"],
             stages: [
                 {
-                    id: "5-1", kind: "meet", diff: "normal", song: song("matsuri", 150, 9501),
+                    id: "5-1", kind: "meet", diff: "normal", song: song("dino", 150, 9501),
                     title: { ja: "恐竜とそば畑", en: "Dinosaurs and Soba Fields" },
                     before: [
                         L("kyoryu", "おおっ、きみが噂の弟子か！ 見てくれこの化石…じゃなかった、そばの実だ！", "Oh! You're the apprentice I've heard about! Look at this fossil... I mean, buckwheat grain!"),
@@ -191,7 +191,7 @@
                     ],
                 },
                 {
-                    id: "5-2", kind: "train", diff: "normal", song: song("matsuri", 156, 9502),
+                    id: "5-2", kind: "train", diff: "normal", song: song("dino", 156, 9502),
                     title: { ja: "そばの産地", en: "Soba Country" },
                     before: [
                         L("soba_hatake", "大野や勝山は、福井でも大きなそばの産地なんやよ。", "Ono and Katsuyama are some of Fukui's biggest soba-growing areas."),
@@ -203,7 +203,7 @@
                     tip: { ja: "大野市・勝山市などはそばの主な産地。福井県はそばの作付面積が全国でも上位。", en: "Ono and Katsuyama are major soba-growing areas, and Fukui ranks among Japan's top prefectures for buckwheat acreage." },
                 },
                 {
-                    id: "5-3", kind: "taste", diff: "normal", song: song("matsuri", 160, 9503),
+                    id: "5-3", kind: "taste", diff: "normal", song: song("dino", 160, 9503),
                     title: { ja: "新そば祭り", en: "New Soba Festival" },
                     before: [
                         L("soba_hatake", "そばの収穫は11月ごろ。県内のあちこちで「新そば祭り」があるんやよ！", "Buckwheat is harvested around November, and there are new-soba festivals all over the prefecture!"),
@@ -221,7 +221,7 @@
             id: "c6", area: { ja: "越前府中の城", en: "Echizen Fuchu Castle" }, guides: ["honda", "kaneko"],
             stages: [
                 {
-                    id: "6-1", kind: "meet", diff: "normal", song: song("matsuri", 150, 9601),
+                    id: "6-1", kind: "meet", diff: "normal", song: song("fuchu", 150, 9601),
                     title: { ja: "殿のお呼び出し", en: "Summoned by the Lord" },
                     before: [
                         L("honda", "うむ、そなたが旅の弟子か。余はそばが大好物じゃ。", "So you are the travelling apprentice. I adore soba."),
@@ -233,7 +233,7 @@
                     ],
                 },
                 {
-                    id: "6-2", kind: "train", diff: "normal", song: song("yokai", 130, 9602),
+                    id: "6-2", kind: "train", diff: "normal", song: song("fuchu", 130, 9602),
                     title: { ja: "おろしそばの由来", en: "Where Oroshi Soba Began" },
                     before: [
                         L("honda", "府中の城主・本多富正公が、京都からそば職人を連れてきたのが始まりと伝わっておる。", "It is said to begin with Lord Honda Tomimasa of Fuchu, who brought a soba maker from Kyoto."),
@@ -248,7 +248,7 @@
                     tip: { ja: "おろしそばは、府中（今の越前市）の城主・本多富正が京都からそば職人を伴ったのが始まりと伝わる。「越前そば」の名は、昭和22年に昭和天皇が召し上がったことに由来するとも言われる。", en: "Oroshi soba is said to begin with Lord Honda Tomimasa of Fuchu bringing a soba maker from Kyoto. The name 'Echizen soba' is said to come from Emperor Showa's 1947 visit." },
                 },
                 {
-                    id: "6-3", kind: "taste", diff: "hard", song: song("matsuri", 168, 9603, FORM_LONG),
+                    id: "6-3", kind: "taste", diff: "hard", song: song("fuchu", 168, 9603, FORM_LONG),
                     title: { ja: "一人前の一杯", en: "A Bowl Worthy of a Master" },
                     before: [
                         L("shokunin", "最後の試練だ。お前の一杯を、殿にお出ししろ。", "Your final test. Serve your bowl to His Lordship."),
