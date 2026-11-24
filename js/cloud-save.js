@@ -9,7 +9,8 @@
 // users/{自分のユーザーID} に写す。読み込み時はクラウドの方が新しければ端末に戻して再読込する。
 // そのため index.html 側のゲーム処理は書き換えていない（ストーリーモードなどで増えた記録も自動で同期される）。
 //
-// 番付・マイページ（そば粉・ガチャ）は今までどおり GAS（gas/Code.gs）が担当する。
+// 番付・ガチャ（そば粉・職人）は今までどおり GAS（gas/Code.gs）が担当する。
+// そのアカウント（名前＋パスワード）のログイン・ログアウトも、この設定画面に並べる（中身は index.html の renderAccountSettings）。
 // npm は不要。Firebase は CDN から ES モジュールとして直接読み込む。
 
 import { firebaseConfig } from "./firebase-config.js";
@@ -235,7 +236,11 @@ function buildPanel() {
 #cloudSettings { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 400; padding: 16px; }
 #cloudSettings.open { display: flex; }
 #cloudSettingsBox { background: #1b1b1b; color: #eee; border: 2px solid gold; border-radius: 12px; padding: 20px; width: 100%; max-width: 420px; font-family: 'Noto Serif JP', serif; text-align: center; }
+#cloudSettingsBox { max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; }
 #cloudSettingsBox h2 { margin: 0 0 12px; color: gold; font-size: 22px; }
+#cloudSettingsBox h3 { margin: 0 0 8px; color: #ffe9a8; font-size: 16px; text-align: left; }
+#cloudSettingsBox .cs-section { border-top: 1px solid #333; padding-top: 14px; margin-top: 14px; }
+#cloudSettingsBox .cs-plain { background: #2c4a63; color: #fff; }
 #cloudSettingsBox .cs-status { background: #000; border-radius: 8px; padding: 10px; font-size: 14px; line-height: 1.6; margin-bottom: 12px; }
 #cloudSettingsBox .cs-note { font-size: 12px; color: #aaa; line-height: 1.6; margin: 8px 0 12px; text-align: left; }
 #cloudSettingsBox button { display: block; width: 100%; margin: 8px 0 0; padding: 12px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; }
@@ -250,7 +255,8 @@ function buildPanel() {
     panel = document.createElement("div");
     panel.id = "cloudSettings";
     panel.innerHTML = `<div id="cloudSettingsBox">
-  <h2>⚙ ${t("設定・データ引き継ぎ", "Settings · Save transfer")}</h2>
+  <h2>⚙ ${t("設定", "Settings")}</h2>
+  <h3>☁ ${t("セーブの引き継ぎ（Google連携）", "Save transfer (Google)")}</h3>
   <div class="cs-status"></div>
   <div class="cs-note"></div>
   <button class="cs-google"></button>
@@ -259,6 +265,7 @@ function buildPanel() {
     <button class="cs-danger">${t("Google側のセーブに切り替える", "Switch to the Google save")}</button>
   </div>
   <div class="cs-msg"></div>
+  <div class="cs-account cs-section"></div>
   <button class="cs-close">${t("閉じる", "Close")}</button>
 </div>`;
     document.body.appendChild(panel);
@@ -269,6 +276,7 @@ function buildPanel() {
 }
 function renderPanel() {
     if (!panel) return;
+    if (window.renderAccountSettings) window.renderAccountSettings(panel.querySelector(".cs-account"));
     const status = panel.querySelector(".cs-status");
     const note = panel.querySelector(".cs-note");
     const btn = panel.querySelector(".cs-google");
@@ -318,6 +326,7 @@ function openPanel() {
 }
 function closePanel() { if (panel) panel.classList.remove("open"); }
 window.openCloudSettings = openPanel;
+window.closeCloudSettings = closePanel;
 
 // ---------- 他の端末で連携済みのGoogleでログインしたいとき ----------
 // ゲストのまま「Googleアカウントと連携」を押せば、そのGoogleにセーブがあれば切り替えの確認が出る。

@@ -139,7 +139,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .tsCard.reflex .modeRow .menuBtn:hover { background: #fff; }
 .tsModes #rankmaEntryBtn { width: auto; max-width: none; margin: 0; padding: 12px 14px; font-size: inherit; text-align: left; display: flex; align-items: center; gap: 12px; white-space: normal; color: white; animation: none; }
 .tsModes #rankmaEntryBtn .tsCardSub { opacity: 0.9; }
-/* 下段：マイページ・番付・設定 */
+/* 下段：ガチャ・図鑑・番付 */
 .tsSecondary { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
 .tsSecondary .menuBtn { width: auto; margin: 0; padding: 10px 18px; font-size: 16px; }
 #tsRankRow { display: none; gap: 6px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
@@ -689,7 +689,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .mobileHitBtn.active .btnIcon { opacity: 1; }
 .mobileHitBtn.active .btnKey { color: #1a1206; text-shadow: none; }
 
-/* ===== マイページ・キャラ・ガチャ ===== */
+/* ===== ガチャ・図鑑（キャラ） ===== */
 /* リズムモード：難易度カード */
 .rhCards { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin:12px auto; max-width:900px; }
 .rhCard { background:#1a1408; border:2px solid #8a6d2a; border-radius:12px; padding:12px 14px; width:min(400px, 92vw); box-sizing:border-box; text-align:left; }
@@ -1051,9 +1051,9 @@ body.mobileLayout #workerArea { display: none; }
     </button>
   </div>
 
-  <!-- マイページ・番付 -->
+  <!-- ガチャ・図鑑・番付 -->
   <div class="tsSecondary">
-    <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+    <button data-en="🎴 Gacha · Collection" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🎴 ガチャ・図鑑</button>
     <button data-en="🏆 Leaderboards" class="menuBtn" onclick="document.getElementById('tsRankRow').classList.toggle('open')">🏆 番付を見る</button>
   </div>
   <div id="tsRankRow">
@@ -1141,7 +1141,7 @@ body.mobileLayout #workerArea { display: none; }
  <button data-en="🎵 Choose difficulty" class="menuBtn" id="rhythmBackBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 難易度選択へ</button>
  <button data-en="🗺️ Back to the map" class="menuBtn" id="storyMapBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="StoryUI.open()">🗺️ 地図へ戻る</button>
  <button data-en="Title" class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
- <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
+ <button data-en="🎴 Gacha · Collection" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🎴 ガチャ・図鑑</button>
 </div>
 
 <!-- ===== リズムモード（難易度選択） ===== -->
@@ -1174,10 +1174,10 @@ body.mobileLayout #workerArea { display: none; }
  </div>
 </div>
 
-<!-- ===== マイページ ===== -->
+<!-- ===== ガチャ・図鑑（画面のidは昔の名残で mypage のまま） ===== -->
 <div id="mypage">
  <div class="mp-wrap">
-  <h1 data-en="🏠 My Page">🏠 マイページ</h1>
+  <h1 data-en="🎴 Gacha · Collection">🎴 ガチャ・図鑑</h1>
   <div id="mpName"></div>
   <div id="mpStatus"></div>
   <div class="mp-row">
@@ -1205,8 +1205,7 @@ body.mobileLayout #workerArea { display: none; }
     <div class="mp-grid" id="mpCollection"></div>
   </div>
   <br>
-  <button data-en="Title" class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button><br>
-  <button data-en="Log out" class="lobby-back-btn" style="margin-top:10px;" onclick="logout()">ログアウト</button>
+  <button data-en="Title" class="menuBtn" onclick="switchScreen('titleScreen')">タイトルへ</button>
  </div>
 </div>
 
@@ -1999,8 +1998,8 @@ function playSE(name) {
     source.start(0);
 }
 
-// ===== ログイン（ランクマ参戦・マイページ共通）モーダル =====
-let nameModalPurpose = "rankma"; // "rankma" | "mypage"
+// ===== ログイン（ランクマ参戦・ガチャ・設定 共通）モーダル =====
+let nameModalPurpose = "rankma"; // "rankma" | "mypage"(ガチャ・図鑑) | "daily" | "settings"
 function nameModalConfirmLabel() { return nameModalPurpose === "rankma" ? T("この名で参戦する", "Enter the match") : T("ログインする", "Log in"); }
 
 function openLoginModal(purpose) {
@@ -2011,7 +2010,8 @@ function openLoginModal(purpose) {
     document.getElementById("nameModalMsg").innerText = "";
     document.getElementById("nameModalMsg").className = "";
     document.getElementById("nameModalTitle").innerText =
-        purpose === "mypage" ? T("🏠 マイページにログイン", "🏠 Log in to My Page")
+        purpose === "mypage" ? T("🎴 ガチャ・図鑑にログイン", "🎴 Log in for Gacha · Collection")
+        : purpose === "settings" ? T("👤 番付・そば粉のアカウントにログイン", "👤 Log in to your game account")
         : purpose === "daily" ? T("📅 今日のそば打ちにログイン", "📅 Log in for the Daily Challenge")
         : T("⚔️ ランクマッチ参戦", "⚔️ Join a Ranked Match");
     document.getElementById("nameModalConfirm").innerText = nameModalConfirmLabel();
@@ -2056,9 +2056,9 @@ async function confirmRankmaName() {
     nameInput.disabled = true; passInput.disabled = true;
     msg.className = ""; msg.innerText = "";
 
-    // マイページ：登録済みの人は「プロフィール取得」だけでログインと表示を済ませる（通信1回）。
+    // ガチャ・図鑑／設定：登録済みの人は「プロフィール取得」だけでログインと表示を済ませる（通信1回）。
     // 未登録（no_user）のときだけ、下の新規登録へ進む。
-    if (nameModalPurpose === "mypage") {
+    if (nameModalPurpose === "mypage" || nameModalPurpose === "settings") {
         try {
             if (await ensureApi() >= 5) {
                 const r = await (await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "profile", name, pass }) })).json();
@@ -2066,7 +2066,7 @@ async function confirmRankmaName() {
                     setAccount(name, pass);
                     profile = r.profile; playerStats = r.stats;
                     closeNameModal(); resetNameModalControls();
-                    openMyPage(true);
+                    if (nameModalPurpose === "settings") afterSettingsLogin(); else openMyPage(true);
                     return;
                 }
                 if (r.status === "wrong_pass") {
@@ -2114,14 +2114,14 @@ async function confirmRankmaName() {
         msg.className = ""; msg.innerText = T("通信失敗。そのまま参戦する。", "Connection failed. Starting anyway.");
     }
 
-    // 認証できたら、この名前でマイページ（そば粉・キャラ）にもログインした状態にする
+    // 認証できたら、この名前でガチャ・図鑑（そば粉・キャラ）にもログインした状態にする
     if (authed) {
         if (!account || account.name !== name) { profile = null; playerStats = null; }
         setAccount(name, pass);
     }
 
     if (nameModalPurpose !== "rankma") {
-        const next = nameModalPurpose === "daily" ? openDaily : openMyPage;
+        const next = nameModalPurpose === "daily" ? openDaily : nameModalPurpose === "settings" ? afterSettingsLogin : openMyPage;
         closeNameModal();
         resetNameModalControls();
         next();
@@ -3358,7 +3358,7 @@ async function showRanking(){
 
 function openRankingMode(m){ currentMode=m; isRankmaMode=false; showRanking(); }
 
-// ===== マイページ・キャラクター・ガチャ =====
+// ===== ガチャ・図鑑・キャラクター =====
 // idとレア度はGAS側(gas/Code.gs)のGACHA_POOLと必ず一致させること。
 // img があれば画像（chars/フォルダ、背景透過・正方形推奨）、なければ絵文字で表示する。
 const CHARACTERS = {
@@ -3447,12 +3447,45 @@ function logout() {
     switchScreen("titleScreen");
 }
 
+// ===== 設定画面の「番付・そば粉のアカウント」欄 =====
+// 設定画面そのものは js/cloud-save.js が作る。ここではアカウント欄の中身だけを用意する。
+let loginFromSettings = false;
+function openAccountLogin(fromSettings) {
+    loginFromSettings = !!fromSettings;
+    if (window.closeCloudSettings) closeCloudSettings();
+    openLoginModal("settings");
+}
+function afterSettingsLogin() {
+    renderTitle();
+    if (loginFromSettings && window.openCloudSettings) openCloudSettings();
+    loginFromSettings = false;
+}
+function settingsLogout() {
+    clearAccount();
+    renderTitle();
+    renderAccountSettings(document.querySelector("#cloudSettings .cs-account"));
+}
+function renderAccountSettings(el) {
+    if (!el) return;
+    const note = T("番付・ランクマッチ・そば粉・ガチャの職人は、この名前とパスワードでサーバーに保存されている。別の端末でも同じ名前でログインすれば戻る。",
+        "Leaderboards, Ranked Match, soba flour and gacha partners are saved on the server under this name and password. Log in with the same name on another device to get them back.");
+    el.innerHTML = account
+        ? `<h3>👤 ${T("番付・そば粉のアカウント", "Game account")}</h3>
+           <div class="cs-status">${T("職人", "Player")} <b style="color:gold;">${escapeHtml(account.name)}</b> ${T("でログイン中", "is logged in")}</div>
+           <div class="cs-note">${note}</div>
+           <button class="cs-plain" onclick="settingsLogout()">${T("ログアウト", "Log out")}</button>`
+        : `<h3>👤 ${T("番付・そば粉のアカウント", "Game account")}</h3>
+           <div class="cs-status">${T("まだログインしていない", "Not logged in")}</div>
+           <div class="cs-note">${note}</div>
+           <button class="cs-plain" onclick="openAccountLogin(true)">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
+}
+
 function activeCharacter() {
     if (isRankmaMode || isDaily || isRhythm || !profile || !profile.selected) return null;
     return CHARACTERS[profile.selected] || null;
 }
 
-// サーバー(GAS)がマイページ機能(v5)に対応しているか。古いGASに新しいactionを送ると
+// サーバー(GAS)がガチャ・図鑑の機能(v5)に対応しているか。古いGASに新しいactionを送ると
 // スコア保存の処理に流れて番付に空の行が書き込まれてしまうため、必ずこれを確認してから送る。
 async function ensureApi() {
     if (serverApi) return serverApi;
@@ -3468,7 +3501,7 @@ async function ensureApi() {
     return serverApi;
 }
 
-// マイページ系のリクエスト。未ログイン・サーバー未対応なら null を返す
+// ガチャ・図鑑系のリクエスト。未ログイン・サーバー未対応なら null を返す
 async function playerAction(action, extra = {}) {
     if (!account) return null;
     if (await ensureApi() < 5) return null;
@@ -3501,11 +3534,11 @@ async function openMyPage(alreadyLoaded) {
     try {
         const res = await playerAction("profile");
         if (!res) {
-            status.textContent = T("サーバーがまだマイページに対応していない（GASの更新待ち）。", "My Page isn't available on the server yet.");
+            status.textContent = T("サーバーがまだガチャ・図鑑に対応していない（GASの更新待ち）。", "Gacha isn't available on the server yet.");
             return;
         }
         if (res.status !== "ok") {
-            status.textContent = T("ログインが切れた。タイトルからもう一度ログインしてくれ。", "You've been logged out. Please log in again from the title screen.");
+            status.textContent = T("ログインが切れた。もう一度ログインしてくれ。", "You've been logged out. Please log in again.");
             renderMyPage();
             return;
         }
@@ -3543,7 +3576,7 @@ function charCardHtml(id, opts = {}) {
     return `<div class="${cls.join(" ")}" style="${style}"${dataId}${onclick}><span class="cRar">${c.r}</span>${count}<div class="cEmoji">${charVisual(c, "cImg")}</div><div class="cName">${charName(c)}</div><div class="cDesc">${charDesc(c)}</div>${info}${badge}</div>`;
 }
 
-// マイページ上部の「修行に連れて行く職人」欄
+// ガチャ・図鑑の上部「修行に連れて行く職人」欄
 function renderMySelected() {
     const p = profile || { selected: "" };
     const sel = CHARACTERS[p.selected];
@@ -3687,7 +3720,7 @@ async function pullGacha(count) {
         else if (res.status !== "ok") status.textContent = T("ガチャに失敗した。もう一度試してくれ。", "Gacha failed. Please try again.");
         else { status.textContent = ""; showGachaResult(res.results); }
     } catch (e) {
-        status.textContent = T("通信失敗。マイページを開き直して、そば粉と図鑑を確認してくれ。", "Connection failed. Reopen My Page to check your flour and collection.");
+        status.textContent = T("通信失敗。ガチャ・図鑑を開き直して、そば粉と図鑑を確認してくれ。", "Connection failed. Reopen Gacha · Collection to check your flour and partners.");
     }
     isPulling = false;
     renderMyPage();
@@ -3705,7 +3738,7 @@ function showGachaResult(results) {
 async function earnCoins() {
     const el = document.getElementById("coinEarnDisplay");
     if (!account) {
-        el.innerHTML = `<span style="color:#aaa; font-size:14px;">${T("マイページにログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる。", "Log in on My Page to earn 🌾 soba flour and collect partners from the gacha!")}</span>`;
+        el.innerHTML = `<span style="color:#aaa; font-size:14px;">${T("ログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる（⚙ 設定 または 🎴 ガチャ・図鑑 から）。", "Log in (from ⚙ Settings or 🎴 Gacha) to earn 🌾 soba flour and collect partners!")}</span>`;
         return;
     }
     el.textContent = T("🌾 そば粉を計量中...", "🌾 Weighing your soba flour...");
@@ -3789,8 +3822,8 @@ function renderTitleInfo() {
     if (!el) return;
     document.getElementById("tsDailyDate").textContent = shortDate();
     if (!account) {
-        el.innerHTML = `<span>${T("ログインすると、ガチャ・今日のそば打ち・マイページが遊べる", "Log in to unlock gacha, the Daily Challenge and My Page")}</span>
-            <button class="tsLink" onclick="openMyPage()">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
+        el.innerHTML = `<span>${T("ログインすると、ガチャ・今日のそば打ちが遊べる", "Log in to unlock the gacha and the Daily Challenge")}</span>
+            <button class="tsLink" onclick="openAccountLogin(false)">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
         return;
     }
     const parts = [`👤 <b>${escapeHtml(account.name)}</b>`];
