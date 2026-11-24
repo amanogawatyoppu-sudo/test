@@ -1387,17 +1387,32 @@ const RHYTHM_DIFFS = {
 };
 const GRADE_ORDER = ["C", "B", "A", "S"];
 
+// リズムモード専用の曲ファイル（曲を選んだときに読み込む）。bpm と offset はファイル全体の拍の解析で求めた。
+// chartEnd：音が鳴り終わる時刻（秒）。それより後の小節にはノーツを置かない
+// 3曲とも Maniira さん作（OpenTracks、旧DOVA-SYNDROME）。クレジット表記は不要だが表示している。
+const EXTRA_TRACKS = {
+    ariake:    { src: "bgm/ariake.bgm",    bpm: 162.2, offset: 0.074, chartEnd: 217.0, title: "有明のユーロビート", composer: "Maniira", site: "OpenTracks" },
+    sakurajo:  { src: "bgm/sakurajo.bgm",  bpm: 120,   offset: 0.024, chartEnd: 132.5, title: "桜城にて",           composer: "Maniira", site: "OpenTracks" },
+    machinami: { src: "bgm/machinami.bgm", bpm: 100,   offset: 0.012, chartEnd: 89.0,  title: "和の街並み",         composer: "Maniira", site: "OpenTracks" },
+};
 const GEN_FORM_STD = [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 0.95], ["D", 8, 0.45], ["A", 8, 0.55], ["C", 8, 1.0], ["O", 2, 0]];
 // リズムモードの曲。track＝曲ファイル（低音衝動）、gen＝ゲームの中で作るオリジナル曲（ファイル不要）
 const RHYTHM_SONGS = {
     hyakki:  { key: "hyakki",  type: "gen", style: "yokai",   bpm: 112, seed: 8002, icon: "👻",
                title: () => T("百鬼夜行", "Night Parade"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("ゆっくり・妖しい", "Slow & spooky"),
                form: [["I", 2, 0.2], ["A", 8, 0.45], ["B", 8, 0.65], ["C", 8, 0.95], ["D", 8, 0.4], ["A", 8, 0.55], ["C", 8, 1.0], ["O", 2, 0]] },
-    teion:   { key: "teion",   type: "track", bpm: 141, icon: "🎸",
+    teion:   { key: "teion",   type: "track", get track() { return TRACK; }, bpm: 141, icon: "🎸",
                title: () => TRACK.title, credit: () => `${TRACK.composer}（${TRACK.site}）`, mood: () => T("かっこいい・ノリノリ", "Cool & groovy") },
     matsuri: { key: "matsuri", type: "gen", style: "matsuri", bpm: 168, seed: 7001, icon: "🏮",
                title: () => T("越前祭り囃子", "Echizen Festival"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("速い・にぎやか", "Fast & festive"),
                form: [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 1.0], ["D", 8, 0.45], ["A", 8, 0.6], ["B", 8, 0.75], ["C", 8, 1.0], ["C", 8, 1.0], ["O", 2, 0]] },
+    // OpenTracks（旧DOVA-SYNDROME）の曲。会長が選んだもの
+    ariake:  { key: "ariake", type: "track", track: EXTRA_TRACKS.ariake, bpm: EXTRA_TRACKS.ariake.bpm, icon: "🌅",
+               title: () => EXTRA_TRACKS.ariake.title, credit: () => `${EXTRA_TRACKS.ariake.composer}（${EXTRA_TRACKS.ariake.site}）`, mood: () => T("和風ユーロビート・速い", "Japanese Eurobeat") },
+    sakurajo:{ key: "sakurajo", type: "track", track: EXTRA_TRACKS.sakurajo, bpm: EXTRA_TRACKS.sakurajo.bpm, icon: "🌸",
+               title: () => EXTRA_TRACKS.sakurajo.title, credit: () => `${EXTRA_TRACKS.sakurajo.composer}（${EXTRA_TRACKS.sakurajo.site}）`, mood: () => T("三味線と琴・のんびり", "Shamisen & koto") },
+    machinami:{ key: "machinami", type: "track", track: EXTRA_TRACKS.machinami, bpm: EXTRA_TRACKS.machinami.bpm, icon: "🏘️",
+               title: () => EXTRA_TRACKS.machinami.title, credit: () => `${EXTRA_TRACKS.machinami.composer}（${EXTRA_TRACKS.machinami.site}）`, mood: () => T("おだやか・ゆっくり", "Calm & gentle") },
     // 福井めぐり：エリアごとのオリジナル曲（ストーリーの各章と同じ曲調）
     takefu:  { key: "takefu", type: "gen", style: "takefu", bpm: 132, seed: 9111, icon: "🔨",
                title: () => T("鎚音の町", "Hammer Town"), credit: () => T("オリジナル曲", "Original song"), mood: () => T("職人・力強い", "Crafty & strong"), form: GEN_FORM_STD },
@@ -1583,14 +1598,15 @@ let reflexSilent = false; // 反射モード（BGMなし）：曲を流さず効
 let barEnergy = null;
 
 // 小節ごとの音量（0〜1、曲の中での順位）を求める
-function computeBarEnergy() {
-    if (!trackBuf) return null;
-    const d = trackBuf.getChannelData(0), sr = trackBuf.sampleRate;
-    const barLen = 60 / TRACK.bpm * 4;
-    const bars = Math.floor((trackBuf.duration - TRACK.offset) / barLen);
+function computeBarEnergy(tr = TRACK) {
+    const buf = trackBufOf(tr);
+    if (!buf) return null;
+    const d = buf.getChannelData(0), sr = buf.sampleRate;
+    const barLen = 60 / tr.bpm * 4;
+    const bars = Math.floor(((tr.chartEnd || buf.duration) - tr.offset) / barLen);
     const rms = [];
     for (let b = 0; b < bars; b++) {
-        const s = Math.floor((TRACK.offset + b * barLen) * sr), e = Math.min(d.length, Math.floor((TRACK.offset + (b + 1) * barLen) * sr));
+        const s = Math.floor((tr.offset + b * barLen) * sr), e = Math.min(d.length, Math.floor((tr.offset + (b + 1) * barLen) * sr));
         let sum = 0, n = 0;
         for (let i = s; i < e; i += 64) { sum += d[i] * d[i]; n++; }
         rms.push(Math.sqrt(sum / Math.max(1, n)));
@@ -1600,14 +1616,18 @@ function computeBarEnergy() {
 }
 
 function buildRhythmChart(diff) {
-    if (!barEnergy) barEnergy = computeBarEnergy();
-    const r = mulberry32(diff.seed);
-    const bars = barEnergy.length;
+    const tr = activeTrack();
+    // 低音衝動は前からの譜面のまま（seed も同じ）。ほかの曲は曲ごとに譜面を変える
+    if (tr === TRACK && !barEnergy) barEnergy = computeBarEnergy(TRACK);
+    if (tr !== TRACK && !tr.energy) tr.energy = computeBarEnergy(tr);
+    const energy = tr === TRACK ? barEnergy : tr.energy;
+    const r = mulberry32(tr === TRACK ? diff.seed : diff.seed + Math.round(tr.bpm * 10));
+    const bars = energy.length;
     const notes = [];
     let deg = 4;
     for (let bar = 1; bar < bars - 1; bar++) {          // 最初の1小節は前奏、最後の1小節は余韻
-        const t0 = TRACK.offset + bar * BAR;
-        const scale = diff.quiet + (1 - diff.quiet) * barEnergy[bar]; // 静かな小節はノーツ少なめ
+        const t0 = tr.offset + bar * BAR;
+        const scale = diff.quiet + (1 - diff.quiet) * energy[bar]; // 静かな小節はノーツ少なめ
         for (let k = 0; k < 8; k++) {
             const onBeat = k % 2 === 0;
             if (r() >= (onBeat ? diff.pOn : diff.pOff) * scale) continue;
@@ -1663,12 +1683,13 @@ function renderRhythmSelect() {
     if (!box) return;
     const rec = loadRhythmRecords();
     const song = rhythmSong();
-    const needLoad = song.type === "track" && !trackBuf;
+    const needLoad = song.type === "track" && !trackBufOf(song.track);
+    if (needLoad && song.track !== TRACK) loadExtraTrack(song.track);
     // 曲を選ぶタブ
     document.getElementById("rhythmSongs").innerHTML = Object.values(RHYTHM_SONGS).map(sg =>
         `<button class="rhSongBtn${sg.key === song.key ? " active" : ""}" onclick="selectRhythmSong('${sg.key}')">
             <span class="rhSongIcon">${sg.icon}</span><span class="rhSongTitle">${sg.title()}</span>
-            <span class="rhSongMeta">${sg.mood()}・BPM ${sg.bpm}</span></button>`).join("");
+            <span class="rhSongMeta">${sg.mood()}・BPM ${Math.round(sg.bpm)}</span></button>`).join("");
     document.getElementById("rhythmSong").textContent = `${song.icon} ${song.title()} / ${song.credit()}`;
     const status = document.getElementById("rhythmStatus");
     status.textContent = needLoad ? T("曲を読み込み中…（数秒かかることがあります）", "Loading the song... (may take a few seconds)") : "";
@@ -1690,7 +1711,7 @@ function renderRhythmSelect() {
 
 function startRhythm(key) {
     const d = RHYTHM_DIFFS[key];
-    if (!d || (rhythmSong().type === "track" && !trackBuf)) return;
+    if (!d || (rhythmSong().type === "track" && !trackBufOf(rhythmSong().track))) return;
     if (key === "kiwami" && !kiwamiUnlocked()) return;
     isStory = false; storySong = null;
     isRankmaMode = false; isDaily = false; reflexSilent = false;
@@ -2378,19 +2399,40 @@ async function loadTrack() {
         if (document.getElementById("rhythm").style.display === "block") renderRhythmSelect();
     } catch (e) { trackBuf = null; }
 }
+// リズムモード専用の曲ファイルを読み込む（読み込んだ音は tr.buf に入る）
+async function loadExtraTrack(tr) {
+    if (!tr || tr.buf || tr.loading || !audioContext) return;
+    tr.loading = true;
+    try {
+        const res = await fetch(tr.src);
+        if (res.ok) tr.buf = await audioContext.decodeAudioData(unpackBgm(await res.arrayBuffer()));
+    } catch (e) { tr.buf = null; }
+    tr.loading = false;
+    if (document.getElementById("rhythm").style.display === "block") renderRhythmSelect();
+}
+// 曲の読み込み状態。低音衝動（TRACK）は trackBuf、ほかは tr.buf
+const trackBufOf = (tr) => tr === TRACK ? trackBuf : tr && tr.buf;
+// 今のプレイで鳴らす曲ファイル（リズムモードは選んだ曲、ほかは低音衝動）
+const activeTrack = () => isRhythm && rhythmSong().type === "track" ? rhythmSong().track : TRACK;
 const usingTrack = () => !!trackBuf && bgmStyle === "track";
 // 今のプレイで曲ファイルを流すか（リズムモードは必ず曲、反射モードは流さない）
-const songUsesTrack = () => !!trackBuf && !reflexSilent && (isRhythm ? rhythmSong().type === "track" : bgmStyle === "track");
+const songUsesTrack = () => !reflexSilent && (isRhythm ? rhythmSong().type === "track" && !!trackBufOf(rhythmSong().track) : !!trackBuf && bgmStyle === "track");
 // 曲の時刻 songT の位置から曲ファイルを鳴らす（ループ区間を考慮）
 function playTrackFrom(songT) {
     stopTrack();
     if (!songUsesTrack() || !audioReady()) return;
-    let pos = songT;
-    if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
-    if (pos < 0) pos = 0;
+    const tr = activeTrack();
     const src = audioContext.createBufferSource();
-    src.buffer = trackBuf;
-    src.loop = true; src.loopStart = trackLoopStart; src.loopEnd = trackLoopStart + trackLoopLen;
+    let pos = songT;
+    if (tr === TRACK) {
+        if (pos >= trackLoopStart + trackLoopLen) pos = trackLoopStart + ((pos - trackLoopStart) % trackLoopLen);
+        src.buffer = trackBuf;
+        src.loop = true; src.loopStart = trackLoopStart; src.loopEnd = trackLoopStart + trackLoopLen;
+    } else {
+        src.buffer = tr.buf; // リズムモード専用の曲は1回流して終わり
+        if (pos >= tr.buf.duration) return;
+    }
+    if (pos < 0) pos = 0;
     src.connect(musicGain);
     src.start(audioContext.currentTime, pos);
     trackSrc = src;
@@ -2521,7 +2563,7 @@ function targetPxPerSec() {
 function composeBar(bar) {
     if (isRhythm && rhythmSong().type === "gen") return; // オリジナル曲は startSong で全部作ってある
     const track = songUsesTrack() || isRhythm;
-    const t0 = (track ? TRACK.offset : 0) + bar * BAR;
+    const t0 = (track ? activeTrack().offset : 0) + bar * BAR;
     const r = chartRand;
     if (track) {
         for (let k = 0; k < 8; k++) soundQueue.push({ t: t0 + k * EIGHTH, kind: "shaker" }); // フィーバー中だけ鳴る
