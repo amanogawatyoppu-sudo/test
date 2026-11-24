@@ -181,7 +181,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             border: `8px solid ${color}`,
             background: "rgba(0,0,0,0.55)",
             color,
-            fontSize: rarity.length > 2 ? 78 : rarity.length > 1 ? 92 : 110,
+            fontSize: rarity.length > 2 ? 58 : rarity.length > 1 ? 76 : 110,
             fontWeight: 900,
             display: "flex",
             alignItems: "center",
@@ -211,9 +211,9 @@ export const CharIntro: React.FC<CharIntroProps> = ({
         >
           <div
             style={{
-              fontSize: 120,
+              fontSize: name.length >= 7 ? 108 : 120,
               fontWeight: 900,
-              letterSpacing: 6,
+              letterSpacing: name.length >= 7 ? 2 : 6,
               textShadow: `0 0 30px ${color}99, 0 6px 16px rgba(0,0,0,0.9)`,
             }}
           >
@@ -236,7 +236,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             borderRadius: 28,
             background: "rgba(0,0,0,0.5)",
             border: `3px solid ${color}88`,
-            fontSize: 42,
+            fontSize: profile.length > 54 ? 37 : 42,
             lineHeight: 1.6,
             color: "#f3e6c4",
             opacity: fadeIn(2.3) * infoOpacity,
@@ -252,7 +252,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
               borderRadius: 40,
               background: color,
               color: "#111",
-              fontSize: effect.length > 16 ? 32 : 38,
+              fontSize: effect.length > 22 ? 28 : effect.length > 16 ? 32 : 38,
               fontWeight: 900,
               whiteSpace: "nowrap",
               opacity: fadeIn(3.6, 0.3),
@@ -337,9 +337,9 @@ export const CharIntro: React.FC<CharIntroProps> = ({
           </div>
           <div
             style={{
-              fontSize: 140,
+              fontSize: name.length >= 6 ? 120 : 140,
               fontWeight: 900,
-              letterSpacing: 8,
+              letterSpacing: name.length >= 6 ? 2 : 8,
               lineHeight: 1.15,
               textShadow: `0 0 40px ${color}, 0 8px 20px rgba(0,0,0,0.9)`,
             }}

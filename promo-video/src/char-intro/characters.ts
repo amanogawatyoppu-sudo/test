@@ -117,4 +117,74 @@ export const CHAR_INTROS: CharIntroProps[] = [
       "眼鏡の町・鯖江で0.1ミリの狂いも見逃さない職人。几帳面すぎて、そばの太さがバラバラだと落ち着かない。",
     line: "おっと、\nこの一本だけ太いですね",
   },
+  {
+    id: "honda",
+    name: "府中城主",
+    nameEn: "Lord of Fuchu Castle",
+    rarity: "SR",
+    effect: "得点+20%",
+    profile:
+      "越前府中（今の武生）の殿様。大のそば好きで、城下にそばを広めた張本人。威厳たっぷりだが、おかわりは必ず三杯。",
+    line: "うむ、余は満足じゃ…\nもう一杯！",
+  },
+  {
+    id: "kaneko",
+    name: "金子権左衛門",
+    nameEn: "Kaneko Gonzaemon",
+    rarity: "SR",
+    effect: "極上の判定が広い",
+    profile:
+      "殿様に招かれて京の都から来た伝説のそば職人で、越前おろしそばの元祖とも言われる。穏やかだが、そばの話になると目つきが変わる。",
+    line: "大根の辛みとそばの香り、\nこれぞ越前の味です",
+  },
+  {
+    id: "kyoryu",
+    name: "恐竜博士",
+    nameEn: "Dinosaur Professor",
+    rarity: "SR",
+    effect: "30連打ごとに5秒間 得点1.5倍",
+    profile:
+      "勝山の山で化石を掘り続ける恐竜マニア。興奮すると話が止まらず、そばをすする勢いも恐竜級。",
+    line: "この歯型！\nまさか…フクイラプトル！？",
+  },
+  {
+    id: "kasumi",
+    name: "越前忍・カスミ",
+    nameEn: "Kasumi, Echizen Ninja",
+    rarity: "SR",
+    effect: "ミスしてもゲージが半分残る",
+    profile:
+      "越前の山奥で修行したくノ一。普段は物静かだが、何度倒れても立ち上がる。好物はもちろんおろしそば。",
+    line: "…まだ、終わってない",
+  },
+  {
+    id: "sennin",
+    name: "越前そば仙人",
+    nameEn: "Echizen Soba Sage",
+    rarity: "SSR",
+    effect: "得点+25%・フィーバー長持ち",
+    profile:
+      "白山の奥に住むと噂される謎の仙人。何百年もそばを打ち続けていて、その一杯を食べると長生きできるとか。",
+    line: "ふぉっふぉっ、\nそば道に終わりはないのじゃ",
+  },
+  {
+    id: "oroshi_ryu",
+    name: "おろし龍",
+    nameEn: "Oroshi Dragon",
+    rarity: "SSR",
+    effect: "虹極上の判定が広い・得点+15%",
+    profile:
+      "大根おろしの雪から生まれたと伝わる白い龍。冬の越前に吹く冷たい風は、この龍のため息だという。",
+    line: "我が辛みに耐えられるか、\n人の子よ",
+  },
+  {
+    id: "kuzuryu_hime",
+    name: "九頭竜の姫",
+    nameEn: "Kuzuryu Princess",
+    rarity: "SSR",
+    effect: "フィーバー中の得点2.5倍・極上の判定が少し広い",
+    profile:
+      "九頭竜川を守る水の姫。この清流がそばのおいしさを支えていることが自慢。普段はおっとりだが、お祭りになると誰より盛り上がる。",
+    line: "九頭竜の水で茹でたそば、\n召し上がれ♪",
+  },
 ];
