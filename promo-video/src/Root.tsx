@@ -1,4 +1,4 @@
-import { Composition, Folder } from "remotion";
+import { Composition, Folder, Still } from "remotion";
 import { PromoVideo } from "./PromoVideo";
 import { OpeningScene } from "./OpeningScene";
 import { GameplayScene } from "./GameplayScene";
@@ -6,6 +6,7 @@ import { CharactersScene } from "./CharactersScene";
 import { EndingScene } from "./EndingScene";
 import { CharIntro } from "./char-intro/CharIntro";
 import { CHAR_INTROS } from "./char-intro/characters";
+import { Thumbnail } from "./char-intro/Thumbnail";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -27,6 +28,18 @@ export const RemotionRoot: React.FC = () => {
             fps={30}
             durationInFrames={360}
             defaultProps={c}
+          />
+        ))}
+      </Folder>
+      <Folder name="Char-Thumbs">
+        {CHAR_INTROS.map((c, i) => (
+          <Still
+            key={c.id}
+            id={`Thumb-${String(i + 1).padStart(2, "0")}-${c.id.replace(/_/g, "-")}`}
+            component={Thumbnail}
+            width={1080}
+            height={1920}
+            defaultProps={{ ...c, no: i + 1 }}
           />
         ))}
       </Folder>
