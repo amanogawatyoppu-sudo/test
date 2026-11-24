@@ -2335,7 +2335,7 @@ function setTempo(bpm) { BEAT = 60 / bpm; EIGHTH = BEAT / 2; BAR = BEAT * 4; }
 // テンポと拍の位置は曲全体の解析で求めた（141.00 BPM、拍のずれは曲の最初から最後まで±数ミリ秒）。
 // ファイルはちょうど92小節（156.6秒）で、頭から終わりまでがそのままループする作り。
 const TRACK = {
-    src: "bgm/main.mp3",
+    src: "bgm/main.bgm", // 曲ファイルは素のmp3のまま公開しない（素材サイトの規約）。読み込むときに元に戻す
     bpm: 141,
     offset: 0.055,     // 最初の拍（秒）
     loopStart: 0,      // ループ区間の始まり（秒）
@@ -2344,6 +2344,20 @@ const TRACK = {
     composer: "伊藤ケイスケ",
     site: "DOVA-SYNDROME",
 };
+// 曲ファイル（.bgm）を元の音声に戻す。先頭4文字「SOBA」の後ろが、決まった数列と重ねて（XOR）変換した音声。
+// 素材サイト（OpenTracks・旧DOVA-SYNDROME）の規約で、音声ファイルをそのまま取り出せる形で置くことが禁じられているため。
+// 作り直すとき：tools/pack-bgm.py に mp3 を渡す
+function unpackBgm(ab) {
+    const u = new Uint8Array(ab);
+    if (u[0] !== 83 || u[1] !== 79 || u[2] !== 66 || u[3] !== 65) return ab; // 「SOBA」で始まらなければそのまま
+    const out = new Uint8Array(u.length - 4);
+    let s = 0x50BA2026;
+    for (let i = 0; i < out.length; i++) {
+        s = (Math.imul(s, 1103515245) + 12345) >>> 0;
+        out[i] = u[i + 4] ^ ((s >>> 16) & 0xff);
+    }
+    return out.buffer;
+}
 let trackBuf = null;
 let trackSrc = null;
 let trackLoopStart = 0, trackLoopLen = 0;
@@ -2352,7 +2366,7 @@ async function loadTrack() {
     try {
         const res = await fetch(TRACK.src);
         if (!res.ok) return;
-        const buf = await audioContext.decodeAudioData(await res.arrayBuffer());
+        const buf = await audioContext.decodeAudioData(unpackBgm(await res.arrayBuffer()));
         const barLen = 60 / TRACK.bpm * 4;
         const bars = TRACK.loopBars || Math.floor((buf.duration - TRACK.offset) / barLen);
         if (bars < 1) return;
