@@ -198,7 +198,7 @@
                         L("kyoryu", "福井県はそばの作付面積が全国でも上位なんだ！ 恐竜の化石と同じくらい誇らしい！", "Fukui ranks near the top in Japan for buckwheat acreage! As proud as our dinosaur fossils!"),
                     ],
                     after: [
-                        L("soba_hatake", "畑に白い花が一面に咲くと、もうすぐ新そばの季節やよ。", "When the fields fill with white flowers, new-soba season is close."),
+                        L("soba_hatake", "そばの白い花が畑一面に咲くのは、9月の終わりごろ。そこから実がなって、新そばの季節が来るんやよ。", "The fields fill with white soba flowers around late September. Then the grains ripen, and new-soba season arrives."),
                     ],
                     tip: { ja: "大野市・勝山市などはそばの主な産地。福井県はそばの作付面積が全国でも上位。", en: "Ono and Katsuyama are major soba-growing areas, and Fukui ranks among Japan's top prefectures for buckwheat acreage." },
                 },
