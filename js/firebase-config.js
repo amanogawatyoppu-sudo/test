@@ -5,10 +5,10 @@
 //
 // apiKey が空のままだと、クラウドセーブは動かず、ゲームは今までどおり端末保存だけで動く。
 export const firebaseConfig = {
-    apiKey: "",
-    authDomain: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: "",
+    apiKey: "AIzaSyBYBJHT02qeOkHSyB566GNGvc1_XT8S8YU",
+    authDomain: "mugen-sobado.firebaseapp.com",
+    projectId: "mugen-sobado",
+    storageBucket: "mugen-sobado.firebasestorage.app",
+    messagingSenderId: "785010971637",
+    appId: "1:785010971637:web:511e14999e8bdd980e86bc",
 };
