@@ -76,10 +76,11 @@ await check("title never repeats the left character when every option is skipped
   assert.deepStrictEqual(r, ["shokunin", "minarai"]);
 });
 await check("story song does not leak into Rhythm Mode after returning to the title", async (page) => {
-  const key = await page.evaluate(() => {
+  const key = await page.evaluate(async () => {
     startStoryStage(STORY_CHAPTERS[0].stages[0]); running = false; endGame();
     const d = document.getElementById("storyDlg"); if (d) d.classList.remove("open");
-    StoryUI.open(); document.getElementById("stBackBtn").click();
+    StoryUI.open(); await new Promise(r => setTimeout(r, 400));
+    document.querySelector('#story [data-act="back"]').click();
     openRhythm(); return rhythmSong().key;
   });
   assert.ok(!key.startsWith("story_"), "rhythm song is " + key);
@@ -99,6 +100,8 @@ await check("corrupt save loads as a fresh story", async (page) => {
   await page.evaluate(() => localStorage.setItem("sobamichi_story", "garbage"));
   await page.reload(); await page.waitForTimeout(500);
   await page.evaluate(() => { try { closeHowTo(); } catch (e) {} StoryUI.open(); });
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.querySelectorAll("#story .m3Label")[0].click());
   assert.deepStrictEqual(await page.evaluate(() => [...document.querySelectorAll("#story .stStage:not(:disabled)")].map(b => b.dataset.stage)), ["1-1"]);
 });
 await check("english after language switch", async (page) => {
@@ -106,6 +109,26 @@ await check("english after language switch", async (page) => {
   await page.reload(); await page.waitForTimeout(500);
   await page.evaluate(() => { try { closeHowTo(); } catch (e) {} StoryUI.open(); });
   assert.ok(await page.evaluate(() => document.querySelector("#story h1").textContent.includes("Fukui Journey")));
+});
+
+await check("3D map: pins show progress and only open chapters can be entered", async (page) => {
+  await page.evaluate(() => StorySave.save({ v: 1, cleared: { "1-1": "A", "1-2": "A", "1-3": "B", "2-1": "S" }, prefs: { noodle: null, spice: null }, finished: false }));
+  await page.evaluate(() => StoryUI.open()); await page.waitForTimeout(500);
+  assert.ok(await page.evaluate(() => document.getElementById("story").classList.contains("st3d")), "3D map not shown");
+  const cls = await page.evaluate(() => [...document.querySelectorAll("#story .m3Label")].map(l => l.className.replace("m3Label", "").trim()));
+  assert.deepStrictEqual(cls, ["done", "now", "locked", "locked", "locked", "locked"]);
+  await page.evaluate(() => document.querySelectorAll("#story .m3Label")[2].click());
+  assert.strictEqual(await page.evaluate(() => document.querySelectorAll("#story .m3Sheet .stStage").length), 0);
+  await page.evaluate(() => document.querySelectorAll("#story .m3Label")[1].click());
+  assert.deepStrictEqual(await page.evaluate(() => [...document.querySelectorAll("#story .m3Sheet .stStage:not(:disabled)")].map(b => b.dataset.stage)), ["2-1", "2-2"]);
+  assert.strictEqual(await page.evaluate(() => localStorage.getItem("sobamichi_story_mappos")), "1");
+});
+await check("3D map: list view and back", async (page) => {
+  await page.evaluate(() => StoryUI.open()); await page.waitForTimeout(500);
+  await page.evaluate(() => document.querySelector('#story [data-act="list"]').click());
+  assert.strictEqual(await page.evaluate(() => document.querySelectorAll("#story .stChapter").length), 6);
+  await page.evaluate(() => document.getElementById("stMap3dBtn").click()); await page.waitForTimeout(300);
+  assert.strictEqual(await page.evaluate(() => document.querySelectorAll("#story .m3Label").length), 6);
 });
 
 await browser.close(); server.kill();
