@@ -21,7 +21,7 @@
 - No real shop names. The shop data slot `STORY_SHOPS` ships empty.
 - The official guide link goes to FUKU-iro (福井県観光連盟) soba listing. The executor confirms the exact URL resolves before committing it.
 - Each explanation in dialogue is at most 2–3 frames (lines) in a row.
-- Story progress is stored only through `StorySave`, using the localStorage key `sobamichi_story`.
+- Story progress is stored only through `StorySave`, using the localStorage key `sobamichi_story`. The cloud-save thread copies every `sobamichi_*` key to Firestore automatically. It rewrites localStorage and reloads on account switch, so always read with `StorySave.load()` and never cache state across a page load. Do not touch `tsFooter` or the final `js/cloud-save.js` script tag; those belong to that thread.
 - Plan change from the spec, to report to 会長: spec §5.7 promised one free gacha pull on clear. That would need a new GAS action, and a client-only grant could be forged. Instead, story stages earn soba flour through the existing `earnCoins()` like every other play, so a logged-in player has flour ready when the gacha unlocks.
 
 ## Review Focus
