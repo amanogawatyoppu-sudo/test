@@ -22,7 +22,7 @@ const LOOKS: Record<string, Look> = {
   honda: { font: "brush", c1: "#fff3b0", c2: "#e0383e" },
   kaneko: { font: "mincho", c1: "#fff3c4", c2: "#c9a227" },
   kyoryu: { font: "pop", c1: "#fff0c2", c2: "#ff7a1a" },
-  kasumi: { font: "brush", c1: "#f2ecff", c2: "#a78bfa" },
+  kasumi: { font: "mincho", c1: "#f2ecff", c2: "#a78bfa" },
   sennin: { font: "brush", c1: "#fffbe0", c2: "#e8c547" },
   oroshi_ryu: { font: "brush", c1: "#ffffff", c2: "#9be38a" },
   kuzuryu_hime: { font: "mincho", c1: "#ffffff", c2: "#5fd0ff" },
