@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="google-site-verification" content="C3c5Iz5iiSzs-1oAL64oGKvXrwIjSoIawN6zvuo6lNo" />
-<link rel="icon" href="favicon.png" type="image/png">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="favicon-48.png" type="image/png" sizes="48x48">
+<link rel="icon" href="favicon-96.png" type="image/png" sizes="96x96">
+<link rel="icon" href="favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+<link rel="canonical" href="https://amanogawatyoppu-sudo.github.io/test/">
 <title>無限そば道 - 音ゲー・越前おろしそば職人修業ゲーム</title>
 <meta name="description" content="PCのブラウザで遊べる無料のそば打ち音ゲー「無限そば道」。A、S、Lキーを駆使してノーツを叩き、最高称号『越前極』のハイスコア番付を目指せ！">
 <meta name="keywords" content="無限そば道,音ゲー,ブラウザゲーム,越前そば,無料ゲーム,福井">
@@ -24,7 +29,7 @@ html {
 body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:white; font-family:'Noto Serif JP'; overflow:hidden; user-select: none; overscroll-behavior:none; }
 
 /* ===== タイトル画面 ===== */
-#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
+#titleScreen, #rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm, #story { position:fixed; width:100%; height:100%; height:100dvh; top:0; left:0; }
 #titleScreen { display:flex; flex-direction:column; justify-content:flex-start; align-items:center; z-index: 100; background: rgba(0,0,0,0.8); overflow-y: auto; padding: 10px 0; box-sizing: border-box; }
 /* 画面に収まらないときにボタンが押しつぶされないよう縮ませず、はみ出た分はスクロールさせる。
    余裕があるときは上下のautoマージンで中央に寄せる（justify-content:centerだと上側がスクロールで見えなくなる） */
@@ -35,7 +40,7 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 .modeRow .menuBtn { flex: 1 1 0; min-width: 0; max-width: 240px; width: auto !important; margin: 0 !important; }
 #titleScreen > :first-child { margin-top: auto; }
 #titleScreen > :last-child { margin-bottom: auto; }
-#rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm { display: none; z-index: 100; }
+#rankmaLobby, #game, #result, #ranking, #mypage, #daily, #rhythm, #story { display: none; z-index: 100; }
 #title{ font-size:52px; color:gold; font-family:'Zen Old Mincho'; text-shadow: 0 0 15px rgba(255, 215, 0, 0.7); margin: 0 0 2px; }
 .menuBtn{ width:240px;padding:10px;margin:5px; font-size:20px; background:linear-gradient(#fff4cc,gold); border:none;border-radius:10px; cursor: pointer; font-weight: bold; }
 
@@ -1012,6 +1017,11 @@ body.mobileLayout #workerArea { display: none; }
 
   <!-- 遊び方を選ぶ -->
   <div class="tsModes">
+    <button class="tsCard rhythm" id="tsStoryBtn" onclick="StoryUI.open()" style="background:linear-gradient(135deg,#5a2a00,#c96a00); border-color:#ffd36a;">
+      <span class="tsCardIcon">🗺️</span>
+      <span><span class="tsCardName"><span data-en="Fukui Journey">福井めぐり</span><span class="tsCardBadge" data-en="STORY">ストーリー</span></span>
+      <span class="tsCardSub" data-en="Tour Fukui and become an Echizen soba maker">福井を巡って、越前そばの職人をめざす</span></span>
+    </button>
     <button class="tsCard rhythm" onclick="openRhythm()">
       <span class="tsCardIcon">🎵</span>
       <span><span class="tsCardName"><span data-en="Rhythm Mode">リズムモード</span><span class="tsCardBadge" data-en="MUSIC">BGMあり</span></span>
@@ -1129,6 +1139,7 @@ body.mobileLayout #workerArea { display: none; }
  </div>
  <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
  <button data-en="🎵 Choose difficulty" class="menuBtn" id="rhythmBackBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 難易度選択へ</button>
+ <button data-en="🗺️ Back to the map" class="menuBtn" id="storyMapBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="StoryUI.open()">🗺️ 地図へ戻る</button>
  <button data-en="Title" class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
  <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
 </div>
@@ -1246,6 +1257,12 @@ body.mobileLayout #workerArea { display: none; }
  <button data-en="Back" class="menuBtn" onclick="isRankmaMode ? openRankmaLobby() : String(currentMode).startsWith('rhythm_') ? openRhythm() : location.reload()">戻る</button>
 </div>
 
+<!-- 福井めぐりストーリー -->
+<div id="story"></div>
+<script src="story/story-core.js"></script>
+<script src="story/story-save.js"></script>
+<script src="story/story-data.js"></script>
+<script src="story/story-ui.js"></script>
 <script>
 window.onerror = function(msg, url, line, col, error) {
     let box = document.getElementById("debugErrorBox");
@@ -1383,7 +1400,9 @@ const RHYTHM_SONGS = {
 };
 let rhythmSongKey = "teion";
 try { if (RHYTHM_SONGS[localStorage.getItem("sobamichi_rhythm_song")]) rhythmSongKey = localStorage.getItem("sobamichi_rhythm_song"); } catch (e) {}
-const rhythmSong = () => RHYTHM_SONGS[rhythmSongKey];
+// ストーリーのステージ中は、ステージ専用の曲を使う
+let isStory = false, storySong = null;
+const rhythmSong = () => storySong || RHYTHM_SONGS[rhythmSongKey];
 // 記録・番付の名前（低音衝動は前からの名前のまま）
 const rhythmRecKey = (song, diff) => song === "teion" ? diff : `${song}_${diff}`;
 const rhythmModeOf = (song, diff) => "rhythm_" + rhythmRecKey(song, diff);
@@ -1576,6 +1595,7 @@ function kiwamiUnlocked(songKey = rhythmSongKey) {
 }
 
 function openRhythm() {
+    isStory = false; storySong = null; // ストーリーの曲が曲選びに残らないように
     switchScreen("rhythm");
     if (!trackBuf) loadTrack(); // 前回の読み込みに失敗していたらもう一度
     renderRhythmSelect();
@@ -1620,10 +1640,26 @@ function startRhythm(key) {
     const d = RHYTHM_DIFFS[key];
     if (!d || (rhythmSong().type === "track" && !trackBuf)) return;
     if (key === "kiwami" && !kiwamiUnlocked()) return;
+    isStory = false; storySong = null;
     isRankmaMode = false; isDaily = false; reflexSilent = false;
     isRhythm = true; rhythmDiff = d;
     isInfinite = false;
     currentMode = rhythmModeOf(rhythmSongKey, key);
+    startWithCountdown(() => {
+        document.getElementById("timeDisplay").style.display = "inline";
+    });
+}
+
+// ストーリーの1ステージを、リズムモードの仕組みで遊ぶ
+function startStoryStage(stage) {
+    storySong = { key: "story_" + stage.id, type: "gen", style: stage.song.style, bpm: stage.song.bpm, seed: stage.song.seed,
+        form: stage.song.form, icon: "🗺️", title: () => T(stage.title.ja, stage.title.en),
+        credit: () => T("オリジナル曲", "Original song"), mood: () => "" };
+    isStory = true;
+    rhythmDiff = RHYTHM_DIFFS[stage.diff];
+    isRankmaMode = false; isDaily = false; reflexSilent = false;
+    isRhythm = true; isInfinite = false;
+    currentMode = "story_" + stage.id;
     startWithCountdown(() => {
         document.getElementById("timeDisplay").style.display = "inline";
     });
@@ -1652,9 +1688,10 @@ function renderRhythmResult(rr) {
     const box = document.getElementById("rhythmResult");
     document.getElementById("rhythmBackBtn").style.display = rr ? "inline-block" : "none";
     if (!rr) { box.style.display = "none"; box.innerHTML = ""; return; }
-    const isNew = saveRhythmRecord(rhythmRecKey(rhythmSongKey, rhythmDiff.key), score, rr.grade, rr.fc, rr.ap);
+    // ストーリーの記録はリズムモードの自己ベストに混ぜない
+    const isNew = isStory ? false : saveRhythmRecord(rhythmRecKey(rhythmSongKey, rhythmDiff.key), score, rr.grade, rr.fc, rr.ap);
     const medals = `${rr.fc ? `<span class="rhMedal fc">${T("フルコンボ", "FULL COMBO")}</span>` : ""}${rr.ap ? `<span class="rhMedal ap">${T("全虹", "ALL RAINBOW")}</span>` : ""}`;
-    const unlockMsg = rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
+    const unlockMsg = !isStory && rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
         ? `<div style="color:#ff88ff; margin-top:4px;">${T("「極」が解放されている！", "Kiwami is unlocked!")}</div>` : "";
     box.innerHTML = `<div style="color:#ffe9a8; font-size:16px;">${rhythmSong().icon} ${rhythmSong().title()}・${rhythmDiff.name()}</div>
         <div class="bigGrade rhGrade g${rr.grade}">${rr.grade}</div>
@@ -1665,7 +1702,7 @@ function renderRhythmResult(rr) {
 
 // ===== 画面遷移管理 =====
 function switchScreen(screenId) {
-    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage", "daily", "rhythm"];
+    const screens = ["titleScreen", "rankmaLobby", "game", "result", "ranking", "mypage", "daily", "rhythm", "story"];
     screens.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -2101,6 +2138,7 @@ async function confirmRankmaName() {
         clearInterval(tauntTimer);
         stopFire();
 
+        isStory = false; storySong = null;
         isRankmaMode = true;
         isDaily = false;
         isRhythm = false; reflexSilent = false;
@@ -2113,8 +2151,8 @@ async function confirmRankmaName() {
 
 // ===== 通常スタート =====
 // 反射モード（BGMなし）：曲は流さず、叩いた音だけ
-function startNormal(sec) { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startGame(sec); }
-function startNormalInfinite() { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startInfinite(); }
+function startNormal(sec) { isStory = false; storySong = null; isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startGame(sec); }
+function startNormalInfinite() { isStory = false; storySong = null; isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startInfinite(); }
 
 // ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
@@ -3131,7 +3169,13 @@ function endGame(){
     rankmaBtn.disabled = false; rankmaBtn.innerText = T("スコアを番付に刻む", "Save score");
 
     document.getElementById("dailyResultArea").style.display = isDaily ? "block" : "none";
-    if (isDaily) {
+    document.getElementById("storyMapBtn").style.display = isStory ? "inline-block" : "none";
+    if (isStory) {
+        // ストーリーは番付に送らない
+        document.getElementById("normalSaveArea").style.display = "none";
+        document.getElementById("rankmaSaveArea").style.display = "none";
+        document.getElementById("rhythmBackBtn").style.display = "none";
+    } else if (isDaily) {
         // デイリーは結果を自動で送る（番付名の入力は不要）
         document.getElementById("normalSaveArea").style.display = "none";
         document.getElementById("rankmaSaveArea").style.display = "none";
@@ -3146,7 +3190,10 @@ function endGame(){
     }
 
     // 順位表示（非同期で取得）
-    if (isDaily) {
+    if (isStory) {
+        document.getElementById("rankPositionDisplay").innerText = "";
+        if (window.StoryUI) StoryUI.onStageEnd(rr);
+    } else if (isDaily) {
         document.getElementById("rankPositionDisplay").innerText = "";
         submitDailyResult();
     } else {
@@ -3523,7 +3570,22 @@ function updateMySelection() {
     });
 }
 
+// ガチャと職人図鑑は、ストーリーをクリアするまで隠す（キャラのネタバレ防止）。
+// すでにキャラを持っている人はそのまま使える。
+function storyGachaUnlocked() {
+    return StoryCore.gachaUnlocked(StorySave.load(), STORY_CHAPTERS, profile && profile.chars);
+}
 function renderMyPage() {
+    const unlocked = storyGachaUnlocked();
+    ["gacha1Btn", "gacha10Btn", "mpCollection", "mpCollectionTitle"].forEach(id => document.getElementById(id).style.display = unlocked ? "" : "none");
+    let lock = document.getElementById("mpStoryLock");
+    if (!lock) {
+        lock = document.createElement("div"); lock.id = "mpStoryLock"; lock.className = "mp-note";
+        lock.style.cssText = "color:#ffe9a8; margin:8px 0;";
+        document.getElementById("gacha1Btn").parentNode.insertBefore(lock, document.getElementById("gacha1Btn"));
+    }
+    lock.style.display = unlocked ? "none" : "";
+    lock.textContent = T("ストーリー『福井めぐり』をクリアすると、ガチャと職人図鑑が解放される", "Clear the story \"Fukui Journey\" to unlock the gacha and the Collection");
     document.getElementById("mpName").innerHTML = account ? `${T("職人", "Player")} <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
     const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
     renderMySelected();
@@ -3612,7 +3674,7 @@ async function selectCharacter(id) {
 
 let isPulling = false;
 async function pullGacha(count) {
-    if (isPulling || !profile) return;
+    if (isPulling || !profile || !storyGachaUnlocked()) return;
     isPulling = true;
     document.getElementById("gacha1Btn").disabled = true;
     document.getElementById("gacha10Btn").disabled = true;
@@ -3686,12 +3748,16 @@ function tsPartnerId() {
     return account && profile && profile.selected && CHARACTERS[profile.selected] && CHARACTERS[profile.selected].img ? profile.selected : null;
 }
 function tsNextChar(skip) {
-    for (let i = 0; i < TS_CHAR_IDS.length; i++) {
-        tsCycle = (tsCycle + 1) % TS_CHAR_IDS.length;
-        const id = TS_CHAR_IDS[tsCycle];
+    // ストーリーをクリアするまでは、ストーリーで出会ったキャラだけを出す
+    const met = storyGachaUnlocked() ? null : StoryCore.metCharacters(StorySave.load(), STORY_CHAPTERS);
+    const pool = met ? TS_CHAR_IDS.filter(id => met.includes(id)) : TS_CHAR_IDS;
+    for (let i = 0; i < pool.length; i++) {
+        tsCycle = (tsCycle + 1) % pool.length;
+        const id = pool[tsCycle];
         if (!skip.includes(id)) return id;
     }
-    return TS_CHAR_IDS[0];
+    // 全員がすでに表示中なら、左（skip の先頭）と違うキャラを出す
+    return pool.find(id => id !== skip[0]) || pool[0];
 }
 function renderTitleChars(instant) {
     const L = document.getElementById("tsCharL"), R = document.getElementById("tsCharR");
@@ -3826,6 +3892,7 @@ function renderDaily() {
 
 function startDaily() {
     if (!dailyInfo) return;
+    isStory = false; storySong = null;
     isRankmaMode = false;
     isDaily = true;
     isRhythm = false; reflexSilent = false;
@@ -4096,6 +4163,11 @@ function loadImage(src) {
 function modeLabelOf(mode) {
     if (mode === "daily") return T(`今日のそば打ち ${shortDate()}`, `Daily Challenge ${shortDate()}`);
     if (String(mode).startsWith("rhythm_")) return modeLabelOfRhythm(mode);
+    if (String(mode).startsWith("story_")) {
+        const id = String(mode).slice(6);
+        const st = (window.STORY_CHAPTERS || []).flatMap(c => c.stages).find(x => x.id === id);
+        return T(`福井めぐり ${id}${st ? "・" + st.title.ja : ""}`, `Fukui Journey ${id}${st ? ": " + st.title.en : ""}`);
+    }
     return mode === "infinite" ? T("終わりなき修行", "Endless") : T(`${mode}秒修行`, `${mode}-sec`);
 }
 
