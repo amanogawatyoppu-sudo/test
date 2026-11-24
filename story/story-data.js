@@ -2,6 +2,8 @@
 // 史実や食べ方の出典は docs/story/content-review.md にまとめてある。文章を直すときはそちらも合わせて直す。
 (function () {
     const L = (who, ja, en) => ({ who, ja, en });
+    // 正体を明かす前の金子権左衛門（名前と姿を隠し「京都から来たそば職人」として出す）
+    const K = (ja, en) => ({ who: "kaneko", mask: true, ja, en });
     const FORM = [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 0.95], ["O", 2, 0]];
     const FORM_LONG = [["I", 2, 0.2], ["A", 8, 0.5], ["B", 8, 0.7], ["C", 8, 0.95], ["D", 8, 0.45], ["C", 8, 1.0], ["O", 2, 0]];
     const song = (style, bpm, seed, form) => ({ style, bpm, seed, form: form || FORM });
@@ -44,6 +46,8 @@
                     ],
                     after: [
                         L("minarai", "オレは②派！ 旅の人はどれが好き？ 福井に来たら全部試してみてや！", "I'm a #2 guy! Which one do you like? Try them all when you're in Fukui!"),
+                        K("（店の奥の席から）…ほう、筋のいい弟子が入りましたね。", "(From a seat at the back) ...My, what a promising new apprentice."),
+                        L("minarai", "あの人？ ときどき来る、京都から来たそば職人さんや。名前は…そういえば知らんなあ。", "Him? A soba maker from Kyoto who drops by now and then. His name... come to think of it, I don't know."),
                         L("shokunin", "次は鯖江へ行ってこい。そばの太さの話を、几帳面な男が教えてくれる。", "Next, go to Sabae. A very precise man there will teach you about noodle thickness."),
                     ],
                     tip: { ja: "つゆのかけ方は主に3通り。①つゆと大根おろしを別々に ②おろし入りのつゆを ③おろしの絞り汁を入れたつゆを、そばにかける。", en: "Three common pours: broth and daikon separately, broth mixed with daikon, or broth mixed with just the daikon juice." },
@@ -124,6 +128,7 @@
                         L("ekiin", "だから大盛りを頼むと、二枚出てくるお店も多いんですよ！", "So when you order a large, many shops bring you two plates!"),
                     ],
                     after: [
+                        K("おや、また会いましたね。私も昔、京の都から峠を越えて、この越前へ来たのですよ。", "Ah, we meet again. Long ago, I too crossed the mountain pass from Kyoto to come to Echizen."),
                         L("ekiin", "最後に、そば湯もぜひ。…次は福井市の一乗谷へ。足軽くんが待ってます！", "And don't forget the soba-cooking water at the end. Next is Ichijodani in Fukui City. The foot soldier is waiting!"),
                     ],
                     tip: { ja: "一杯の量は控えめなことが多く、大盛りだと二枚出てくる店も多い。食後はそば湯も楽しめる。", en: "Portions are often modest, so a large order may come as two plates. Many shops also serve the soba water to finish." },
@@ -193,7 +198,7 @@
                         L("kyoryu", "福井県はそばの作付面積が全国でも上位なんだ！ 恐竜の化石と同じくらい誇らしい！", "Fukui ranks near the top in Japan for buckwheat acreage! As proud as our dinosaur fossils!"),
                     ],
                     after: [
-                        L("soba_hatake", "畑に白い花が一面に咲くと、もうすぐ新そばの季節やよ。", "When the fields fill with white flowers, new-soba season is close."),
+                        L("soba_hatake", "そばの白い花が畑一面に咲くのは、9月の終わりごろ。そこから実がなって、新そばの季節が来るんやよ。", "The fields fill with white soba flowers around late September. Then the grains ripen, and new-soba season arrives."),
                     ],
                     tip: { ja: "大野市・勝山市などはそばの主な産地。福井県はそばの作付面積が全国でも上位。", en: "Ono and Katsuyama are major soba-growing areas, and Fukui ranks among Japan's top prefectures for buckwheat acreage." },
                 },
@@ -203,6 +208,7 @@
                     before: [
                         L("soba_hatake", "そばの収穫は11月ごろ。県内のあちこちで「新そば祭り」があるんやよ！", "Buckwheat is harvested around November, and there are new-soba festivals all over the prefecture!"),
                         L("kyoryu", "新そばの香り…これはもう、ジュラ紀級の大発見だ！", "The aroma of new soba... a Jurassic-level discovery!"),
+                        K("この香り…都を出て、初めて越前のそばを打った日を思い出します。", "This aroma... It reminds me of the day I first made soba in Echizen, after leaving the capital."),
                     ],
                     after: [
                         L("shokunin", "（手紙）旅の弟子へ。そろそろ戻ってこい。殿がお前のそばを食べたいそうだ。", "(A letter) To my travelling apprentice: come back. His Lordship wants to taste your soba."),
@@ -222,7 +228,8 @@
                         L("honda", "府中（今の越前市）は、おろしそばが生まれた地とも言われておる。", "Fuchu, today's Echizen City, is said to be where oroshi soba was born."),
                     ],
                     after: [
-                        L("honda", "見事じゃ。では、そばの由来を聞かせてやろう。", "Splendid. Now, let me tell you where this soba came from."),
+                        K("殿、お久しゅうございます。", "My lord, it has been a long time."),
+                        L("honda", "おお、そなたも来ておったか。見事じゃ、弟子よ。では、そばの由来を聞かせてやろう。", "Ah, you're here too. Splendid, apprentice. Now, let me tell you where this soba came from."),
                     ],
                 },
                 {
@@ -230,6 +237,9 @@
                     title: { ja: "おろしそばの由来", en: "Where Oroshi Soba Began" },
                     before: [
                         L("honda", "府中の城主・本多富正公が、京都からそば職人を連れてきたのが始まりと伝わっておる。", "It is said to begin with Lord Honda Tomimasa of Fuchu, who brought a soba maker from Kyoto."),
+                        L("minarai", "京都からのそば職人…って、まさか！", "A soba maker from Kyoto... wait, you mean!"),
+                        L("kaneko", "ええ。殿に伴われて京から来たそば職人…それが私、金子権左衛門です。", "Yes. The soba maker who came from Kyoto with His Lordship... that is me, Kaneko Gonzaemon."),
+                        L("you", "（金子権左衛門。越前おろしそばの祖とも語り継がれる、伝説のそば職人だ――）", "(Kaneko Gonzaemon. A legendary soba maker, handed down in stories as a founder of Echizen oroshi soba.)"),
                         L("kaneko", "大根の辛みとそばの香り。この組み合わせが、ここで生まれたと語られています。", "The bite of daikon and the aroma of soba. They say this pairing was born here."),
                     ],
                     after: [
