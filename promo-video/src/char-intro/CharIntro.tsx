@@ -5,6 +5,7 @@ import {
   Img,
   interpolate,
   random,
+  Sequence,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
@@ -77,6 +78,12 @@ export const CharIntro: React.FC<CharIntroProps> = ({
     interpolate(frame, [t(lineStart + 0.3), t(lineStart + 0.3) + line.length * 2.2], [0, line.length], clamp),
   );
 
+  // フィナーレ(決め演出)
+  const fin = 8.0;
+  const finP = interpolate(frame, [t(fin), t(fin + 0.6)], [0, 1], { ...clamp, easing: easeOut });
+  const infoOpacity = 1 - interpolate(frame, [t(fin - 0.1), t(fin + 0.2)], [0, 1], clamp);
+  const flash = interpolate(frame, [t(fin), t(fin + 0.05), t(fin + 0.5)], [0, 0.9, 0], clamp);
+
   const outro = interpolate(frame, [durationInFrames - t(0.5), durationInFrames], [1, 0], clamp);
   const bob = Math.sin(frame / 18) * 10;
 
@@ -101,11 +108,29 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             fontSize: 44,
             letterSpacing: 14,
             color: "#f3e6c4",
-            opacity: fadeIn(0, 0.4),
+            opacity: fadeIn(0, 0.4) * infoOpacity,
           }}
         >
           ― キャラクター紹介 ―
         </div>
+
+        {/* フィナーレの集中線(回転する光) */}
+        <div
+          style={{
+            position: "absolute",
+            left: -460,
+            top: -60,
+            width: 2000,
+            height: 2000,
+            borderRadius: 1000,
+            background: `repeating-conic-gradient(${color}55 0deg 6deg, transparent 6deg 18deg)`,
+            maskImage: "radial-gradient(circle, black 10%, transparent 60%)",
+            WebkitMaskImage: "radial-gradient(circle, black 10%, transparent 60%)",
+            opacity: finP,
+            rotate: `${frame * 0.6}deg`,
+            scale: 0.6 + finP * 0.4,
+          }}
+        />
 
         {/* 後光 */}
         <div
@@ -131,14 +156,16 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             top: 240,
             width: 700,
             height: 700,
-            translate: `0px ${bob}px`,
+            translate: `0px ${bob + finP * 340}px`,
             filter: `drop-shadow(0 20px 40px rgba(0,0,0,0.6))`,
             opacity: fadeIn(0.2, 0.3),
-            scale: interpolate(frame, [t(0.2), t(1.0)], [0.5, 1], {
-              ...clamp,
-              easing: Easing.spring({ damping: 11 }),
-              output: "perceptual-scale",
-            }),
+            scale:
+              interpolate(frame, [t(0.2), t(1.0)], [0.5, 1], {
+                ...clamp,
+                easing: Easing.spring({ damping: 11 }),
+                output: "perceptual-scale",
+              }) *
+              (1 + finP * 0.12),
           }}
         />
 
@@ -161,7 +188,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             justifyContent: "center",
             boxShadow: `0 0 40px ${color}aa`,
             rotate: "-12deg",
-            opacity: fadeIn(0.9, 0.15),
+            opacity: fadeIn(0.9, 0.15) * infoOpacity,
             scale: interpolate(frame, [t(0.9), t(1.25)], [2.2, 1], {
               ...clamp,
               easing: Easing.bezier(0.3, 1.6, 0.5, 1),
@@ -178,7 +205,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             top: 960,
             width: "100%",
             textAlign: "center",
-            opacity: fadeIn(1.3),
+            opacity: fadeIn(1.3) * infoOpacity,
             translate: slideUp(1.3),
           }}
         >
@@ -212,7 +239,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             fontSize: 42,
             lineHeight: 1.6,
             color: "#f3e6c4",
-            opacity: fadeIn(2.3),
+            opacity: fadeIn(2.3) * infoOpacity,
             translate: slideUp(2.3),
           }}
         >
@@ -252,7 +279,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             lineHeight: 1.4,
             textAlign: "center",
             boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
-            opacity: fadeIn(lineStart, 0.25),
+            opacity: fadeIn(lineStart, 0.25) * infoOpacity,
             scale: interpolate(frame, [t(lineStart), t(lineStart + 0.35)], [0.7, 1], {
               ...clamp,
               easing: Easing.bezier(0.3, 1.5, 0.5, 1),
@@ -277,6 +304,81 @@ export const CharIntro: React.FC<CharIntroProps> = ({
           <span style={{ opacity: chars >= line.length ? 1 : 0 }}>」</span>
         </div>
 
+        {/* フィナーレ: 名前ドン */}
+        <div
+          style={{
+            position: "absolute",
+            top: 120,
+            width: "100%",
+            textAlign: "center",
+            opacity: fadeIn(fin + 0.3, 0.1),
+            scale: interpolate(frame, [t(fin + 0.3), t(fin + 0.6)], [2.4, 1], {
+              ...clamp,
+              easing: Easing.bezier(0.3, 1.5, 0.5, 1),
+            }),
+          }}
+        >
+          <div
+            style={{
+              display: "inline-block",
+              padding: "6px 34px",
+              borderRadius: 50,
+              border: `5px solid ${color}`,
+              background: "rgba(0,0,0,0.6)",
+              color,
+              fontSize: 64,
+              fontWeight: 900,
+              marginBottom: 16,
+            }}
+          >
+            {rarity}
+          </div>
+          <div
+            style={{
+              fontSize: 140,
+              fontWeight: 900,
+              letterSpacing: 8,
+              lineHeight: 1.15,
+              textShadow: `0 0 40px ${color}, 0 8px 20px rgba(0,0,0,0.9)`,
+            }}
+          >
+            {name}
+            <br />
+            <span style={{ color: RARITY_COLOR.SSR }}>参上！</span>
+          </div>
+        </div>
+
+        {/* フィナーレ: 締めのひとこと */}
+        <div
+          style={{
+            position: "absolute",
+            top: 1500,
+            width: "100%",
+            textAlign: "center",
+            opacity: fadeIn(fin + 1.0),
+            translate: slideUp(fin + 1.0),
+          }}
+        >
+          <div style={{ fontSize: 52, color: "#f3e6c4", fontWeight: 700, letterSpacing: 4 }}>
+            ガチャで仲間にしよう
+          </div>
+          <div
+            style={{
+              marginTop: 24,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 24,
+              fontSize: 86,
+              fontWeight: 900,
+              color: "white",
+              textShadow: "0 0 30px rgba(255,215,0,0.6)",
+            }}
+          >
+            <Img src={staticFile("favicon.png")} style={{ width: 120, height: 120, borderRadius: 24 }} />
+            無限そば道
+          </div>
+        </div>
+
         {/* ロゴ */}
         <div
           style={{
@@ -288,13 +390,25 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             gap: 14,
             fontSize: 34,
             color: "#f3e6c4",
-            opacity: fadeIn(0.5) * 0.85,
+            opacity: fadeIn(0.5) * 0.85 * infoOpacity,
           }}
         >
           <Img src={staticFile("favicon.png")} style={{ width: 60, height: 60, borderRadius: 12 }} />
           無限そば道
         </div>
       </AbsoluteFill>
+
+      <AbsoluteFill style={{ background: "white", opacity: flash }} />
+
+      <Sequence from={Math.round(t(0.9))} layout="none">
+        <Audio src={staticFile("perfect.mp3")} volume={0.7} />
+      </Sequence>
+      <Sequence from={Math.round(t(lineStart))} layout="none">
+        <Audio src={staticFile("great.mp3")} volume={0.5} />
+      </Sequence>
+      <Sequence from={Math.round(t(fin))} layout="none">
+        <Audio src={staticFile("kami.mp3")} volume={0.9} />
+      </Sequence>
 
       <Audio
         src={staticFile("main.mp3")}
