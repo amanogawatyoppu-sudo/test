@@ -3563,7 +3563,22 @@ function updateMySelection() {
     });
 }
 
+// ガチャと職人図鑑は、ストーリーをクリアするまで隠す（キャラのネタバレ防止）。
+// すでにキャラを持っている人はそのまま使える。
+function storyGachaUnlocked() {
+    return StoryCore.gachaUnlocked(StorySave.load(), STORY_CHAPTERS, profile && profile.chars);
+}
 function renderMyPage() {
+    const unlocked = storyGachaUnlocked();
+    ["gacha1Btn", "gacha10Btn", "mpCollection", "mpCollectionTitle"].forEach(id => document.getElementById(id).style.display = unlocked ? "" : "none");
+    let lock = document.getElementById("mpStoryLock");
+    if (!lock) {
+        lock = document.createElement("div"); lock.id = "mpStoryLock"; lock.className = "mp-note";
+        lock.style.cssText = "color:#ffe9a8; margin:8px 0;";
+        document.getElementById("gacha1Btn").parentNode.insertBefore(lock, document.getElementById("gacha1Btn"));
+    }
+    lock.style.display = unlocked ? "none" : "";
+    lock.textContent = T("ストーリー『福井めぐり』をクリアすると、ガチャと職人図鑑が解放される", "Clear the story \"Fukui Journey\" to unlock the gacha and the Collection");
     document.getElementById("mpName").innerHTML = account ? `${T("職人", "Player")} <strong style="color:gold;">${escapeHtml(account.name)}</strong>` : "";
     const p = profile || { coins: 0, chars: {}, selected: "", plays: 0 };
     renderMySelected();
@@ -3652,7 +3667,7 @@ async function selectCharacter(id) {
 
 let isPulling = false;
 async function pullGacha(count) {
-    if (isPulling || !profile) return;
+    if (isPulling || !profile || !storyGachaUnlocked()) return;
     isPulling = true;
     document.getElementById("gacha1Btn").disabled = true;
     document.getElementById("gacha10Btn").disabled = true;
@@ -3726,12 +3741,16 @@ function tsPartnerId() {
     return account && profile && profile.selected && CHARACTERS[profile.selected] && CHARACTERS[profile.selected].img ? profile.selected : null;
 }
 function tsNextChar(skip) {
-    for (let i = 0; i < TS_CHAR_IDS.length; i++) {
-        tsCycle = (tsCycle + 1) % TS_CHAR_IDS.length;
-        const id = TS_CHAR_IDS[tsCycle];
+    // ストーリーをクリアするまでは、ストーリーで出会ったキャラだけを出す
+    const met = storyGachaUnlocked() ? null : StoryCore.metCharacters(StorySave.load(), STORY_CHAPTERS);
+    const pool = met ? TS_CHAR_IDS.filter(id => met.includes(id)) : TS_CHAR_IDS;
+    for (let i = 0; i < pool.length; i++) {
+        tsCycle = (tsCycle + 1) % pool.length;
+        const id = pool[tsCycle];
         if (!skip.includes(id)) return id;
     }
-    return TS_CHAR_IDS[0];
+    // 全員がすでに表示中なら、左（skip の先頭）と違うキャラを出す
+    return pool.find(id => id !== skip[0]) || pool[0];
 }
 function renderTitleChars(instant) {
     const L = document.getElementById("tsCharL"), R = document.getElementById("tsCharR");
