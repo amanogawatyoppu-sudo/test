@@ -147,8 +147,8 @@
             if (stage.ask && value) { s = StoryCore.setPref(s, stage.ask, value); StorySave.save(s); }
             if (!wasCleared && StoryCore.isStoryCleared(s, chapters())) {
                 s.finished = true; StorySave.save(s);
-                dialogue([{ who: "you", ja: "🎉 ストーリークリア！ マイページのガチャと職人図鑑が解放された！",
-                    en: "🎉 Story cleared! The gacha and Collection on My Page are now unlocked!" }], showResult);
+                dialogue([{ who: "you", ja: "🎉 ストーリークリア！ タイトルの「ガチャ・図鑑」が解放された！",
+                    en: "🎉 Story cleared! Gacha · Collection on the title screen is now unlocked!" }], showResult);
             }
         }, stage.ask ? ASKS[stage.ask] : null);
     }
