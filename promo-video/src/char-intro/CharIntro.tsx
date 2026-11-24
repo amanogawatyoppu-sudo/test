@@ -252,8 +252,9 @@ export const CharIntro: React.FC<CharIntroProps> = ({
               borderRadius: 40,
               background: color,
               color: "#111",
-              fontSize: 38,
+              fontSize: effect.length > 16 ? 32 : 38,
               fontWeight: 900,
+              whiteSpace: "nowrap",
               opacity: fadeIn(3.6, 0.3),
             }}
           >
@@ -266,7 +267,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
           style={{
             position: "absolute",
             left: 60,
-            top: 1590,
+            top: 1615,
             width: 960,
             minHeight: 170,
             padding: "30px 44px",
@@ -278,6 +279,7 @@ export const CharIntro: React.FC<CharIntroProps> = ({
             fontWeight: 900,
             lineHeight: 1.4,
             textAlign: "center",
+            whiteSpace: "pre-line",
             boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
             opacity: fadeIn(lineStart, 0.25) * infoOpacity,
             scale: interpolate(frame, [t(lineStart), t(lineStart + 0.35)], [0.7, 1], {
