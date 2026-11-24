@@ -73,8 +73,26 @@
     };
 
     // ---- 章の地図 ----
+    // ふだんは福井県の3Dマップ。WebGL が使えない端末や「一覧で見る」を押したときは、章の一覧を出す
+    let listMode = false;
     function open() {
         ensureDom();
+        const el = document.getElementById("story");
+        if (listMode || !window.StoryMap3D) { openList(); return; }
+        const state = StorySave.load();
+        const cleared = StoryCore.isStoryCleared(state, chapters());
+        // 初回は three.js の読み込みに少しかかるので、その間は見出しだけ出しておく
+        window.StoryMap3D.leave(el);
+        el.innerHTML = `<div class="mp-wrap"><h1>${T("🗺️ 福井めぐり", "🗺️ Fukui Journey")}</h1><div class="mp-note">${T("地図を広げています…", "Opening the map...")}</div></div>`;
+        window.StoryMap3D.render(el, state, chapters(), {
+            tr, esc, onStage: playStage, onBack: () => switchScreen("titleScreen"),
+            onList: () => { listMode = true; openList(); }, onResult: cleared ? showResult : null,
+        }).catch(() => { listMode = true; if (el.style.display !== "none") openList(); });
+        switchScreen("story");
+    }
+    function openList() {
+        ensureDom();
+        if (window.StoryMap3D) window.StoryMap3D.leave(document.getElementById("story"));
         const state = StorySave.load();
         const el = document.getElementById("story");
         const cleared = StoryCore.isStoryCleared(state, chapters());
@@ -92,10 +110,12 @@
                 }).join("")}</div></div>`;
           }).join("")}
           <div class="stFinal">${cleared ? `<button class="menuBtn" id="stResultBtn">${T("🍜 あなたのそばタイプを見る", "🍜 See your soba type")}</button><br>` : ""}
+          ${window.StoryMap3D ? `<button class="menuBtn" id="stMap3dBtn">${T("🗾 3Dマップで見る", "🗾 3D map")}</button><br>` : ""}
           <button class="menuBtn" id="stBackBtn">${T("タイトルへ", "Title")}</button></div></div>`;
         el.querySelectorAll(".stStage").forEach(b => b.onclick = () => playStage(b.dataset.stage));
         const rb = document.getElementById("stResultBtn"); if (rb) rb.onclick = showResult;
         document.getElementById("stBackBtn").onclick = () => switchScreen("titleScreen");
+        const m3 = document.getElementById("stMap3dBtn"); if (m3) m3.onclick = () => { listMode = false; open(); };
         switchScreen("story");
     }
 
@@ -146,6 +166,7 @@
         const type = window.STORY_TASTE_TYPES[StoryCore.tasteTypeId(state.prefs)];
         const tips = chapters().flatMap(c => c.stages).filter(s => s.tip);
         const el = document.getElementById("story");
+        if (window.StoryMap3D) window.StoryMap3D.leave(el);
         el.innerHTML = `<div class="mp-wrap">
           <h1>${T("🍜 あなたのそばタイプ", "🍜 Your Soba Type")}</h1>
           <div class="stCard" style="text-align:center"><div style="font-family:'Zen Old Mincho'; font-size:26px; color:#ffe9a8;">${type ? esc(tr(type.name)) : T("まだ決まっていない", "Not decided yet")}</div>
