@@ -137,6 +137,12 @@
     function showResult() {
         ensureDom();
         const state = StorySave.load();
+        // 選ぶ前にページを閉じた等で好みが抜けていたら、ここで聞き直す
+        const missing = ["noodle", "spice"].find(k => !state.prefs[k]);
+        if (missing) {
+            dialogue([], (value) => { if (value) StorySave.save(StoryCore.setPref(StorySave.load(), missing, value)); showResult(); }, ASKS[missing]);
+            return;
+        }
         const type = window.STORY_TASTE_TYPES[StoryCore.tasteTypeId(state.prefs)];
         const tips = chapters().flatMap(c => c.stages).filter(s => s.tip);
         const el = document.getElementById("story");

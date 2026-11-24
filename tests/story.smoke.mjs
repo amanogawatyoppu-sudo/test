@@ -75,6 +75,26 @@ await check("title never repeats the left character when every option is skipped
   const r = await page.evaluate(() => [tsNextChar(["minarai", "shokunin"]), tsNextChar(["shokunin", "minarai"])]);
   assert.deepStrictEqual(r, ["shokunin", "minarai"]);
 });
+await check("story song does not leak into Rhythm Mode after returning to the title", async (page) => {
+  const key = await page.evaluate(() => {
+    startStoryStage(STORY_CHAPTERS[0].stages[0]); running = false; endGame();
+    const d = document.getElementById("storyDlg"); if (d) d.classList.remove("open");
+    StoryUI.open(); document.getElementById("stBackBtn").click();
+    openRhythm(); return rhythmSong().key;
+  });
+  assert.ok(!key.startsWith("story_"), "rhythm song is " + key);
+});
+await check("result card label for a story stage names the stage", async (page) => {
+  const label = await page.evaluate(() => modeLabelOf("story_1-1"));
+  assert.ok(label.includes("1-1") && !label.includes("秒"), label);
+});
+await check("final screen asks for a taste pick that was never saved", async (page) => {
+  await clearStory(page);
+  await page.evaluate(() => { const s = StorySave.load(); s.prefs = { noodle: null, spice: "hot" }; StorySave.save(s); StoryUI.showResult(); });
+  assert.ok(await page.evaluate(() => !!document.querySelector("#storyDlg.open .sdChoices")), "no choice shown");
+  await page.evaluate(() => document.querySelectorAll("#storyDlg .sdChoices button")[1].click());
+  assert.strictEqual(await page.evaluate(() => StoryCore.tasteTypeId(StorySave.load().prefs)), "thick_hot");
+});
 await check("corrupt save loads as a fresh story", async (page) => {
   await page.evaluate(() => localStorage.setItem("sobamichi_story", "garbage"));
   await page.reload(); await page.waitForTimeout(500);

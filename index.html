@@ -1589,6 +1589,7 @@ function kiwamiUnlocked(songKey = rhythmSongKey) {
 }
 
 function openRhythm() {
+    isStory = false; storySong = null; // ストーリーの曲が曲選びに残らないように
     switchScreen("rhythm");
     if (!trackBuf) loadTrack(); // 前回の読み込みに失敗していたらもう一度
     renderRhythmSelect();
@@ -4156,6 +4157,11 @@ function loadImage(src) {
 function modeLabelOf(mode) {
     if (mode === "daily") return T(`今日のそば打ち ${shortDate()}`, `Daily Challenge ${shortDate()}`);
     if (String(mode).startsWith("rhythm_")) return modeLabelOfRhythm(mode);
+    if (String(mode).startsWith("story_")) {
+        const id = String(mode).slice(6);
+        const st = (window.STORY_CHAPTERS || []).flatMap(c => c.stages).find(x => x.id === id);
+        return T(`福井めぐり ${id}${st ? "・" + st.title.ja : ""}`, `Fukui Journey ${id}${st ? ": " + st.title.en : ""}`);
+    }
     return mode === "infinite" ? T("終わりなき修行", "Endless") : T(`${mode}秒修行`, `${mode}-sec`);
 }
 
