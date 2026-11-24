@@ -1012,6 +1012,11 @@ body.mobileLayout #workerArea { display: none; }
 
   <!-- 遊び方を選ぶ -->
   <div class="tsModes">
+    <button class="tsCard rhythm" id="tsStoryBtn" onclick="StoryUI.open()" style="background:linear-gradient(135deg,#5a2a00,#c96a00); border-color:#ffd36a;">
+      <span class="tsCardIcon">🗺️</span>
+      <span><span class="tsCardName"><span data-en="Fukui Journey">福井めぐり</span><span class="tsCardBadge" data-en="STORY">ストーリー</span></span>
+      <span class="tsCardSub" data-en="Tour Fukui and become an Echizen soba maker">福井を巡って、越前そばの職人をめざす</span></span>
+    </button>
     <button class="tsCard rhythm" onclick="openRhythm()">
       <span class="tsCardIcon">🎵</span>
       <span><span class="tsCardName"><span data-en="Rhythm Mode">リズムモード</span><span class="tsCardBadge" data-en="MUSIC">BGMあり</span></span>
@@ -1128,6 +1133,7 @@ body.mobileLayout #workerArea { display: none; }
  </div>
  <div id="coinEarnDisplay" style="font-size:18px; margin:10px 0; min-height:24px;"></div>
  <button data-en="🎵 Choose difficulty" class="menuBtn" id="rhythmBackBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="openRhythm()">🎵 難易度選択へ</button>
+ <button data-en="🗺️ Back to the map" class="menuBtn" id="storyMapBtn" style="display:none; background:linear-gradient(#fff1d6,#ffb84d);" onclick="StoryUI.open()">🗺️ 地図へ戻る</button>
  <button data-en="Title" class="menuBtn" onclick="isRankmaMode ? showRanking() : location.reload()">タイトルへ</button>
  <button data-en="🏠 My Page · Gacha" class="menuBtn" style="background:linear-gradient(#e8f7ff,#7fc8ff);" onclick="openMyPage()">🏠 マイページ・ガチャ</button>
 </div>
@@ -1388,7 +1394,9 @@ const RHYTHM_SONGS = {
 };
 let rhythmSongKey = "teion";
 try { if (RHYTHM_SONGS[localStorage.getItem("sobamichi_rhythm_song")]) rhythmSongKey = localStorage.getItem("sobamichi_rhythm_song"); } catch (e) {}
-const rhythmSong = () => RHYTHM_SONGS[rhythmSongKey];
+// ストーリーのステージ中は、ステージ専用の曲を使う
+let isStory = false, storySong = null;
+const rhythmSong = () => storySong || RHYTHM_SONGS[rhythmSongKey];
 // 記録・番付の名前（低音衝動は前からの名前のまま）
 const rhythmRecKey = (song, diff) => song === "teion" ? diff : `${song}_${diff}`;
 const rhythmModeOf = (song, diff) => "rhythm_" + rhythmRecKey(song, diff);
@@ -1625,10 +1633,26 @@ function startRhythm(key) {
     const d = RHYTHM_DIFFS[key];
     if (!d || (rhythmSong().type === "track" && !trackBuf)) return;
     if (key === "kiwami" && !kiwamiUnlocked()) return;
+    isStory = false; storySong = null;
     isRankmaMode = false; isDaily = false; reflexSilent = false;
     isRhythm = true; rhythmDiff = d;
     isInfinite = false;
     currentMode = rhythmModeOf(rhythmSongKey, key);
+    startWithCountdown(() => {
+        document.getElementById("timeDisplay").style.display = "inline";
+    });
+}
+
+// ストーリーの1ステージを、リズムモードの仕組みで遊ぶ
+function startStoryStage(stage) {
+    storySong = { key: "story_" + stage.id, type: "gen", style: stage.song.style, bpm: stage.song.bpm, seed: stage.song.seed,
+        form: stage.song.form, icon: "🗺️", title: () => T(stage.title.ja, stage.title.en),
+        credit: () => T("オリジナル曲", "Original song"), mood: () => "" };
+    isStory = true;
+    rhythmDiff = RHYTHM_DIFFS[stage.diff];
+    isRankmaMode = false; isDaily = false; reflexSilent = false;
+    isRhythm = true; isInfinite = false;
+    currentMode = "story_" + stage.id;
     startWithCountdown(() => {
         document.getElementById("timeDisplay").style.display = "inline";
     });
@@ -1657,9 +1681,10 @@ function renderRhythmResult(rr) {
     const box = document.getElementById("rhythmResult");
     document.getElementById("rhythmBackBtn").style.display = rr ? "inline-block" : "none";
     if (!rr) { box.style.display = "none"; box.innerHTML = ""; return; }
-    const isNew = saveRhythmRecord(rhythmRecKey(rhythmSongKey, rhythmDiff.key), score, rr.grade, rr.fc, rr.ap);
+    // ストーリーの記録はリズムモードの自己ベストに混ぜない
+    const isNew = isStory ? false : saveRhythmRecord(rhythmRecKey(rhythmSongKey, rhythmDiff.key), score, rr.grade, rr.fc, rr.ap);
     const medals = `${rr.fc ? `<span class="rhMedal fc">${T("フルコンボ", "FULL COMBO")}</span>` : ""}${rr.ap ? `<span class="rhMedal ap">${T("全虹", "ALL RAINBOW")}</span>` : ""}`;
-    const unlockMsg = rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
+    const unlockMsg = !isStory && rhythmDiff.key === "hard" && (rr.grade === "A" || rr.grade === "S")
         ? `<div style="color:#ff88ff; margin-top:4px;">${T("「極」が解放されている！", "Kiwami is unlocked!")}</div>` : "";
     box.innerHTML = `<div style="color:#ffe9a8; font-size:16px;">${rhythmSong().icon} ${rhythmSong().title()}・${rhythmDiff.name()}</div>
         <div class="bigGrade rhGrade g${rr.grade}">${rr.grade}</div>
@@ -2106,6 +2131,7 @@ async function confirmRankmaName() {
         clearInterval(tauntTimer);
         stopFire();
 
+        isStory = false; storySong = null;
         isRankmaMode = true;
         isDaily = false;
         isRhythm = false; reflexSilent = false;
@@ -2118,8 +2144,8 @@ async function confirmRankmaName() {
 
 // ===== 通常スタート =====
 // 反射モード（BGMなし）：曲は流さず、叩いた音だけ
-function startNormal(sec) { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startGame(sec); }
-function startNormalInfinite() { isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startInfinite(); }
+function startNormal(sec) { isStory = false; storySong = null; isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startGame(sec); }
+function startNormalInfinite() { isStory = false; storySong = null; isRankmaMode = false; isDaily = false; isRhythm = false; reflexSilent = true; startInfinite(); }
 
 // ===== ゲーム本体 =====
 function startGame(sec){ isInfinite=false; currentMode=String(sec); startWithCountdown(() => { setupTimer(sec); }); }
@@ -3136,7 +3162,13 @@ function endGame(){
     rankmaBtn.disabled = false; rankmaBtn.innerText = T("スコアを番付に刻む", "Save score");
 
     document.getElementById("dailyResultArea").style.display = isDaily ? "block" : "none";
-    if (isDaily) {
+    document.getElementById("storyMapBtn").style.display = isStory ? "inline-block" : "none";
+    if (isStory) {
+        // ストーリーは番付に送らない
+        document.getElementById("normalSaveArea").style.display = "none";
+        document.getElementById("rankmaSaveArea").style.display = "none";
+        document.getElementById("rhythmBackBtn").style.display = "none";
+    } else if (isDaily) {
         // デイリーは結果を自動で送る（番付名の入力は不要）
         document.getElementById("normalSaveArea").style.display = "none";
         document.getElementById("rankmaSaveArea").style.display = "none";
@@ -3151,7 +3183,10 @@ function endGame(){
     }
 
     // 順位表示（非同期で取得）
-    if (isDaily) {
+    if (isStory) {
+        document.getElementById("rankPositionDisplay").innerText = "";
+        if (window.StoryUI) StoryUI.onStageEnd(rr);
+    } else if (isDaily) {
         document.getElementById("rankPositionDisplay").innerText = "";
         submitDailyResult();
     } else {
@@ -3831,6 +3866,7 @@ function renderDaily() {
 
 function startDaily() {
     if (!dailyInfo) return;
+    isStory = false; storySong = null;
     isRankmaMode = false;
     isDaily = true;
     isRhythm = false; reflexSilent = false;

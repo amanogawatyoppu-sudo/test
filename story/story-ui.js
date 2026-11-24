@@ -116,8 +116,8 @@
         const r = StoryCore.recordClear(before, stage.id, rr.rate, rr.grade);
         StorySave.save(r.state);
         if (!r.cleared) {
-            dialogue([{ who: "shokunin", ja: `まだまだだな。正確さ${Math.round(StoryCore.STORY_CLEAR_RATE * 100)}%以上でクリアだ。もう一度やってみろ。`,
-                en: `Not yet. You need at least ${Math.round(StoryCore.STORY_CLEAR_RATE * 100)}% to clear. Try again.` }]);
+            dialogue([{ who: "shokunin", ja: `まだまだだな。達成率${Math.round(StoryCore.STORY_CLEAR_RATE * 100)}%以上でクリアだ。もう一度やってみろ。`,
+                en: `Not yet. You need a rate of at least ${Math.round(StoryCore.STORY_CLEAR_RATE * 100)}% to clear. Try again.` }]);
             return;
         }
         const lines = [...stage.after];
