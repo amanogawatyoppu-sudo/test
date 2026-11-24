@@ -63,3 +63,32 @@ test("metCharacters", () => {
   const s = C.recordClear(C.newState(), "2-1", 0.9, "A").state;
   assert.deepStrictEqual(C.metCharacters(s, ch), ["minarai", "shokunin", "megane"]);
 });
+
+test("story data shape", () => {
+  const D = require("../story/story-data.js");
+  const IDS = ["minarai","oroshi_musume","kamaban","soba_hatake","shokunin","ekiin","ashigaru","tabi_shonin","megane",
+    "honda","kaneko","kyoryu","kasumi","sennin","oroshi_ryu","kuzuryu_hime"];
+  assert.strictEqual(D.STORY_CHAPTERS.length, 6);
+  const ids = new Set(); let asks = [];
+  for (const c of D.STORY_CHAPTERS) {
+    assert.strictEqual(c.stages.length, 3, c.id);
+    assert.deepStrictEqual(c.stages.map(s => s.kind), ["meet", "train", "taste"]);
+    c.guides.forEach(g => assert.ok(IDS.includes(g), g));
+    for (const s of c.stages) {
+      assert.ok(!ids.has(s.id), "dup " + s.id); ids.add(s.id);
+      assert.ok(["easy","normal","hard"].includes(s.diff));
+      assert.ok(s.title.ja && s.title.en);
+      for (const l of [...s.before, ...s.after]) {
+        assert.ok(l.who === "you" || IDS.includes(l.who), s.id + " " + l.who);
+        assert.ok(l.ja && l.en, s.id);
+      }
+      if (s.ask) asks.push([s.id, s.ask]);
+    }
+  }
+  assert.deepStrictEqual(asks, [["2-2", "noodle"], ["4-2", "spice"]]);
+  const seeds = D.STORY_CHAPTERS.flatMap(c => c.stages.map(s => s.song.seed));
+  assert.strictEqual(new Set(seeds).size, 18);
+  assert.deepStrictEqual(Object.keys(D.STORY_TASTE_TYPES).sort(), ["thick_hot","thick_mild","thin_hot","thin_mild"]);
+  assert.strictEqual(D.STORY_SHOPS.length, 0);
+  assert.ok(D.STORY_GUIDE_URL.startsWith("https://"));
+});
