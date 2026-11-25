@@ -145,6 +145,56 @@ await check("音が使えなくても演出は止まらない", async (page) => 
   assert.strictEqual(await done(page), 1);
 });
 
+// 「引く」ボタンからの流れ。サーバーの代わりに playerAction を差し替える
+const wire = (page, mode) => page.evaluate(m => {
+  window.__calls = 0;
+  profile = { name: "t", coins: 1000, chars: {} };
+  window.storyGachaUnlocked = () => true;
+  window.renderMyPage = () => {};
+  window.playerAction = async () => {
+    window.__calls++;
+    await new Promise(r => setTimeout(r, 200));
+    if (m === "ok") return { status: "ok", results: [{ id: "minarai", rarity: "N", dup: true, refund: 10 }] };
+    if (m === "no_coins") return { status: "no_coins" };
+    if (m === "null") return null;
+    throw new Error("net");
+  };
+}, mode);
+const overlayOpen = (page) => page.evaluate(() => document.getElementById("gachaOverlay").classList.contains("open"));
+const status = (page) => page.evaluate(() => document.getElementById("mpStatus").textContent);
+
+await check("引く→演出→結果一覧", async (page) => {
+  await wire(page, "ok");
+  await page.evaluate(() => { pullGacha(1); });
+  await page.waitForTimeout(50);
+  assert.strictEqual(await phase(page), "charge", "演出は通信中から始まる");
+  await waitPhase(page, "card");
+  assert.strictEqual(await overlayOpen(page), false);
+  await runThrough(page);
+  assert.strictEqual(await overlayOpen(page), true);
+  assert.strictEqual(await page.evaluate(() => isPulling), false);
+});
+
+for (const [mode, want] of [["no_coins", "そば粉が足りない"], ["null", "対応していない"], ["throw", "通信失敗"]]) {
+  await check(`引く→${mode}：演出を閉じてメッセージ`, async (page) => {
+    await wire(page, mode);
+    await page.evaluate(() => pullGacha(1));
+    assert.strictEqual(await isOpen(page), false);
+    assert.ok((await status(page)).includes(want), await status(page));
+    assert.strictEqual(await page.evaluate(() => isPulling), false);
+  });
+}
+
+await check("演出中にもう一度引いても始まらない", async (page) => {
+  await wire(page, "ok");
+  await page.evaluate(() => { pullGacha(1); });
+  await waitPhase(page, "card");
+  await page.evaluate(() => { pullGacha(1); });
+  await page.waitForTimeout(300);
+  assert.strictEqual(await page.evaluate(() => window.__calls), 1);
+  await runThrough(page);
+});
+
 await browser.close();
 server.kill();
 if (failed) { console.log(`${failed} failed`); process.exit(1); }
