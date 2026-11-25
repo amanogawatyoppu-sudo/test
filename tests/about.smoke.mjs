@@ -115,6 +115,19 @@ await check("about: credits name every BGM composer", async (page) => {
   for (const n of ["伊藤ケイスケ", "Maniira", "地球地図日本", "three.js"]) assert.ok(txt.includes(n), n);
 });
 
+await check("privacy: discloses everything the game stores or sends", async (page) => {
+  await page.goto(url + "privacy.html"); await page.waitForTimeout(200);
+  const ja = await page.locator("div[data-l=ja]").textContent();
+  for (const w of ["端末ID", "sessionStorage", "Googleアカウント情報", "Google Fonts", "作った人が見られる", "有効にしている場合"]) assert.ok(ja.includes(w), w);
+  const en = await page.locator("div[data-l=en]").textContent();
+  for (const w of ["device ID", "sessionStorage", "Google account information", "Google Fonts", "readable by the developer", "when cloud save is enabled"]) assert.ok(en.includes(w), w);
+});
+await check("no school name in public files yet", async () => {
+  const fs = await import("node:fs");
+  for (const f of ["js/about.js", "privacy.html", "docs/superpowers/specs/2026-11-25-kankou-renmei-pitch-design.md", "docs/superpowers/plans/2026-11-25-kankou-renmei-pitch.md"])
+    assert.ok(!fs.readFileSync(new URL("../" + f, import.meta.url), "utf8").includes("高志"), f);
+});
+
 await browser.close(); server.kill();
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);

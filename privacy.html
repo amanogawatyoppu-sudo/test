@@ -37,32 +37,36 @@
   <p>このページは、ブラウザゲーム「無限そば道」が、遊ぶ人のどんな情報を、どこに保存し、何に使うかを説明するものです。</p>
 
   <h2>1. 端末（ブラウザ）に保存するもの</h2>
-  <p>遊んだ記録や設定（言語・BGM・ストーリーの進み具合など）を、ブラウザの保存領域（localStorage、名前が <code>sobamichi_</code> で始まるもの）に保存します。この情報はお使いの端末の中にあり、ブラウザのデータを消すと消えます。</p>
+  <p>遊んだ記録や設定（言語・BGM・ストーリーの進み具合など）と、自動で作る端末ID（ランダムな文字列）を、ブラウザの保存領域（localStorage、名前が <code>sobamichi_</code> で始まるもの）に保存します。ログイン中のプレイヤー名と合言葉は、ブラウザを閉じるまでの間だけ sessionStorage に保存します。この情報はお使いの端末の中にあり、ブラウザのデータを消すと消えます。</p>
 
   <h2>2. 自動ログインとセーブの引き継ぎ（Firebase）</h2>
   <ul>
+    <li>この項目は、クラウドセーブを有効にしている場合の説明です（有効にしている場合だけ、設定画面に「セーブの引き継ぎ」が使える状態で表示されます）。</li>
     <li>ゲームを開くと、Google の Firebase という仕組みで、名前やメールアドレスを使わない「ゲスト用のID」が自動で作られます。</li>
     <li>セーブデータ（そば粉・キャラ・進み具合など）は、このIDにひもづけて Firebase（Firestore）に保存します。読み書きできるのは、そのIDの本人だけです。</li>
-    <li>設定画面で「Googleアカウントと連携」を選んだ場合だけ、そのGoogleアカウントのメールアドレスが Firebase に渡ります。メールアドレスは本人の設定画面に表示するためだけに使い、ほかの人には見えません。</li>
+    <li>設定画面で「Googleアカウントと連携」を選んだ場合だけ、メールアドレス・表示名・プロフィール画像などのGoogleアカウント情報が Firebase に渡ります。ゲームではメールアドレスを本人の設定画面に表示するためだけに使い、ほかの人には見えません。</li>
   </ul>
 
   <h2>3. 番付・ガチャ・日替わり（Google Apps Script）</h2>
   <ul>
-    <li>番付への登録やガチャを使うと、入力したプレイヤー名・合言葉・スコア・そば粉やキャラの記録を、Google Apps Script（Googleスプレッドシート）に保存します。</li>
+    <li>番付への登録やガチャを使うと、入力したプレイヤー名・合言葉・スコア・そば粉やキャラの記録を、Google Apps Script（Googleスプレッドシート）に保存します。ランクマッチのスコアには、プレイヤーを見分けるための端末IDもいっしょに保存します。</li>
     <li>プレイヤー名とスコア・順位は、番付として誰でも見られる形で表示されます。本名は入れないでください。</li>
-    <li>合言葉は、名前の取り違えを防ぐためのものです。ほかのサービスで使っているパスワードは使わないでください。</li>
+    <li>合言葉は、ガチャなどの記録を本人だけが使えるようにするためのものです。合言葉は作った人が見られる形で保存されるので、ほかのサービスで使っているパスワードは使わないでください。</li>
   </ul>
 
-  <h2>4. 使い道</h2>
+  <h2>4. 文字の表示（Google Fonts）</h2>
+  <p>画面の文字（フォント）を Google Fonts から読み込んでいます。そのとき、お使いのブラウザから Google へ、IPアドレスなどの通信に必要な情報が送られます。</p>
+
+  <h2>5. 使い道</h2>
   <p>集めた情報は、セーブの保存と引き継ぎ、番付の表示だけに使います。広告には使いません。販売したり、ほかの人や会社に渡したりもしません（法令で求められた場合を除きます）。</p>
 
-  <h2>5. 消してほしいとき</h2>
+  <h2>6. 消してほしいとき</h2>
   <p>セーブや番付の記録を消してほしいときは、下の問い合わせ先へ連絡してください。プレイヤー名を教えてもらえれば対応します。</p>
 
-  <h2>6. 作った人・問い合わせ先</h2>
+  <h2>7. 作った人・問い合わせ先</h2>
   <p>作った人：福井県内の高校生（探究活動）<br>問い合わせ：準備中</p>
 
-  <h2>7. このページの変更</h2>
+  <h2>8. このページの変更</h2>
   <p>仕組みを変えたときは、このページを更新します。</p>
 
   <p><a href="./">← ゲームに戻る</a></p>
@@ -74,32 +78,36 @@
   <p>This page explains what information the browser game "Mugen Soba-do" stores about players, where, and why.</p>
 
   <h2>1. Stored on your device</h2>
-  <p>Progress and settings (language, music, story progress, etc.) are stored in your browser's localStorage under names starting with <code>sobamichi_</code>. They stay on your device and are removed if you clear your browser data.</p>
+  <p>Progress and settings (language, music, story progress, etc.) and an automatically generated device ID (a random string) are stored in your browser's localStorage under names starting with <code>sobamichi_</code>. While you are logged in, your player name and passphrase are kept in sessionStorage until you close the browser. They stay on your device and are removed if you clear your browser data.</p>
 
   <h2>2. Auto sign-in and save transfer (Firebase)</h2>
   <ul>
+    <li>This section applies when cloud save is enabled (the save transfer option in Settings is then available).</li>
     <li>When you open the game, Google Firebase automatically creates a guest ID that does not use your name or email.</li>
     <li>Your save (soba flour, characters, progress, etc.) is stored in Firebase (Firestore) under that ID. Only the owner of that ID can read or write it.</li>
-    <li>Only if you choose "Link Google account" in Settings, the email address of that Google account is passed to Firebase. It is shown only on your own Settings screen and is not visible to anyone else.</li>
+    <li>Only if you choose "Link Google account" in Settings, Google account information such as the email address, display name and profile picture is passed to Firebase. The game uses only the email address, shown on your own Settings screen, and it is not visible to anyone else.</li>
   </ul>
 
   <h2>3. Rankings, gacha and daily challenge (Google Apps Script)</h2>
   <ul>
-    <li>When you register on the rankings or use the gacha, the player name, passphrase, scores and soba flour / character records you enter are stored with Google Apps Script (Google Sheets).</li>
+    <li>When you register on the rankings or use the gacha, the player name, passphrase, scores and soba flour / character records you enter are stored with Google Apps Script (Google Sheets). Ranked-match scores are also stored with your device ID to tell players apart.</li>
     <li>Player names, scores and ranks are shown publicly on the rankings. Please don't use your real name.</li>
-    <li>The passphrase only prevents name mix-ups. Please don't use a password you use for other services.</li>
+    <li>The passphrase keeps your gacha and other records for you only. It is stored in a form readable by the developer, so please don't use a password you use for other services.</li>
   </ul>
 
-  <h2>4. How we use it</h2>
+  <h2>4. Fonts (Google Fonts)</h2>
+  <p>The game loads its fonts from Google Fonts, so your browser sends Google the information needed for the connection, such as your IP address.</p>
+
+  <h2>5. How we use it</h2>
   <p>This information is used only to save and transfer progress and to show rankings. It is not used for ads, sold, or given to other people or companies (except where required by law).</p>
 
-  <h2>5. Deleting your data</h2>
+  <h2>6. Deleting your data</h2>
   <p>To have your save or ranking records deleted, contact us below with your player name.</p>
 
-  <h2>6. Made by / Contact</h2>
+  <h2>7. Made by / Contact</h2>
   <p>Made by: a high school student in Fukui (inquiry-based learning project)<br>Contact: coming soon</p>
 
-  <h2>7. Changes</h2>
+  <h2>8. Changes</h2>
   <p>We will update this page when the way the game works changes.</p>
 
   <p><a href="./">← Back to the game</a></p>
