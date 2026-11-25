@@ -98,6 +98,17 @@ await check("privacy: link from about", async (page) => {
   const r = await page.request.get(url + "privacy.html"); assert.strictEqual(r.status(), 200);
 });
 
+await check("redirect: forwards with query", async (page) => {
+  const fs = await import("node:fs");
+  const html = fs.readFileSync(new URL("../tools/old-url-redirect/index.html", import.meta.url), "utf8");
+  const swapped = html.replace(/const NEW_URL = "[^"]*";/, `const NEW_URL = "${url}";`);
+  assert.notStrictEqual(swapped, html, "NEW_URL constant not found");
+  await page.route("**/old/**", r => r.fulfill({ contentType: "text/html", body: swapped }));
+  await page.goto(url + "old/?x=1#h");
+  await page.waitForURL(u => !u.pathname.startsWith("/old/"), { timeout: 3000 });
+  assert.ok(page.url().endsWith("/?x=1#h"), page.url());
+});
+
 await browser.close(); server.kill();
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);
