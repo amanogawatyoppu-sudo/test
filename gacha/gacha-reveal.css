@@ -1,0 +1,100 @@
+/* ===== ガチャ演出（タメ → 1体ずつ → 初登場） ===== */
+#gachaReveal { display: none; position: fixed; inset: 0; z-index: 430; background: #07060a; color: #fff; overflow: hidden;
+  font-family: 'Zen Old Mincho', serif; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer;
+  --glow: #ffe9c2; --rc: #aaaaaa; }
+#gachaReveal.open { display: block; }
+#gachaReveal > section { display: none; position: absolute; inset: 0; }
+#gachaReveal[data-phase="charge"] .grCharge,
+#gachaReveal[data-phase="card"] .grCardWrap,
+#gachaReveal[data-phase="special"] .grSpecial { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+.grSkip { position: absolute; top: 12px; right: 12px; z-index: 5; padding: 8px 14px; font-size: 14px; font-family: inherit; font-weight: bold;
+  color: #fff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; cursor: pointer; }
+#gachaReveal[data-phase="charge"] .grSkip { display: none; }
+.grHint { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; font-size: 14px; color: rgba(255,255,255,0.7);
+  animation: grBlink 1.4s ease-in-out infinite; }
+@keyframes grBlink { 50% { opacity: 0.3; } }
+
+/* --- タメ：のれんと釜 --- */
+.grCharge { background: radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 60%); transition: background 0.4s; }
+.grNoren { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(92vw, 520px); height: 30vh; display: flex; gap: 6px; }
+.grNoren span { flex: 1; background: linear-gradient(#1d2a5a, #142046); border-bottom: 3px solid #0c1430; border-radius: 0 0 6px 6px;
+  display: flex; align-items: center; justify-content: center; font-size: min(11vw, 64px); color: #f4efe2;
+  transform-origin: top center; animation: grSway 2.6s ease-in-out infinite; }
+.grNoren span:nth-child(2) { animation-delay: -0.6s; }
+.grNoren span:nth-child(3) { animation-delay: -1.2s; }
+@keyframes grSway { 0%,100% { transform: skewX(0deg); } 50% { transform: skewX(2.5deg); } }
+.grPotArea { position: relative; margin-top: 18vh; width: 220px; height: 200px; }
+.grFire { position: absolute; left: 50%; bottom: -6px; width: 260px; height: 120px; transform: translateX(-50%);
+  background: radial-gradient(ellipse at 50% 80%, var(--glow), transparent 65%); filter: blur(6px); opacity: 0.55;
+  animation: grFlicker 0.5s ease-in-out infinite alternate; transition: background 0.3s; }
+#gachaReveal.lit .grFire { opacity: 1; animation-duration: 0.18s; }
+@keyframes grFlicker { to { transform: translateX(-50%) scale(1.08, 0.94); } }
+.grPot { position: absolute; left: 50%; bottom: 20px; width: 200px; height: 110px; transform: translateX(-50%);
+  background: linear-gradient(#3a3a3a, #141414); border-radius: 18px 18px 90px 90px; box-shadow: inset 0 6px 0 #555, 0 0 30px var(--glow); transition: box-shadow 0.3s; }
+.grPot::before { content: ""; position: absolute; left: -10px; right: -10px; top: -8px; height: 16px; background: #2a2a2a; border-radius: 8px; }
+.grSteam { position: absolute; left: 50%; bottom: 110px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.55);
+  filter: blur(10px); animation: grSteam 1.8s ease-in infinite; }
+.grSteam:nth-child(2) { margin-left: -50px; animation-delay: -0.6s; }
+.grSteam:nth-child(3) { margin-left: 30px; animation-delay: -1.2s; }
+#gachaReveal.lit .grSteam { background: color-mix(in srgb, var(--glow) 60%, white); animation-duration: 0.9s; }
+@keyframes grSteam { from { transform: translate(-50%, 0) scale(0.6); opacity: 0.8; } to { transform: translate(-50%, -150px) scale(2.2); opacity: 0; } }
+.grChargeText { position: absolute; bottom: 64px; left: 0; right: 0; text-align: center; font-size: 16px; color: rgba(255,255,255,0.8); }
+.grFlash { position: absolute; inset: 0; pointer-events: none; background: var(--glow); opacity: 0; }
+.grFlash.on { animation: grFlash 0.6s ease-out; }
+@keyframes grFlash { from { opacity: 0.85; } to { opacity: 0; } }
+#gachaReveal.shake { animation: grShake 0.5s linear 2; }
+@keyframes grShake { 0%,100% { transform: none; } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -4px); } 60% { transform: translate(-4px, -2px); } 80% { transform: translate(4px, 4px); } }
+
+/* --- 1体ずつ：カード --- */
+.grCardWrap { background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc) 18%, transparent), transparent 60%); }
+.grCounter { position: absolute; top: 18px; left: 16px; font-size: 16px; color: rgba(255,255,255,0.8); }
+.grCard { position: relative; width: min(64vw, 230px); aspect-ratio: 23 / 32; perspective: 900px; animation: grDeal 0.35s ease-out both; }
+@keyframes grDeal { from { transform: translateY(40px) scale(0.85); opacity: 0; } }
+.grCardIn { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.45s ease-in-out; }
+.grCard.flipped .grCardIn { transform: rotateY(180deg); }
+.grBack, .grFront { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-sizing: border-box; }
+.grBack { background: repeating-linear-gradient(45deg, #2a1a0a 0 10px, #321f0c 10px 20px); border: 4px solid var(--rc);
+  box-shadow: 0 0 22px var(--rc); display: flex; align-items: center; justify-content: center; font-size: 72px; color: var(--rc); }
+.grFront { transform: rotateY(180deg); background: linear-gradient(#2b2b38, #15151c); border: 4px solid var(--rc); box-shadow: 0 0 34px var(--rc);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px; }
+.grRar { font-size: 22px; font-weight: bold; color: var(--rc); text-shadow: 0 0 10px var(--rc); }
+.grFront .grPic { width: 72%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 80px; }
+.grFront .grPic img { width: 100%; height: 100%; object-fit: contain; }
+.grFront .grNm { font-size: 18px; font-weight: bold; text-align: center; }
+.grTag { font-size: 13px; padding: 2px 10px; border-radius: 10px; background: rgba(255,255,255,0.15); }
+.grTag.new { background: #e0306a; font-weight: bold; }
+.grBurst { position: absolute; left: 50%; top: 45%; width: 10px; height: 10px; border-radius: 50%; pointer-events: none;
+  transform: translate(-50%, -50%); box-shadow: 0 0 0 0 var(--rc); }
+.grCard.flipped ~ .grBurst { animation: grBurst 0.7s ease-out; }
+@keyframes grBurst { from { box-shadow: 0 0 0 0 var(--rc); opacity: 1; } to { box-shadow: 0 0 0 60vmax transparent; opacity: 0; } }
+
+/* --- 初登場 --- */
+.grSpecial { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 40%, #07060a), #07060a 70%); }
+.grRays { position: absolute; left: 50%; top: 38%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); display: none;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--rc) 45%, transparent) 0 8deg, transparent 8deg 20deg);
+  animation: grSpin 14s linear infinite; pointer-events: none; }
+.grSpecial.ssr .grRays { display: block; }
+@keyframes grSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+.grSpecial .grBig { position: relative; width: min(70vw, 340px); aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: min(40vw, 200px); filter: drop-shadow(0 0 24px var(--rc)); animation: grRise 0.7s cubic-bezier(.2,1.4,.4,1) both; }
+.grSpecial .grBig img { width: 100%; height: 100%; object-fit: contain; }
+@keyframes grRise { from { transform: translateY(60px) scale(0.7); opacity: 0; } }
+.grSpecial .grSpRar { position: relative; font-size: 26px; font-weight: bold; color: var(--rc); text-shadow: 0 0 14px var(--rc); animation: grFade 0.4s 0.3s both; }
+.grSpecial .grSpName { position: relative; font-size: min(9vw, 40px); font-weight: bold; letter-spacing: 0.08em; text-shadow: 0 2px 8px #000; animation: grFade 0.5s 0.45s both; }
+.grSpecial .grSpQuote { position: relative; max-width: min(86vw, 460px); margin-top: 10px; padding: 10px 16px; font-size: 16px; line-height: 1.6;
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.3); border-radius: 12px; animation: grFade 0.5s 0.8s both; }
+@keyframes grFade { from { opacity: 0; transform: translateY(10px); } }
+.grStamp { position: absolute; top: 14%; right: max(6vw, calc(50% - 230px)); width: 92px; height: 92px; border-radius: 50%; border: 4px solid #e0306a;
+  color: #e0306a; background: rgba(255,240,240,0.9); display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: bold;
+  transform: rotate(-14deg); animation: grStamp 0.35s 1s cubic-bezier(.3,1.8,.5,1) both; }
+@keyframes grStamp { from { transform: rotate(-14deg) scale(2.4); opacity: 0; } }
+.grConfetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.grConfetti i { position: absolute; top: -20px; width: 8px; height: 14px; animation: grFall linear forwards; }
+@keyframes grFall { to { transform: translateY(110vh) rotate(720deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #gachaReveal.shake { animation: none; }
+  .grConfetti { display: none; }
+  .grRays { animation: none; }
+}
