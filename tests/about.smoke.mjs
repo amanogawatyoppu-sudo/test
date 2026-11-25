@@ -80,6 +80,24 @@ await check("about: close returns to settings", async (page) => {
   assert.ok(await isOpen(page, "#cloudSettings"), "settings closed");
 });
 
+await check("privacy: page loads", async (page) => {
+  await page.goto(url + "privacy.html"); await page.waitForTimeout(200);
+  assert.ok((await page.locator("h1:visible").textContent()).includes("プライバシーポリシー"));
+  const body = await page.textContent("body");
+  assert.ok(body.includes("Firebase") && body.includes("Google Apps Script"));
+});
+await check("privacy: english", async (page) => {
+  await page.goto(url + "privacy.html");
+  await page.evaluate(() => localStorage.setItem("sobamichi_lang", "en"));
+  await page.reload(); await page.waitForTimeout(200);
+  assert.ok((await page.locator("h1:visible").textContent()).includes("Privacy Policy"));
+});
+await check("privacy: link from about", async (page) => {
+  await openGame(page); await page.evaluate(() => openAbout());
+  assert.strictEqual(await page.evaluate(() => document.querySelector("#aboutPanel a.ab-privacy").getAttribute("href")), "privacy.html");
+  const r = await page.request.get(url + "privacy.html"); assert.strictEqual(r.status(), 200);
+});
+
 await browser.close(); server.kill();
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);
