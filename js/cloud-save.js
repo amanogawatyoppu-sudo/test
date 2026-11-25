@@ -266,11 +266,13 @@ function buildPanel() {
   </div>
   <div class="cs-msg"></div>
   <div class="cs-account cs-section"></div>
+  <button class="cs-about cs-plain">ℹ ${t("このゲームについて", "About this game")}</button>
   <button class="cs-close">${t("閉じる", "Close")}</button>
 </div>`;
     document.body.appendChild(panel);
     panel.addEventListener("click", e => { if (e.target === panel) closePanel(); });
     panel.querySelector(".cs-close").onclick = closePanel;
+    panel.querySelector(".cs-about").onclick = () => { if (window.openAbout) window.openAbout(); };
     panel.querySelector(".cs-google").onclick = linkGoogle;
     panel.querySelector(".cs-danger").onclick = () => { if (pendingCred) switchToExisting(pendingCred); };
 }
