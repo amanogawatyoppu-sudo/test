@@ -133,6 +133,7 @@ await check("英語表示でも最後まで通る", async (page) => {
   await tap(page); await waitPhase(page, "special");
   const txt = await page.evaluate(() => document.getElementById("gachaReveal").innerText);
   assert.ok(txt.includes("Echizen Soba Sage"), "english name");
+  assert.ok(txt.includes("\u201cHo ho") && !txt.includes("\u300c"), "english quote marks");
   await runThrough(page);
   assert.strictEqual(await done(page), 1);
 }, { lang: "en" });
@@ -220,6 +221,16 @@ await check("横向きスマホでも初登場演出とカードが画面に収�
   await page.waitForTimeout(1500);
   const sp = await page.evaluate(() => { const q = document.querySelector("#gachaReveal .grSpQuote").getBoundingClientRect(), b = document.querySelector("#gachaReveal .grBig").getBoundingClientRect(), h = document.querySelector("#gachaReveal .grSpecial .grHint").getBoundingClientRect(); return { bigTop: b.top, bigBottom: b.bottom, qBottom: q.bottom, hintTop: h.top, H: innerHeight }; });
   assert.ok(sp.bigTop >= 0 && sp.bigBottom <= sp.H && sp.qBottom <= sp.hintTop, JSON.stringify(sp));
+});
+
+await check("スキップした後に鐘が鳴らない", async (page) => {
+  await page.evaluate(() => { window.__osc = 0; const orig = audioContext.createOscillator.bind(audioContext); audioContext.createOscillator = () => { window.__osc++; return orig(); }; });
+  await start(page, [{ id: "honda", rarity: "SR", dup: true }, { id: "minarai", rarity: "N", dup: true }]);
+  await waitPhase(page, "card");
+  await page.evaluate(() => { document.getElementById("gachaReveal").click(); document.querySelector("#gachaReveal .grSkip").click(); });
+  const before = await page.evaluate(() => window.__osc);
+  await page.waitForTimeout(400);
+  assert.strictEqual(await page.evaluate(() => window.__osc), before);
 });
 
 await browser.close();
