@@ -1,4 +1,5 @@
 /* ===== ガチャ演出（タメ → 1体ずつ → 初登場） ===== */
+/* color-mix() が使えない古い端末（iOS 16.1以前など）向けに、直前に単色の指定を置いている */
 #gachaReveal { display: none; position: fixed; inset: 0; z-index: 430; background: #07060a; color: #fff; overflow: hidden;
   font-family: 'Zen Old Mincho', serif; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; cursor: pointer;
   --glow: #ffe9c2; --rc: #aaaaaa; }
@@ -17,7 +18,8 @@
 @keyframes grBlink { 50% { opacity: 0.3; } }
 
 /* --- タメ：のれんと釜 --- */
-.grCharge { background: radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 60%); transition: background 0.4s; }
+.grCharge { background: radial-gradient(ellipse at 50% 70%, rgba(255,233,194,0.18), transparent 60%);
+  background: radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--glow) 22%, transparent), transparent 60%); transition: background 0.4s; }
 .grNoren { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(92vw, 520px); height: 30vh; display: flex; gap: 6px; }
 .grNoren span { flex: 1; background: linear-gradient(#1d2a5a, #142046); border-bottom: 3px solid #0c1430; border-radius: 0 0 6px 6px;
   display: flex; align-items: center; justify-content: center; font-size: min(11vw, 64px); color: #f4efe2;
@@ -38,7 +40,7 @@
   filter: blur(10px); animation: grSteam 1.8s ease-in infinite; }
 .grSteam:nth-child(2) { margin-left: -50px; animation-delay: -0.6s; }
 .grSteam:nth-child(3) { margin-left: 30px; animation-delay: -1.2s; }
-#gachaReveal.lit .grSteam { background: color-mix(in srgb, var(--glow) 60%, white); animation-duration: 0.9s; }
+#gachaReveal.lit .grSteam { background: rgba(255,255,255,0.7); background: color-mix(in srgb, var(--glow) 60%, white); animation-duration: 0.9s; }
 @keyframes grSteam { from { transform: translate(-50%, 0) scale(0.6); opacity: 0.8; } to { transform: translate(-50%, -150px) scale(2.2); opacity: 0; } }
 .grChargeText { position: absolute; bottom: 64px; left: 0; right: 0; text-align: center; font-size: 16px; color: rgba(255,255,255,0.8); }
 .grFlash { position: absolute; inset: 0; pointer-events: none; background: var(--glow); opacity: 0; }
@@ -48,7 +50,8 @@
 @keyframes grShake { 0%,100% { transform: none; } 20% { transform: translate(-6px, 3px); } 40% { transform: translate(5px, -4px); } 60% { transform: translate(-4px, -2px); } 80% { transform: translate(4px, 4px); } }
 
 /* --- 1体ずつ：カード --- */
-.grCardWrap { background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc) 18%, transparent), transparent 60%); }
+.grCardWrap { background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.08), transparent 60%);
+  background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--rc) 18%, transparent), transparent 60%); }
 .grCounter { position: absolute; top: 18px; left: 16px; font-size: 16px; color: rgba(255,255,255,0.8); }
 .grCard { position: relative; width: min(64vw, 230px); aspect-ratio: 23 / 32; perspective: 900px; animation: grDeal 0.35s ease-out both; }
 @keyframes grDeal { from { transform: translateY(40px) scale(0.85); opacity: 0; } }
@@ -71,8 +74,10 @@
 @keyframes grBurst { from { box-shadow: 0 0 0 0 var(--rc); opacity: 1; } to { box-shadow: 0 0 0 60vmax transparent; opacity: 0; } }
 
 /* --- 初登場 --- */
-.grSpecial { background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 40%, #07060a), #07060a 70%); }
+.grSpecial { background: radial-gradient(circle at 50% 40%, #3a3045, #07060a 70%);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--rc) 40%, #07060a), #07060a 70%); }
 .grRays { position: absolute; left: 50%; top: 38%; width: 160vmax; height: 160vmax; transform: translate(-50%, -50%); display: none;
+  background: repeating-conic-gradient(rgba(255,204,0,0.4) 0 8deg, transparent 8deg 20deg);
   background: repeating-conic-gradient(color-mix(in srgb, var(--rc) 45%, transparent) 0 8deg, transparent 8deg 20deg);
   animation: grSpin 14s linear infinite; pointer-events: none; }
 .grSpecial.ssr .grRays { display: block; }

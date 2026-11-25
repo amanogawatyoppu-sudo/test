@@ -20,7 +20,7 @@
         try {
             const a = typeof audioContext !== "undefined" ? audioContext : null;
             if (!a || a.state === "closed") return null;
-            if (a.state === "suspended") a.resume();
+            if (a.state === "suspended") { const r = a.resume(); if (r && r.catch) r.catch(() => {}); }
             return a;
         } catch (e) { return null; }
     }
@@ -158,7 +158,7 @@
         st.flipped = true;
         $(".grCard").classList.add("flipped");
         sfx.flip();
-        setTimeout(() => sfx.bell(s.rarity), 180);
+        later(() => sfx.bell(s.rarity), 180); // スキップしたら鳴らさない
         $(".grCardWrap .grHint").textContent = T("タップで次へ", "Tap for next");
         // 初登場は、めくったカードを少し見せてから自動で特別演出へ
         if (s.special) later(showSpecial, 900);
@@ -178,7 +178,7 @@
         box.querySelector(".grSpName").textContent = nameOf(c);
         const q = T(c.quote || "", c.quoteEn || c.quote || "");
         const qe = box.querySelector(".grSpQuote");
-        qe.textContent = q ? `「${q}」` : ""; qe.style.display = q ? "" : "none";
+        qe.textContent = q ? T(`「${q}」`, `\u201c${q}\u201d`) : ""; qe.style.display = q ? "" : "none";
         box.querySelector(".grHint").textContent = T("タップで次へ", "Tap for next");
         const conf = box.querySelector(".grConfetti");
         conf.innerHTML = "";
