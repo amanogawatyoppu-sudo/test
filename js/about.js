@@ -21,7 +21,7 @@
         { ja: "福井県観光連盟「ふくいドットコム」越前おろしそば特集", en: "Fukui Prefectural Tourism Federation: Echizen Oroshi Soba", url: "https://www.fuku-e.com/feature/oroshisoba" },
     ];
     const CREDITS = [
-        { ja: "BGM（一部）：Maniira（OpenTracks）", en: "BGM (some tracks): Maniira (OpenTracks)" },
+        { ja: "BGM（一部）：伊藤ケイスケ「低音衝動」、Maniira「有明のユーロビート」「桜城にて」「和の街並み」（OpenTracks／旧DOVA-SYNDROME）", en: "BGM (some tracks): Keisuke Ito \"Teion Shodo\"; Maniira \"Ariake no Eurobeat\", \"Sakurajo nite\", \"Wa no Machinami\" (OpenTracks / formerly DOVA-SYNDROME)" },
         { ja: "地形：Terrain Tiles（AWS Open Data・SRTM ほか）", en: "Terrain: Terrain Tiles (AWS Open Data, SRTM and others)" },
         { ja: "陸地と県境：地球地図日本（国土地理院）", en: "Coastline and borders: Global Map Japan (GSI)" },
         { ja: "3D表示：three.js（MIT License）", en: "3D: three.js (MIT License)" },

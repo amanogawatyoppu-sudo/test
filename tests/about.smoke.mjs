@@ -109,6 +109,12 @@ await check("redirect: forwards with query", async (page) => {
   assert.ok(page.url().endsWith("/?x=1#h"), page.url());
 });
 
+await check("about: credits name every BGM composer", async (page) => {
+  await openGame(page); await page.evaluate(() => openAbout());
+  const txt = await page.evaluate(() => document.querySelector("#aboutPanel .ab-credits").textContent);
+  for (const n of ["伊藤ケイスケ", "Maniira", "地球地図日本", "three.js"]) assert.ok(txt.includes(n), n);
+});
+
 await browser.close(); server.kill();
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);
