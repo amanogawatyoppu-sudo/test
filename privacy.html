@@ -37,19 +37,19 @@
   <p>このページは、ブラウザゲーム「無限そば道」が、遊ぶ人のどんな情報を、どこに保存し、何に使うかを説明するものです。</p>
 
   <h2>1. 端末（ブラウザ）に保存するもの</h2>
-  <p>遊んだ記録や設定（言語・BGM・ストーリーの進み具合など）と、自動で作る端末ID（ランダムな文字列）を、ブラウザの保存領域（localStorage、名前が <code>sobamichi_</code> で始まるもの）に保存します。ログイン中のプレイヤー名と合言葉は、ブラウザを閉じるまでの間だけ sessionStorage に保存します。この情報はお使いの端末の中にあり、ブラウザのデータを消すと消えます。</p>
+  <p>遊んだ記録や設定（言語・BGM・ストーリーの進み具合など）と、自動で作る端末ID（ランダムな文字列）を、ブラウザの保存領域（localStorage、名前が <code>sobamichi_</code> で始まるもの）に保存します。番付・ガチャで使うプレイヤー名と、自動ログイン用にゲームが自動で作る合言葉（ランダムな文字列。パスワードの代わり）も localStorage に保存します。前の方式の「名前＋パスワード」でログインした場合は、そのパスワードをブラウザを閉じるまでの間だけ sessionStorage に保存します。この情報はお使いの端末の中にあり、ブラウザのデータを消すと消えます。</p>
 
   <h2>2. 自動ログインとセーブの引き継ぎ（Firebase）</h2>
   <ul>
     <li>この項目は、クラウドセーブを有効にしている場合の説明です（有効にしている場合だけ、設定画面に「セーブの引き継ぎ」が使える状態で表示されます）。</li>
     <li>ゲームを開くと、Google の Firebase という仕組みで、名前やメールアドレスを使わない「ゲスト用のID」が自動で作られます。</li>
-    <li>セーブデータ（そば粉・キャラ・進み具合など）は、このIDにひもづけて Firebase（Firestore）に保存します。読み書きできるのは、そのIDの本人だけです。</li>
+    <li>セーブデータ（進み具合・設定や、番付・ガチャの自動ログイン用の合言葉など）は、このIDにひもづけて Firebase（Firestore）に保存します。読み書きできるのは、そのIDの本人だけです。</li>
     <li>設定画面で「Googleアカウントと連携」を選んだ場合だけ、メールアドレス・表示名・プロフィール画像などのGoogleアカウント情報が Firebase に渡ります。ゲームではメールアドレスを本人の設定画面に表示するためだけに使い、ほかの人には見えません。</li>
   </ul>
 
   <h2>3. 番付・ガチャ・日替わり（Google Apps Script）</h2>
   <ul>
-    <li>番付への登録やガチャを使うと、入力したプレイヤー名・合言葉・スコア・そば粉やキャラの記録を、Google Apps Script（Googleスプレッドシート）に保存します。ランクマッチのスコアには、プレイヤーを見分けるための端末IDもいっしょに保存します。</li>
+    <li>番付への登録やガチャを使うと、プレイヤー名・合言葉（自動ログイン用のもの、または前の方式で入力したパスワード）・スコア・そば粉やキャラの記録を、Google Apps Script（Googleスプレッドシート）に保存します。ランクマッチのスコアには、プレイヤーを見分けるための端末IDもいっしょに保存します。</li>
     <li>プレイヤー名とスコア・順位は、番付として誰でも見られる形で表示されます。本名は入れないでください。</li>
     <li>合言葉は、ガチャなどの記録を本人だけが使えるようにするためのものです。合言葉は作った人が見られる形で保存されるので、ほかのサービスで使っているパスワードは使わないでください。</li>
   </ul>
@@ -78,19 +78,19 @@
   <p>This page explains what information the browser game "Mugen Soba-do" stores about players, where, and why.</p>
 
   <h2>1. Stored on your device</h2>
-  <p>Progress and settings (language, music, story progress, etc.) and an automatically generated device ID (a random string) are stored in your browser's localStorage under names starting with <code>sobamichi_</code>. While you are logged in, your player name and passphrase are kept in sessionStorage until you close the browser. They stay on your device and are removed if you clear your browser data.</p>
+  <p>Progress and settings (language, music, story progress, etc.) and an automatically generated device ID (a random string) are stored in your browser's localStorage under names starting with <code>sobamichi_</code>. Your player name for the rankings and gacha, and a random sign-in key the game creates automatically (used instead of a password), are also stored in localStorage. If you log in the older way with a name and password, that password is kept in sessionStorage only until you close the browser. They stay on your device and are removed if you clear your browser data.</p>
 
   <h2>2. Auto sign-in and save transfer (Firebase)</h2>
   <ul>
     <li>This section applies when cloud save is enabled (the save transfer option in Settings is then available).</li>
     <li>When you open the game, Google Firebase automatically creates a guest ID that does not use your name or email.</li>
-    <li>Your save (soba flour, characters, progress, etc.) is stored in Firebase (Firestore) under that ID. Only the owner of that ID can read or write it.</li>
+    <li>Your save (progress, settings, and the sign-in key for the rankings and gacha, etc.) is stored in Firebase (Firestore) under that ID. Only the owner of that ID can read or write it.</li>
     <li>Only if you choose "Link Google account" in Settings, Google account information such as the email address, display name and profile picture is passed to Firebase. The game uses only the email address, shown on your own Settings screen, and it is not visible to anyone else.</li>
   </ul>
 
   <h2>3. Rankings, gacha and daily challenge (Google Apps Script)</h2>
   <ul>
-    <li>When you register on the rankings or use the gacha, the player name, passphrase, scores and soba flour / character records you enter are stored with Google Apps Script (Google Sheets). Ranked-match scores are also stored with your device ID to tell players apart.</li>
+    <li>When you register on the rankings or use the gacha, the player name, passphrase (the automatic sign-in key, or a password entered the older way), scores and soba flour / character records are stored with Google Apps Script (Google Sheets). Ranked-match scores are also stored with your device ID to tell players apart.</li>
     <li>Player names, scores and ranks are shown publicly on the rankings. Please don't use your real name.</li>
     <li>The passphrase keeps your gacha and other records for you only. It is stored in a form readable by the developer, so please don't use a password you use for other services.</li>
   </ul>

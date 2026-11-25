@@ -49,6 +49,17 @@
  *
  * ▼v9での追加点（キャラ追加）
  * 14) ガチャの排出表（GACHA_POOL）に6体を追加して16体にした（N4 / R5 / SR4 / SSR3）。
+ *
+ * ▼v10での追加点（自動ログイン：パスワード入力をなくす）
+ * 15) players シートに「キー」列を追加（初回アクセス時に自動で足す）。キーはゲームが端末で作る
+ *     長いランダムな合言葉（"sk_" + 英数字32文字）で、パスワードの代わりに毎回自動で送られる。
+ *     端末のキーは Google連携（Firebase）のセーブにも入るので、同じGoogleでログインすれば別の端末でも同じ職人になる。
+ * 16) action = register：名前だけで新しい職人を作る（パスワードなし・キーで認証）。
+ * 17) action = link_key：前からの「名前＋パスワード」の職人にキーを付ける（データの引き継ぎ）。
+ *     すでにキーがある職人なら、そのキーを返す（別の端末で引き継いでも、前の端末が締め出されない）。
+ * 18) profile / earn / gacha / select / daily_submit は、名前＋パスワードの代わりに key でも認証できる。
+ *     古い「名前＋パスワード」もそのまま使える。パスワードの無い（キーだけの）職人には、パスワードではログインできない。
+ * 19) API_VERSION を 7 にした。
  */
 
 function doGet(e) {
@@ -160,6 +171,14 @@ function doPost(e) {
     }
 
     // --- v5: マイページ・キャラ・ガチャ ---
+    // --- v10: 自動ログイン（名前だけで登録／前のアカウントの引き継ぎ）---
+    if (postData.action === "register") {
+      return handleRegister(postData, ss);
+    }
+    if (postData.action === "link_key") {
+      return handleLinkKey(postData, ss);
+    }
+
     if (PLAYER_ACTIONS.indexOf(postData.action) >= 0) {
       return handlePlayerAction(postData, ss);
     }
@@ -315,11 +334,15 @@ function handleAuth(postData, ss) {
     userSheet.appendRow(["名前", "パスワード", "累計極上", "UUID", "最終更新"]);
   }
 
+  // v10: 空のパスワードでは入れない（キーだけの職人に、空のパスワードで入られないように）
+  if (!pass) return jsonOut({ status: "wrong_pass" });
+
   const userData = userSheet.getDataRange().getValues();
   const colsForExisting = getPlayerColumns(userData[0]);
   for (let i = 1; i < userData.length; i++) {
     if (String(userData[i][colsForExisting.nameCol]).trim() === name) {
-      if (String(userData[i][colsForExisting.passCol]).trim() !== pass) {
+      const storedPass = String(userData[i][colsForExisting.passCol]).trim();
+      if (!storedPass || storedPass !== pass) { // v10: キーだけの職人（パスワード無し）はパスワードでは入れない
         return ContentService.createTextOutput(JSON.stringify({ status: "wrong_pass" }))
           .setMimeType(ContentService.MimeType.JSON);
       }
@@ -389,15 +412,16 @@ function toSafeNumber(v) {
 }
 
 function getPlayerColumns(header) {
-  let nameCol = 0, passCol = 1, dateCol = -1, perfectCol = -1;
+  let nameCol = 0, passCol = 1, dateCol = -1, perfectCol = -1, keyCol = -1;
   header.forEach((h, i) => {
     const t = String(h).toLowerCase().trim();
     if (t === "name" || t === "名前") nameCol = i;
     else if (t === "pass" || t === "password" || t === "パスワード") passCol = i;
     else if (t === "perfectcount" || t === "累計極上") perfectCol = i;
     else if (t === "date" || t === "最終更新" || t === "登録日") dateCol = i;
+    else if (t === "key" || t === "キー") keyCol = i;
   });
-  return { nameCol, passCol, dateCol, perfectCol };
+  return { nameCol, passCol, dateCol, perfectCol, keyCol };
 }
 
 function ensurePlayersHeader(sheet) {
@@ -536,7 +560,7 @@ function runEnsurePlayersHeader() {
 // =====================================================================
 
 // フロント(index.html)はdoGetのapiVersionがこの値以上のときだけ新機能を使う
-const API_VERSION = 6;
+const API_VERSION = 7;
 
 const PLAYER_ACTIONS = ["profile", "earn", "gacha", "select", "daily_submit"];
 
@@ -580,7 +604,9 @@ function verifyPlayer(ss, name, pass) {
   const cols = getPlayerColumns(data[0]);
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][cols.nameCol]).trim() === name) {
-      return String(data[i][cols.passCol]).trim() === pass ? "ok" : "wrong_pass";
+      const stored = String(data[i][cols.passCol]).trim();
+      // v10: キーだけの職人（パスワード無し）はパスワードでは入れない
+      return stored && stored === pass ? "ok" : "wrong_pass";
     }
   }
   return "no_user";
@@ -670,10 +696,17 @@ function rollCharacter(guaranteeSR) {
 }
 
 function handlePlayerAction(postData, ss) {
-  const name = String(postData.name || "").trim();
-  const pass = String(postData.pass || "").trim();
-  const auth = verifyPlayer(ss, name, pass);
-  if (auth !== "ok") return jsonOut({ status: auth });
+  let name;
+  if (postData.key) {
+    // v10: 自動ログイン（キー）。キーから職人の名前を探す
+    name = findPlayerNameByKey(ss, String(postData.key));
+    if (!name) return jsonOut({ status: "no_user" });
+  } else {
+    name = String(postData.name || "").trim();
+    const pass = String(postData.pass || "").trim();
+    const auth = verifyPlayer(ss, name, pass);
+    if (auth !== "ok") return jsonOut({ status: auth });
+  }
 
   const sheet = getProfileSheet(ss);
   const loaded = loadProfile(sheet, name);
@@ -687,7 +720,7 @@ function handlePlayerAction(postData, ss) {
   // マイページ表示用：プロフィール＋戦績
   if (postData.action === "profile") {
     if (loaded.row < 0) saveProfile(sheet, -1, name, p); // 初回アクセスで作成（初期そば粉つき）
-    return jsonOut({ status: "ok", profile: publicProfile(p), stats: getPlayerStats(ss, name) });
+    return jsonOut({ status: "ok", name: name, profile: publicProfile(p), stats: getPlayerStats(ss, name) });
   }
 
   // プレイ終了時のそば粉獲得（スコアに応じて。短時間の連続送信は無効）
@@ -831,4 +864,122 @@ function isAllowedName(name) {
   if (!name || name === "名無し" || name.length > NAME_MAX_LENGTH) return false;
   const n = normalizeName(name);
   return !NG_WORDS.some(w => n.indexOf(w) >= 0);
+}
+
+// =====================================================================
+// v10: 自動ログイン（キー）
+// =====================================================================
+
+// キーの形：sk_ + 英数字（小文字の0-9a-f）32文字。数字だけにならないので、シートで数値に化けない
+function isValidKey(key) {
+  return /^sk_[0-9a-f]{32}$/.test(String(key || ""));
+}
+
+function getPlayersSheet(ss) {
+  let sheet = ss.getSheetByName("players");
+  if (!sheet) {
+    sheet = ss.insertSheet("players");
+    sheet.appendRow(["名前", "パスワード", "累計極上", "UUID", "最終更新"]);
+  }
+  ensurePlayersHeader(sheet);
+  return sheet;
+}
+
+// players シートに「キー」列が無ければ末尾に足す。列番号（0始まり）を返す
+function ensureKeyColumn(sheet) {
+  const lastCol = sheet.getLastColumn();
+  const header = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const cols = getPlayerColumns(header);
+  if (cols.keyCol >= 0) return cols.keyCol;
+  sheet.getRange(1, lastCol + 1).setValue("キー");
+  sheet.getRange(1, lastCol + 1, sheet.getMaxRows(), 1).setNumberFormat("@");
+  return lastCol;
+}
+
+function findPlayerNameByKey(ss, key) {
+  if (!isValidKey(key)) return "";
+  const sheet = ss.getSheetByName("players");
+  if (!sheet || sheet.getLastRow() < 2) return "";
+  const data = sheet.getDataRange().getValues();
+  const cols = getPlayerColumns(data[0]);
+  if (cols.keyCol < 0) return "";
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][cols.keyCol]).trim() === key) return String(data[i][cols.nameCol]).trim();
+  }
+  return "";
+}
+
+// 名前だけで新しい職人を作る。{ name, key } → { status: "ok", name, key, profile, stats }
+// status: "bad_key"（キーの形が変）/ "bad_name"（使えない名前）/ "name_taken"（その名前はもういる）
+function handleRegister(postData, ss) {
+  const name = String(postData.name || "").trim();
+  const key = String(postData.key || "");
+  if (!isValidKey(key)) return jsonOut({ status: "bad_key" });
+
+  // 同じキーで登録済み（通信が切れて送り直した等）なら、その職人をそのまま返す
+  const already = findPlayerNameByKey(ss, key);
+  if (already) return jsonOut(Object.assign({ status: "ok", name: already, key: key }, profileReply(ss, already)));
+
+  if (!isAllowedName(name)) return jsonOut({ status: "bad_name" });
+
+  const sheet = getPlayersSheet(ss);
+  const keyCol = ensureKeyColumn(sheet);
+  const data = sheet.getDataRange().getValues();
+  const cols = getPlayerColumns(data[0]);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][cols.nameCol]).trim() === name) return jsonOut({ status: "name_taken" });
+  }
+
+  const newRow = new Array(data[0].length).fill("");
+  newRow[cols.nameCol] = name;
+  newRow[cols.passCol] = ""; // パスワードなし（キーだけで入る）
+  if (cols.dateCol >= 0) newRow[cols.dateCol] = new Date();
+  if (cols.perfectCol >= 0) newRow[cols.perfectCol] = 0;
+  newRow[keyCol] = key;
+  sheet.appendRow(newRow);
+  const r = sheet.getLastRow();
+  if (cols.perfectCol >= 0) sheet.getRange(r, cols.perfectCol + 1).setNumberFormat("0");
+  if (cols.dateCol >= 0) sheet.getRange(r, cols.dateCol + 1).setNumberFormat("yyyy/MM/dd HH:mm:ss");
+
+  return jsonOut(Object.assign({ status: "ok", name: name, key: key }, profileReply(ss, name)));
+}
+
+// 前からの「名前＋パスワード」の職人にキーを付ける（引き継ぎ）。{ name, pass, key } → { status: "ok", name, key, profile, stats }
+// その職人にもうキーがあれば、送られたキーではなく今のキーを返す（ほかの端末を締め出さないため）。
+function handleLinkKey(postData, ss) {
+  const name = String(postData.name || "").trim();
+  const pass = String(postData.pass || "").trim();
+  const key = String(postData.key || "");
+  if (!isValidKey(key)) return jsonOut({ status: "bad_key" });
+  const auth = verifyPlayer(ss, name, pass);
+  if (auth !== "ok") return jsonOut({ status: auth });
+
+  const sheet = getPlayersSheet(ss);
+  const keyCol = ensureKeyColumn(sheet);
+  const data = sheet.getDataRange().getValues();
+  const cols = getPlayerColumns(data[0]);
+  let row = -1;
+  for (let i = 1; i < data.length; i++) {
+    const rowName = String(data[i][cols.nameCol]).trim();
+    if (rowName === name && row < 0) row = i;
+    else if (String(data[i][keyCol]).trim() === key) return jsonOut({ status: "bad_key" }); // ほかの職人のキーとかぶった
+  }
+  if (row < 0) return jsonOut({ status: "no_user" });
+
+  let useKey = String(data[row][keyCol]).trim();
+  if (!isValidKey(useKey)) {
+    useKey = key;
+    const cell = sheet.getRange(row + 1, keyCol + 1);
+    cell.setNumberFormat("@");
+    cell.setValue(useKey);
+  }
+  return jsonOut(Object.assign({ status: "ok", name: name, key: useKey }, profileReply(ss, name)));
+}
+
+// プロフィール（無ければ初期そば粉つきで作る）と戦績
+function profileReply(ss, name) {
+  const sheet = getProfileSheet(ss);
+  const loaded = loadProfile(sheet, name);
+  if (loaded.row < 0) saveProfile(sheet, -1, name, loaded.profile);
+  return { profile: publicProfile(loaded.profile), stats: getPlayerStats(ss, name) };
 }

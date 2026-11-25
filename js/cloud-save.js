@@ -9,8 +9,10 @@
 // users/{自分のユーザーID} に写す。読み込み時はクラウドの方が新しければ端末に戻して再読込する。
 // そのため index.html 側のゲーム処理は書き換えていない（ストーリーモードなどで増えた記録も自動で同期される）。
 //
-// 番付・ガチャ（そば粉・職人）は今までどおり GAS（gas/Code.gs）が担当する。
-// そのアカウント（名前＋パスワード）のログイン・ログアウトも、この設定画面に並べる（中身は index.html の renderAccountSettings）。
+// 番付・ガチャ（そば粉・職人）は今までどおり GAS（gas/Code.gs）が担当する（ズル防止のため、ガチャはサーバーで引く）。
+// その職人の自動ログイン用の合言葉（キー）は localStorage の sobamichi_player にあり、ほかの記録と一緒にここで同期される。
+// だから Google と連携すれば、別の端末でも同じ職人（そば粉・ガチャの職人）に戻れる。
+// 職人の欄も、この設定画面に並べる（中身は index.html の renderAccountSettings）。
 // npm は不要。Firebase は CDN から ES モジュールとして直接読み込む。
 
 import { firebaseConfig } from "./firebase-config.js";
@@ -25,6 +27,7 @@ const META_KEY = "sobamichi_cloud_meta";      // { savedAt: 端末で最後に�
 const RELOAD_FLAG = "sobamichi_cloud_reloaded"; // 再読込を1回だけにするための印（sessionStorage）
 const PUSH_DELAY_MS = 3000;
 const SAVE_VERSION = 1;
+const PLAYER_KEY = "sobamichi_player"; // ガチャ・番付の職人の自動ログイン用（index.html）
 
 // ゲームの言語設定（index.html が <html lang> に入れている）に合わせる
 const t = (ja, en) => (document.documentElement.lang === "en" ? en : ja);
@@ -50,9 +53,11 @@ function localSavedAt() {
 function setLocalSavedAt(ms) {
     origSetItem.call(localStorage, META_KEY, JSON.stringify({ savedAt: ms }));
 }
-// クラウドのデータで端末を置き換える
+// クラウドのデータで端末を置き換える。
+// ただし、クラウド側にガチャの職人（sobamichi_player）が無く、端末には有るときは、端末の職人を残す
+// （そば粉・ガチャの職人に戻れなくならないように）。
 function applyToLocal(save, savedAt) {
-    Object.keys(readLocalSave()).forEach(k => { if (!(k in save)) origRemoveItem.call(localStorage, k); });
+    Object.keys(readLocalSave()).forEach(k => { if (!(k in save) && k !== PLAYER_KEY) origRemoveItem.call(localStorage, k); });
     Object.entries(save).forEach(([k, v]) => {
         if (k.startsWith(PREFIX) && !SKIP_KEYS.has(k) && typeof v === "string") origSetItem.call(localStorage, k, v);
     });
@@ -208,6 +213,8 @@ async function switchToExisting(cred) {
         if (cloud && cloud.save) applyToLocal(cloud.save, Number(cloud.clientSavedAt) || Date.now());
         else { setLocalSavedAt(Date.now()); await pushToCloud(); }
         try { sessionStorage.removeItem("sobamichi_account"); sessionStorage.removeItem("sobamichi_profile"); } catch (e) {}
+        // 端末に残したガチャの職人（Google側に無かったとき）もクラウドへ
+        if (localStorage.getItem(PLAYER_KEY) && !(cloud && cloud.save && cloud.save[PLAYER_KEY])) await pushToCloud();
         location.reload();
     } catch (e) {
         setMsg(linkErrorText(e));
@@ -295,7 +302,7 @@ function renderPanel() {
         note.textContent = "";
     } else if (SobaCloud.isGuest) {
         status.innerHTML = `${t("いまは", "You're playing as a")} <b style="color:gold;">${t("ゲスト", "guest")}</b>${t(" で遊んでいる。", ".")}<br>${t("セーブは自動でクラウドに保存されている。", "Your progress is backed up automatically.")}`;
-        note.textContent = t("※ ゲストのままだと、ブラウザのデータを消したり機種変更したりするとセーブが戻せない。Googleと連携しておけば、別の端末でも続きから遊べる。", "As a guest, clearing browser data or changing devices loses your save. Link Google to keep it.");
+        note.textContent = t("※ ゲストのままだと、ブラウザのデータを消したり機種変更したりするとセーブが戻せない。Googleと連携しておけば、別の端末でも続きから遊べる（ガチャの職人・そば粉も）。", "As a guest, clearing browser data or changing devices loses your save. Link Google to keep it (gacha partners and soba flour too).");
         btn.textContent = t("Googleアカウントと連携", "Link Google account");
         btn.disabled = false;
     } else {
