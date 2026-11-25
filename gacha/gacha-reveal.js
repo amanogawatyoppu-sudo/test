@@ -8,6 +8,7 @@
     const reduceMotion = () => { try { return matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; } };
 
     let root = null;
+    let waitDismissed = false; // 通信待ちの間にプレイヤーが閉じた
     let st = null; // { steps, i, onDone, flipped, specialShown, specialAt, ready }
     let timers = [];
     const later = (fn, ms) => timers.push(setTimeout(fn, ms));
@@ -69,7 +70,11 @@
 <section class="grSpecial"><div class="grRays"></div><div class="grConfetti"></div><div class="grBig"></div><div class="grSpRar"></div><div class="grSpName"></div><div class="grSpQuote"></div><div class="grStamp">NEW!</div><div class="grHint"></div></section>`;
         document.body.appendChild(root);
         root.addEventListener("click", onTap);
-        $(".grSkip").addEventListener("click", (e) => { e.stopPropagation(); finish(); });
+        $(".grSkip").addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (st) { finish(); return; }
+            waitDismissed = true; close(); // 通信が返らないときの逃げ道
+        });
     }
     const setPhase = (p) => { root.dataset.phase = p; };
     const chr = (id) => (typeof CHARACTERS !== "undefined" && CHARACTERS[id]) || { name: id, nameEn: id, emoji: "❔", r: "N" };
@@ -90,18 +95,24 @@
         build();
         clearTimers();
         st = null;
+        waitDismissed = false;
         root.classList.add("open");
-        root.classList.remove("lit", "shake");
+        root.classList.remove("lit", "shake", "canClose");
         root.style.setProperty("--glow", WAIT_GLOW);
         $(".grSkip").textContent = T("スキップ ⏭", "Skip ⏭");
         $(".grChargeText").textContent = T("釜に火を入れている…", "Firing up the pot...");
         setPhase("charge");
         sfx.rumble();
+        later(() => { $(".grSkip").textContent = T("閉じる ✕", "Close ✕"); root.classList.add("canClose"); }, GachaReveal.WAIT_CLOSE_MS);
     }
 
     function play(results, onDone) {
+        // 待っている間に閉じられていたら、演出は出さずに結果へ進む
+        if (waitDismissed) { waitDismissed = false; if (onDone) onDone(); return; }
         if (!root || !root.classList.contains("open")) begin();
         clearTimers();
+        root.classList.remove("canClose");
+        $(".grSkip").textContent = T("スキップ ⏭", "Skip ⏭");
         st = { steps: GachaCore.revealSteps(results), i: 0, onDone, flipped: false, specialShown: false, specialAt: 0, ready: false };
         if (!st.steps.length) { finish(); return; }
         const plan = GachaCore.chargePlan(GachaCore.bestRarity(results), Math.random);
@@ -207,7 +218,7 @@
 
     function close() {
         clearTimers();
-        if (root) { root.classList.remove("open", "lit", "shake"); root.dataset.phase = ""; }
+        if (root) { root.classList.remove("open", "lit", "shake", "canClose"); root.dataset.phase = ""; }
     }
     function finish() {
         const cb = st && st.onDone;
@@ -215,8 +226,10 @@
         close();
         if (cb) cb();
     }
-    function cancel() { st = null; close(); }
+    function cancel() { st = null; waitDismissed = false; close(); }
     const isOpen = () => !!root && root.classList.contains("open");
 
-    window.GachaReveal = { begin, play, cancel, isOpen };
+    // WAIT_CLOSE_MS: 通信待ちがこれより長いと「閉じる」を出す
+    const GachaReveal = { begin, play, cancel, isOpen, WAIT_CLOSE_MS: 8000 };
+    window.GachaReveal = GachaReveal;
 })();

@@ -195,6 +195,33 @@ await check("演出中にもう一度引いても始まらない", async (page) 
   await runThrough(page);
 });
 
+await check("通信が返らないとき、しばらくすると閉じられる", async (page) => {
+  await page.evaluate(() => { window.__done = 0; GachaReveal.WAIT_CLOSE_MS = 300; GachaReveal.begin(); });
+  const skipShown = () => page.evaluate(() => getComputedStyle(document.querySelector("#gachaReveal .grSkip")).display !== "none");
+  assert.strictEqual(await skipShown(), false);
+  await page.waitForTimeout(450);
+  assert.strictEqual(await skipShown(), true);
+  await page.evaluate(() => document.querySelector("#gachaReveal .grSkip").click());
+  assert.strictEqual(await isOpen(page), false);
+  // あとから結果が届いたら、演出は出さずに結果一覧へ
+  await page.evaluate(() => GachaReveal.play([{ id: "minarai", rarity: "N", dup: true }], () => { window.__done++; }));
+  assert.strictEqual(await done(page), 1);
+  assert.strictEqual(await isOpen(page), false);
+});
+
+await check("横向きスマホでも初登場演出とカードが画面に収まる", async (page) => {
+  await page.setViewportSize({ width: 844, height: 390 });
+  await start(page, [{ id: "sennin", rarity: "SSR", dup: false }]);
+  await waitPhase(page, "card");
+  await page.waitForTimeout(400);
+  const card = await page.evaluate(() => { const r = document.querySelector("#gachaReveal .grCard").getBoundingClientRect(), h = document.querySelector("#gachaReveal .grCardWrap .grHint").getBoundingClientRect(); return { top: r.top, bottom: r.bottom, hintTop: h.top }; });
+  assert.ok(card.top >= 0 && card.bottom <= card.hintTop, JSON.stringify(card));
+  await tap(page); await waitPhase(page, "special");
+  await page.waitForTimeout(1500);
+  const sp = await page.evaluate(() => { const q = document.querySelector("#gachaReveal .grSpQuote").getBoundingClientRect(), b = document.querySelector("#gachaReveal .grBig").getBoundingClientRect(), h = document.querySelector("#gachaReveal .grSpecial .grHint").getBoundingClientRect(); return { bigTop: b.top, bigBottom: b.bottom, qBottom: q.bottom, hintTop: h.top, H: innerHeight }; });
+  assert.ok(sp.bigTop >= 0 && sp.bigBottom <= sp.H && sp.qBottom <= sp.hintTop, JSON.stringify(sp));
+});
+
 await browser.close();
 server.kill();
 if (failed) { console.log(`${failed} failed`); process.exit(1); }

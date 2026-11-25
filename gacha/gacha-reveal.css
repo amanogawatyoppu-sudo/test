@@ -11,6 +11,7 @@
 .grSkip { position: absolute; top: 12px; right: 12px; z-index: 5; padding: 8px 14px; font-size: 14px; font-family: inherit; font-weight: bold;
   color: #fff; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; cursor: pointer; }
 #gachaReveal[data-phase="charge"] .grSkip { display: none; }
+#gachaReveal[data-phase="charge"].canClose .grSkip { display: block; }
 .grHint { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; font-size: 14px; color: rgba(255,255,255,0.7);
   animation: grBlink 1.4s ease-in-out infinite; }
 @keyframes grBlink { 50% { opacity: 0.3; } }
@@ -92,6 +93,19 @@
 .grConfetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .grConfetti i { position: absolute; top: -20px; width: 8px; height: 14px; animation: grFall linear forwards; }
 @keyframes grFall { to { transform: translateY(110vh) rotate(720deg); } }
+
+/* 横向きスマホ：カードは高さで決め、初登場は絵を左・文字を右に */
+@media (max-height: 500px) and (orientation: landscape) {
+  .grHint { bottom: 8px; }
+  .grCard { width: auto; height: min(74vh, 320px); }
+  #gachaReveal[data-phase="special"] .grSpecial { display: grid; grid-template-columns: auto minmax(0, 420px); grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: 28px; align-items: center; justify-content: center; justify-items: start; }
+  .grSpecial .grBig { grid-column: 1; grid-row: 1 / 6; width: min(70vh, 300px); }
+  .grSpecial .grSpRar { grid-column: 2; grid-row: 2; }
+  .grSpecial .grSpName { grid-column: 2; grid-row: 3; font-size: min(6vw, 32px); }
+  .grSpecial .grSpQuote { grid-column: 2; grid-row: 4; font-size: 14px; }
+  .grStamp { top: 8%; width: 72px; height: 72px; font-size: 20px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   #gachaReveal.shake { animation: none; }
