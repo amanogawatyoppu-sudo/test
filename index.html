@@ -606,6 +606,11 @@ body{ margin:0; min-height:100%; min-height:100dvh; background:black; color:whit
 #nameModalCancel {
   background: none; border: none; color: #666; font-size: 13px; cursor: pointer; text-decoration: underline;
 }
+#nameModalSwitch {
+  display: block; width: 100%; margin: 0 0 12px; padding: 10px; font-size: 14px; line-height: 1.5;
+  background: rgba(255,215,0,0.08); color: #ffe9a8; border: 1px solid rgba(255,215,0,0.45); border-radius: 8px; cursor: pointer;
+  font-family: 'Noto Serif JP', serif;
+}
 
 /* ===== スマホ・タブレット用 A/S/Lボタン（漆塗り×レーン色） =====
    色はレーン画像に合わせる：A=若竹（緑）/ S=金（橙）/ L=藍（青）。
@@ -955,6 +960,7 @@ body.mobileLayout #workerArea { display: none; }
       style="font-size:20px; text-align:center; background:#111; color:white; border:2px solid gold; border-radius:8px; padding:10px 20px; width:100%; box-sizing:border-box; font-family:'Noto Serif JP'; margin-bottom:8px;">
     <div id="nameModalMsg"></div>
     <button id="nameModalConfirm" onclick="confirmRankmaName()">この名で参戦する</button>
+    <button id="nameModalSwitch" type="button" style="display:none;"></button>
     <button data-en="Cancel" id="nameModalCancel" onclick="closeNameModal()">キャンセル</button>
   </div>
 </div>
@@ -2076,22 +2082,72 @@ function playSE(name) {
     source.start(0);
 }
 
-// ===== ログイン（ランクマ参戦・ガチャ・設定 共通）モーダル =====
+// ===== ログイン（ランクマ参戦・ガチャ・今日のそば・設定 共通）モーダル =====
+// v10（GAS の apiVersion 7 以上）から、パスワードは使わない「自動ログイン」になった。
+//   "new"  : はじめての人。職人の名前だけ決める → 端末に合言葉（キー）を自動で作って登録。次からは何も入れずに自動ログイン。
+//   "link" : 前に「名前＋パスワード」で遊んでいた人。一度だけ名前とパスワードを入れると、そば粉・職人がそのまま引き継がれ、次からは自動ログイン。
+//   "old"  : サーバー(GAS)がまだ古いとき用。今までどおり名前＋パスワード。
+// キーは localStorage の sobamichi_player に入り、Google連携（js/cloud-save.js）のセーブにも自動で入る。
+// だから同じGoogleでログインすれば、別の端末でも同じ職人・そば粉・ガチャの職人で遊べる。
 let nameModalPurpose = "rankma"; // "rankma" | "mypage"(ガチャ・図鑑) | "daily" | "settings"
-function nameModalConfirmLabel() { return nameModalPurpose === "rankma" ? T("この名で参戦する", "Enter the match") : T("ログインする", "Log in"); }
+let nameModalMode = "new";       // "new" | "link" | "old"
+function nameModalConfirmLabel() {
+    if (nameModalMode === "new") return nameModalPurpose === "rankma" ? T("この名で参戦する", "Enter the match") : T("この名ではじめる", "Start with this name");
+    if (nameModalMode === "link") return T("引き継ぐ", "Transfer my data");
+    return nameModalPurpose === "rankma" ? T("この名で参戦する", "Enter the match") : T("ログインする", "Log in");
+}
 
-function openLoginModal(purpose) {
+const PLAYER_STORE = "sobamichi_player"; // { name, key } 自動ログイン用。Google連携のセーブにも入る
+function makePlayerKey() {
+    const b = new Uint8Array(16);
+    crypto.getRandomValues(b);
+    return "sk_" + Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+}
+
+// 職人が必要な所（ガチャ・今日のそば・ランクマ・設定）の入口。サーバーが新しければ名前だけの画面を出す
+async function startPlayer(purpose, mode) {
+    let api = 0;
+    try { api = await ensureApi(); } catch (e) { api = LATEST_API; } // 通信失敗でも新しい画面を出す（送るときにもう一度失敗を伝える）
+    openLoginModal(purpose, api >= LATEST_API ? (mode || "new") : "old");
+}
+
+function openLoginModal(purpose, mode) {
     nameModalPurpose = purpose;
+    nameModalMode = mode || "old";
     const input = document.getElementById("nameModalInput");
-    input.value = rankmaName || (account ? account.name : "");
-    document.getElementById("nameModalPass").value = "";
+    input.value = nameModalMode === "new" ? "" : (rankmaName || (account ? account.name : ""));
+    const pass = document.getElementById("nameModalPass");
+    pass.value = "";
+    pass.style.display = nameModalMode === "new" ? "none" : "";
     document.getElementById("nameModalMsg").innerText = "";
     document.getElementById("nameModalMsg").className = "";
-    document.getElementById("nameModalTitle").innerText =
-        purpose === "mypage" ? T("🎴 ガチャ・図鑑にログイン", "🎴 Log in for Gacha · Collection")
-        : purpose === "settings" ? T("👤 番付・そば粉のアカウントにログイン", "👤 Log in to your game account")
-        : purpose === "daily" ? T("📅 今日のそば打ちにログイン", "📅 Log in for the Daily Challenge")
-        : T("⚔️ ランクマッチ参戦", "⚔️ Join a Ranked Match");
+    const sub = document.getElementById("nameModalSub");
+    const sw = document.getElementById("nameModalSwitch");
+    const noReal = `<span style="color:#ff8866;">${T("⚠ 本名は使わないこと（番付でみんなに見える）。", "⚠ Don't use your real name (it's shown on the leaderboards).")}</span>`;
+    if (nameModalMode === "new") {
+        document.getElementById("nameModalTitle").innerText = purpose === "rankma" ? T("⚔️ ランクマッチ参戦", "⚔️ Join a Ranked Match") : T("👤 職人の名前を決めよう", "👤 Choose your player name");
+        sub.innerHTML = T("番付・ガチャで使う職人の名前を決めてね。<br>パスワードはいらない。次からは自動でログインする。<br>", "Pick the name you'll use on the leaderboards and gacha.<br>No password needed. You'll be logged in automatically next time.<br>") + noReal;
+        input.placeholder = T("職人の名（8文字まで）", "Nickname (max 8)");
+        sw.textContent = T("前に名前とパスワードで遊んでいた人はこちら（データを引き継ぐ）", "Played before with a name and password? Transfer your data");
+        sw.style.display = "";
+        sw.onclick = () => openLoginModal(purpose, "link");
+    } else if (nameModalMode === "link") {
+        document.getElementById("nameModalTitle").innerText = T("🔁 前のデータを引き継ぐ", "🔁 Transfer your data");
+        sub.innerHTML = T("前に使っていた職人の名前とパスワードを入れてね。<br>そば粉・ガチャの職人・番付の記録がそのまま引き継がれる。<br>次からはパスワードなしで自動ログインになる。", "Enter the name and password you used before.<br>Your soba flour, gacha partners and records carry over.<br>After this you'll be logged in automatically.");
+        input.placeholder = T("前の職人の名", "Your previous nickname");
+        sw.textContent = T("はじめて遊ぶ人はこちら", "New here? Choose a name instead");
+        sw.style.display = "";
+        sw.onclick = () => openLoginModal(purpose, "new");
+    } else {
+        document.getElementById("nameModalTitle").innerText =
+            purpose === "mypage" ? T("🎴 ガチャ・図鑑にログイン", "🎴 Log in for Gacha · Collection")
+            : purpose === "settings" ? T("👤 番付・そば粉のアカウントにログイン", "👤 Log in to your game account")
+            : purpose === "daily" ? T("📅 今日のそば打ちにログイン", "📅 Log in for the Daily Challenge")
+            : T("⚔️ ランクマッチ参戦", "⚔️ Join a Ranked Match");
+        sub.innerHTML = T("職人の名とパスワードを入力せよ。<br>初回登録時にパスワードが設定される。以降は同じパスワードで積み重ねが引き継がれる。<br><span style=\"color:#ff8866;\">⚠ 本名や、ほかで使っているパスワードは使わないこと。</span>", "Enter a nickname and a password.<br>The first time, this creates your account. Use the same password next time to keep your progress.<br><span style=\"color:#ff8866;\">⚠ Don't use your real name or a password you use anywhere else.</span>");
+        input.placeholder = T("職人の名（8文字まで）", "Nickname (max 8)");
+        sw.style.display = "none";
+    }
     document.getElementById("nameModalConfirm").innerText = nameModalConfirmLabel();
     document.getElementById("nameModal").classList.add("open");
     setTimeout(() => input.focus(), 80);
@@ -2099,7 +2155,9 @@ function openLoginModal(purpose) {
 
 function openRankma(mode) {
     pendingRankmaMode = mode;
-    openLoginModal("rankma");
+    // 職人がいれば（自動ログイン済み）名前の入力なしで、すぐ参戦
+    if (account) { beginRankma(account.name, 0); return; }
+    startPlayer("rankma");
 }
 
 function closeNameModal() {
@@ -2115,6 +2173,14 @@ function resetNameModalControls() {
     isConfirming = false;
 }
 
+// ログインできたあと、開こうとしていた画面へ進む（ランクマ以外）
+function afterPlayerLogin() {
+    const next = nameModalPurpose === "daily" ? openDaily : nameModalPurpose === "settings" ? afterSettingsLogin : () => openMyPage(true);
+    closeNameModal();
+    resetNameModalControls();
+    next();
+}
+
 async function confirmRankmaName() {
     if (isConfirming) return;
     const nameInput = document.getElementById("nameModalInput");
@@ -2122,18 +2188,46 @@ async function confirmRankmaName() {
     const name = nameInput.value.trim();
     const pass = passInput.value;
     const msg = document.getElementById("nameModalMsg");
+    const needPass = nameModalMode !== "new";
 
     if (!name) { msg.className=""; msg.innerText = T("名前を入力せよ。", "Enter a nickname."); return; }
     if (name === "名無し" || isBadName(name)) { msg.className=""; msg.innerText = T("その名は名乗れぬ。", "Please choose a different nickname."); return; }
-    if (!pass) { msg.className=""; msg.innerText = T("パスワードを入力せよ。", "Enter a password."); return; }
-    if (pass.length < 4) { msg.className=""; msg.innerText = T("パスワードは4文字以上にせよ。", "Password must be at least 4 characters."); return; }
+    if (needPass && !pass) { msg.className=""; msg.innerText = T("パスワードを入力せよ。", "Enter a password."); return; }
+    if (nameModalMode === "old" && pass.length < 4) { msg.className=""; msg.innerText = T("パスワードは4文字以上にせよ。", "Password must be at least 4 characters."); return; }
 
     isConfirming = true;
     const btn = document.getElementById("nameModalConfirm");
-    btn.disabled = true; btn.innerText = T("認証中...", "Checking...");
+    btn.disabled = true; btn.innerText = T("確認中...", "Checking...");
     nameInput.disabled = true; passInput.disabled = true;
     msg.className = ""; msg.innerText = "";
+    const fail = (text) => { msg.className = ""; msg.innerText = text; resetNameModalControls(); };
 
+    // --- 自動ログイン（はじめての人／前のデータの引き継ぎ） ---
+    if (nameModalMode === "new" || nameModalMode === "link") {
+        let r;
+        try {
+            const body = nameModalMode === "new"
+                ? { action: "register", name, key: makePlayerKey() }
+                : { action: "link_key", name, pass, key: makePlayerKey() };
+            r = await (await fetch(GAS_URL, { method: "POST", body: JSON.stringify(body) })).json();
+        } catch (e) { fail(T("通信失敗。もう一度試せ。", "Connection failed. Please try again.")); return; }
+        if (r.status === "name_taken") { fail(T("その名前はもう使われている。前にその名前で遊んでいたなら、下の「データを引き継ぐ」から。", "That name is taken. If it's yours, use \"Transfer your data\" below.")); return; }
+        if (r.status === "bad_name") { fail(T("その名は名乗れぬ。", "Please choose a different nickname.")); return; }
+        if (r.status === "wrong_pass") { fail(T("パスワードが違う。", "Wrong password.")); return; }
+        if (r.status === "no_user") { fail(T("その名前の職人は見つからない。", "No player with that name.")); return; }
+        if (r.status !== "ok" || !r.key) { fail(T("うまくいかなかった。もう一度試せ。", "Something went wrong. Please try again.")); return; }
+        setKeyAccount(r.name || name, r.key);
+        profile = r.profile || null; playerStats = r.stats || null;
+        cacheProfile();
+        renderTitle();
+        if (nameModalPurpose !== "rankma") { afterPlayerLogin(); return; }
+        msg.className = "info";
+        msg.innerText = nameModalMode === "link" ? T("引き継いだ。いざ参戦せよ。", "Data transferred. Let's go!") : T("登録した。いざ参戦せよ。", "You're registered. Let's go!");
+        beginRankma(r.name || name, 800);
+        return;
+    }
+
+    // --- 古いサーバー用：名前＋パスワード ---
     // ガチャ・図鑑／設定：登録済みの人は「プロフィール取得」だけでログインと表示を済ませる（通信1回）。
     // 未登録（no_user）のときだけ、下の新規登録へ進む。
     if (nameModalPurpose === "mypage" || nameModalPurpose === "settings") {
@@ -2143,18 +2237,17 @@ async function confirmRankmaName() {
                 if (r.status === "ok") {
                     setAccount(name, pass);
                     profile = r.profile; playerStats = r.stats;
-                    closeNameModal(); resetNameModalControls();
-                    if (nameModalPurpose === "settings") afterSettingsLogin(); else openMyPage(true);
+                    afterPlayerLogin();
                     return;
                 }
-                if (r.status === "wrong_pass") {
-                    msg.className = ""; msg.innerText = T("パスワードが違う。", "Wrong password (or that nickname is already taken).");
-                    resetNameModalControls(); return;
-                }
+                if (r.status === "wrong_pass") { fail(T("パスワードが違う。", "Wrong password (or that nickname is already taken).")); return; }
             }
         } catch (e) { /* 通信失敗時は下の通常の流れで再挑戦 */ }
     }
+    await legacyPasswordLogin(name, pass, msg);
+}
 
+async function legacyPasswordLogin(name, pass, msg) {
     let authed = false;
     try {
         // GASにパスワード認証リクエスト
@@ -2198,16 +2291,15 @@ async function confirmRankmaName() {
         setAccount(name, pass);
     }
 
-    if (nameModalPurpose !== "rankma") {
-        const next = nameModalPurpose === "daily" ? openDaily : nameModalPurpose === "settings" ? afterSettingsLogin : openMyPage;
-        closeNameModal();
-        resetNameModalControls();
-        next();
-        return;
-    }
+    if (nameModalPurpose !== "rankma") { afterPlayerLogin(); return; }
+    beginRankma(name, msg.innerText ? 800 : 0);
+}
 
+// ランクマッチを始める（名前はもう決まっている）
+function beginRankma(name, waitMs) {
     rankmaName = name;
-    btn.innerText = T("参戦準備中...", "Getting ready...");
+    const btn = document.getElementById("nameModalConfirm");
+    if (document.getElementById("nameModal").classList.contains("open")) btn.innerText = T("参戦準備中...", "Getting ready...");
 
     setTimeout(() => {
         closeNameModal();
@@ -2224,7 +2316,7 @@ async function confirmRankmaName() {
         else startGame(parseInt(pendingRankmaMode));
 
         setTimeout(resetNameModalControls, 1000);
-    }, msg.innerText ? 800 : 0); // 認証メッセージを一瞬読めるだけ待つ
+    }, waitMs); // 認証メッセージを一瞬読めるだけ待つ
 }
 
 // ===== 通常スタート =====
@@ -3654,34 +3746,58 @@ function scoreFactor() {
 let buff = { ...BASE_BUFF };
 let shieldLeft = 0;
 
-// ログイン情報はタブを閉じるまで保持（「タイトルへ」でページを再読込しても消えないように）
-let account = null;
-try { account = JSON.parse(sessionStorage.getItem("sobamichi_account") || "null"); } catch (e) { account = null; }
+// 職人（番付・そば粉・ガチャのアカウント）
+// ・自動ログイン（v10〜）: { name, key } を localStorage の sobamichi_player に保存。ずっと残り、Google連携のセーブにも入る。
+// ・古いサーバー用: { name, pass } をタブを閉じるまで sessionStorage に保存（パスワードは端末やクラウドに残さない）。
+let account = loadAccount();
 let profile = null;      // { coins, chars:{id:所持数}, selected, plays, totalEarned }
 let playerStats = null;  // { best:{"30","60","infinite"}, perfect }
 let serverApi = 0;
+const LATEST_API = 7;    // 自動ログイン（キー）に対応した GAS の apiVersion
 
+function loadAccount() {
+    try {
+        const a = JSON.parse(localStorage.getItem(PLAYER_STORE) || "null");
+        if (a && a.name && a.key) return { name: String(a.name), key: String(a.key) };
+    } catch (e) {}
+    try { return JSON.parse(sessionStorage.getItem("sobamichi_account") || "null"); } catch (e) { return null; }
+}
 function setAccount(name, pass) {
     account = { name, pass };
     try { sessionStorage.setItem("sobamichi_account", JSON.stringify(account)); } catch (e) {}
 }
+function setKeyAccount(name, key) {
+    if (account && account.name !== name) { profile = null; playerStats = null; }
+    account = { name, key };
+    try { localStorage.setItem(PLAYER_STORE, JSON.stringify(account)); } catch (e) {}
+    try { sessionStorage.removeItem("sobamichi_account"); } catch (e) {}
+}
 function clearAccount() {
     account = null; profile = null; playerStats = null;
     try { sessionStorage.removeItem("sobamichi_account"); sessionStorage.removeItem("sobamichi_profile"); } catch (e) {}
-}
-function logout() {
-    clearAccount();
-    renderTitle();
-    switchScreen("titleScreen");
+    try { localStorage.removeItem(PLAYER_STORE); } catch (e) {}
 }
 
-// ===== 設定画面の「番付・そば粉のアカウント」欄 =====
+// 前の版で「名前＋パスワード」でログインしたままの人は、裏で自動ログインに切り替える（次からパスワード不要）
+async function upgradeSessionAccount() {
+    if (!account || account.key || !account.pass) return;
+    if (await ensureApi() < LATEST_API) return;
+    const r = await (await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "link_key", name: account.name, pass: account.pass, key: makePlayerKey() }) })).json();
+    if (r.status === "ok" && r.key) {
+        setKeyAccount(r.name || account.name, r.key);
+        if (r.profile) { profile = r.profile; cacheProfile(); }
+        if (r.stats) playerStats = r.stats;
+        renderTitle();
+    }
+}
+
+// ===== 設定画面の「番付・そば粉の職人」欄 =====
 // 設定画面そのものは js/cloud-save.js が作る。ここではアカウント欄の中身だけを用意する。
 let loginFromSettings = false;
-function openAccountLogin(fromSettings) {
+function openAccountLogin(fromSettings, mode) {
     loginFromSettings = !!fromSettings;
     if (window.closeCloudSettings) closeCloudSettings();
-    openLoginModal("settings");
+    startPlayer("settings", mode);
 }
 function afterSettingsLogin() {
     renderTitle();
@@ -3695,17 +3811,35 @@ function settingsLogout() {
 }
 function renderAccountSettings(el) {
     if (!el) return;
-    const note = T("番付・ランクマッチ・そば粉・ガチャの職人は、この名前とパスワードでサーバーに保存されている。別の端末でも同じ名前でログインすれば戻る。",
-        "Leaderboards, Ranked Match, soba flour and gacha partners are saved on the server under this name and password. Log in with the same name on another device to get them back.");
-    el.innerHTML = account
-        ? `<h3>👤 ${T("番付・そば粉のアカウント", "Game account")}</h3>
+    const cloud = window.SobaCloud || {};
+    const head = `<h3>👤 ${T("番付・そば粉・ガチャの職人", "Player (leaderboards · flour · gacha)")}</h3>`;
+    const linkBtn = `<button class="cs-plain" onclick="openAccountLogin(true, 'link')">🔁 ${T("前の名前とパスワードのデータを引き継ぐ", "Transfer data from a name and password")}</button>`;
+    // 自動ログインの職人がどこまで守られているか（Google連携の状態で変わる）
+    const keyNote = !cloud.enabled
+        ? T("この端末に自動でログインしている。パスワードはいらない。（Google連携は準備中。それまでは、ブラウザのデータを消すとこの職人に戻れなくなるので注意）",
+            "You're logged in automatically on this device. (Google linking isn't set up yet. Until then, clearing browser data loses this player.)")
+        : cloud.isGuest
+            ? T("この端末に自動でログインしている。上の「Googleアカウントと連携」をしておくと、機種変更しても同じGoogleでこの職人（そば粉・ガチャの職人）に戻れる。",
+                "You're logged in automatically. Link Google above to keep this player (flour and partners) when you change devices.")
+            : T("Googleと連携済み。別の端末でも、同じGoogleでログインすればこの職人で遊べる。",
+                "Linked to Google. Sign in with the same Google account on another device to play as this player.");
+    if (account && account.key) {
+        el.innerHTML = `${head}
+           <div class="cs-status">${T("職人", "Player")} <b style="color:gold;">${escapeHtml(account.name)}</b> ${T("で自動ログイン中", "(logged in automatically)")}</div>
+           <div class="cs-note">${keyNote}</div>
+           ${linkBtn}`;
+    } else if (account) {
+        el.innerHTML = `${head}
            <div class="cs-status">${T("職人", "Player")} <b style="color:gold;">${escapeHtml(account.name)}</b> ${T("でログイン中", "is logged in")}</div>
-           <div class="cs-note">${note}</div>
-           <button class="cs-plain" onclick="settingsLogout()">${T("ログアウト", "Log out")}</button>`
-        : `<h3>👤 ${T("番付・そば粉のアカウント", "Game account")}</h3>
-           <div class="cs-status">${T("まだログインしていない", "Not logged in")}</div>
-           <div class="cs-note">${note}</div>
-           <button class="cs-plain" onclick="openAccountLogin(true)">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
+           <div class="cs-note">${T("番付・ランクマッチ・そば粉・ガチャの職人は、この名前とパスワードでサーバーに保存されている。", "Leaderboards, Ranked Match, soba flour and gacha partners are saved on the server under this name and password.")}</div>
+           <button class="cs-plain" onclick="settingsLogout()">${T("ログアウト", "Log out")}</button>`;
+    } else {
+        el.innerHTML = `${head}
+           <div class="cs-status">${T("まだ職人がいない", "No player yet")}</div>
+           <div class="cs-note">${T("名前を決めるだけで、ガチャ・今日のそば打ち・ランクマッチが遊べる。パスワードはいらない。", "Just pick a name to play the gacha, the Daily Challenge and Ranked Match. No password needed.")}</div>
+           <button class="cs-plain" onclick="openAccountLogin(true)">${T("職人の名前を決める", "Choose a player name")}</button>
+           ${linkBtn}`;
+    }
 }
 
 function activeCharacter() {
@@ -3717,10 +3851,11 @@ function activeCharacter() {
 // スコア保存の処理に流れて番付に空の行が書き込まれてしまうため、必ずこれを確認してから送る。
 async function ensureApi() {
     if (serverApi) return serverApi;
-    // 一度対応を確認できたら端末に覚えておき、次からは確認のための通信（番付全体の読み込み）を省く
+    // 最新の版（自動ログイン対応）だと確認できたら端末に覚えておき、次からは確認のための通信（番付全体の読み込み）を省く。
+    // それより古い版のうちは、ページを開くたびに1回だけ確かめ直す（GASが更新されたらすぐ気づけるように）
     try {
         const cached = Number(localStorage.getItem("sobamichi_api")) || 0;
-        if (cached >= 6) { serverApi = cached; return serverApi; }
+        if (cached >= LATEST_API) { serverApi = cached; return serverApi; }
     } catch (e) {}
     const res = await fetch(`${GAS_URL}?mode=30&t=${Date.now()}`);
     const data = await res.json();
@@ -3732,10 +3867,11 @@ async function ensureApi() {
 // ガチャ・図鑑系のリクエスト。未ログイン・サーバー未対応なら null を返す
 async function playerAction(action, extra = {}) {
     if (!account) return null;
-    if (await ensureApi() < 5) return null;
+    if (await ensureApi() < (account.key ? LATEST_API : 5)) return null;
+    const who = account.key ? { key: account.key } : { name: account.name, pass: account.pass };
     const res = await fetch(GAS_URL, {
         method: "POST",
-        body: JSON.stringify({ action, name: account.name, pass: account.pass, ...extra })
+        body: JSON.stringify({ action, ...who, ...extra })
     });
     const data = await res.json();
     if (data.profile) {
@@ -3744,12 +3880,12 @@ async function playerAction(action, extra = {}) {
         renderTitle();
     }
     if (data.stats) playerStats = data.stats;
-    if (data.status === "wrong_pass" || data.status === "no_user") clearAccount();
+    if (data.status === "wrong_pass" || data.status === "no_user") { clearAccount(); renderTitle(); }
     return data;
 }
 
 async function openMyPage(alreadyLoaded) {
-    if (!account) { openLoginModal("mypage"); return; }
+    if (!account) { startPlayer("mypage"); return; }
     switchScreen("mypage");
     if (alreadyLoaded === true && profile) {
         document.getElementById("mpStatus").textContent = "";
@@ -3974,7 +4110,7 @@ function showGachaResult(results) {
 async function earnCoins() {
     const el = document.getElementById("coinEarnDisplay");
     if (!account) {
-        el.innerHTML = `<span style="color:#aaa; font-size:14px;">${T("ログインすると 🌾そば粉 が貯まり、ガチャで職人を集められる（⚙ 設定 または 🎴 ガチャ・図鑑 から）。", "Log in (from ⚙ Settings or 🎴 Gacha) to earn 🌾 soba flour and collect partners!")}</span>`;
+        el.innerHTML = `<span style="color:#aaa; font-size:14px;">${T("職人の名前を決めると 🌾そば粉 が貯まり、ガチャで職人を集められる（🎴 ガチャ・図鑑 から。パスワードはいらない）。", "Pick a player name (from 🎴 Gacha, no password needed) to earn 🌾 soba flour and collect partners!")}</span>`;
         return;
     }
     el.textContent = T("🌾 そば粉を計量中...", "🌾 Weighing your soba flour...");
@@ -4058,8 +4194,8 @@ function renderTitleInfo() {
     if (!el) return;
     document.getElementById("tsDailyDate").textContent = shortDate();
     if (!account) {
-        el.innerHTML = `<span>${T("ログインすると、ガチャ・今日のそば打ちが遊べる", "Log in to unlock the gacha and the Daily Challenge")}</span>
-            <button class="tsLink" onclick="openAccountLogin(false)">${T("ログイン / 登録", "Log in / Sign up")}</button>`;
+        el.innerHTML = `<span>${T("名前を決めるだけで、ガチャ・今日のそば打ちが遊べる", "Pick a name to unlock the gacha and the Daily Challenge")}</span>
+            <button class="tsLink" onclick="openAccountLogin(false)">${T("はじめる", "Start")}</button>`;
         return;
     }
     const parts = [`👤 <b>${escapeHtml(account.name)}</b>`];
@@ -4093,7 +4229,8 @@ function renderTitle() {
 })();
 renderTitleChars(true);
 renderTitleInfo();
-if (account) playerAction("profile").catch(() => {});
+if (account && !account.key && account.pass) upgradeSessionAccount().catch(() => {}).then(() => { if (account) playerAction("profile").catch(() => {}); });
+else if (account) playerAction("profile").catch(() => {});
 
 // ===== 今日のそば打ち（デイリー） =====
 // 毎日、全員が同じ譜面（レーンの並び）で30秒勝負。番付に残るのは1日1回目だけ（サーバー側で判定）。
@@ -4112,7 +4249,7 @@ function shortDate(d) {
 }
 
 async function openDaily() {
-    if (!account) { openLoginModal("daily"); return; }
+    if (!account) { startPlayer("daily"); return; }
     switchScreen("daily");
     const status = document.getElementById("dlStatus");
     const btn = document.getElementById("dlStartBtn");
