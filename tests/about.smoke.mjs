@@ -125,7 +125,7 @@ await check("privacy: discloses everything the game stores or sends", async (pag
 await check("no school name in public files yet", async () => {
   const fs = await import("node:fs");
   for (const f of ["js/about.js", "privacy.html", "docs/superpowers/specs/2026-11-25-kankou-renmei-pitch-design.md", "docs/superpowers/plans/2026-11-25-kankou-renmei-pitch.md"])
-    assert.ok(!fs.readFileSync(new URL("../" + f, import.meta.url), "utf8").includes("高志"), f);
+    assert.ok(!fs.readFileSync(new URL("../" + f, import.meta.url), "utf8").includes("\u9ad8\u5fd7"), f);
 });
 
 await browser.close(); server.kill();
