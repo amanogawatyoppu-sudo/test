@@ -77,7 +77,7 @@ await check("初登場SSR：名前とセリフの特別演出", async (page) => 
   assert.ok(txt.includes("越前そば仙人"), "name");
   assert.ok(txt.includes("ふぉっふぉっ"), "quote");
   assert.ok(txt.includes("NEW"), "NEW stamp");
-  await page.waitForTimeout(350); // 特別演出は出てすぐのタップを無視する（読む前に飛ばさないため）
+  await page.waitForTimeout(450); // 特別演出は出てすぐのタップを無視する（読む前に飛ばさないため）
   await tap(page); await page.waitForTimeout(80);
   assert.strictEqual(await done(page), 1);
 });
